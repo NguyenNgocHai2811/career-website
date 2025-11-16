@@ -1,0 +1,159 @@
+TRƯỜNG ĐẠI HỌC QUY NHƠN
+KHOA CÔNG NGHỆ THÔNG TIN
+
+<br>
+<br>
+<br>
+<br>
+
+ĐỀ CƯƠNG
+KHÓA LUẬN TỐT NGHIỆP
+**KORRA – NỀN TẢNG TÌM KIẾM VIỆC LÀM**
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+| | |
+| :--- | :--- |
+| **Sinh viên** | **Nguyễn Ngọc Hải** |
+| **Chuyên ngành** | **Hệ thống thông tin** |
+| **Khóa học** | **K45C** |
+| | |
+| **Người hướng dẫn** | **TS. Phan Đình Sinh**|
+| | |
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+**Quy Nhơn, tháng 11 năm 2025**
+
+<div style="page-break-after: always;"></div>
+
+**MỤC LỤC**
+
+[Tự động cập nhật sau]
+
+<div style="page-break-after: always;"></div>
+
+**I. ĐẶT VẤN ĐỀ**
+
+**1. Lý do chọn đề tài**
+
+Trong bối cảnh cuộc cách mạng công nghiệp 4.0 đang diễn ra mạnh mẽ, thị trường lao động Việt Nam ngày càng trở nên sôi động và cạnh tranh. Nhu cầu kết nối giữa nhà tuyển dụng và ứng viên không chỉ tăng về số lượng mà còn đòi hỏi cao hơn về chất lượng và hiệu quả. Tuy nhiên, các phương pháp tìm việc truyền thống bộc lộ nhiều hạn chế, trong khi các nền tảng trực tuyến hiện có đôi khi chưa đáp ứng được trải nghiệm người dùng một cách tối ưu, gây khó khăn trong việc sàng lọc và kết nối đúng người, đúng việc.
+
+Nhận thấy tính cấp thiết của việc xây dựng một công cụ hỗ trợ hiệu quả, cùng với sự phát triển vượt bậc của các công nghệ web hiện đại, tôi quyết định thực hiện đề tài **“KORRA – Nền tảng tìm kiếm việc làm”**. Đề tài hướng tới việc áp dụng các công nghệ tiên tiến để xây dựng một website tuyển dụng thông minh, thân thiện và đáng tin cậy, góp phần giải quyết bài toán nhân sự cho doanh nghiệp và mở ra cơ hội phát triển sự nghiệp cho người lao động.
+
+**2. Mục tiêu nghiên cứu**
+
+*   **Mục tiêu chính:** Xây dựng thành công một nền tảng web tuyển dụng hoàn chỉnh, cho phép ứng viên tìm kiếm việc làm, tạo và quản lý hồ sơ trực tuyến, trong khi nhà tuyển dụng có thể đăng tin, tìm kiếm, quản lý hồ sơ ứng viên và tương tác hiệu quả.
+*   **Mục tiêu phụ:**
+    *   Tích hợp hệ thống thông báo thời gian thực (real-time notification) để tăng cường sự kết nối tức thì giữa hai bên.
+    *   Xây dựng công cụ tìm kiếm nâng cao, cho phép lọc kết quả theo nhiều tiêu chí (vị trí, kỹ năng, mức lương, kinh nghiệm).
+    *   Đảm bảo tính bảo mật thông tin người dùng và cung cấp giao diện quản trị hệ thống dễ sử dụng.
+
+**II. TỔNG QUAN**
+
+Thị trường tuyển dụng trực tuyến tại Việt Nam đã có sự góp mặt của nhiều nền tảng lớn và uy tín như TopCV, VietnamWorks, CareerBuilder. Các hệ thống này đã thành công trong việc số hóa quy trình tuyển dụng, cung cấp một lượng lớn thông tin việc làm và hồ sơ ứng viên. Về mặt công nghệ, các nền tảng này thường sử dụng kiến trúc Client-Server, kết hợp các framework JavaScript phổ biến ở phía frontend (như React, Angular) và các ngôn ngữ mạnh mẽ ở phía backend (như Java, PHP, Node.js) cùng hệ quản trị cơ sở dữ liệu quan hệ (MySQL, PostgreSQL).
+
+Tuy nhiên, vẫn còn không gian để cải tiến, đặc biệt là về trải nghiệm người dùng, tốc độ phản hồi của hệ thống và khả năng tương tác tức thì. Đề tài "KORRA" sẽ tập trung vào việc kế thừa những ưu điểm của các hệ thống đi trước, đồng thời áp dụng các công nghệ mới như Socket.io cho thông báo real-time và Elasticsearch/PostgreSQL Full-text search để tối ưu hóa hiệu năng tìm kiếm, nhằm mang lại một giải pháp tuyển dụng hiện đại và hiệu quả hơn.
+
+**III. NỘI DUNG VÀ PHƯƠNG PHÁP NGHIÊN CỨU**
+
+**1. Đối tượng và phạm vi nghiên cứu**
+
+*   **Đối tượng sử dụng:** Ứng viên đang tìm kiếm việc làm và các nhà tuyển dụng/doanh nghiệp có nhu cầu về nhân sự.
+*   **Phạm vi nghiên cứu:**
+    *   Nghiên cứu kiến trúc và công nghệ để xây dựng một ứng dụng web hoàn chỉnh.
+    *   Tập trung vào các tính năng cốt lõi: quản lý người dùng (ứng viên, nhà tuyển dụng, admin), quản lý tin tuyển dụng, quản lý hồ sơ (CV), tìm kiếm và lọc nâng cao, hệ thống thông báo thời gian thực.
+    *   Không đi sâu vào các lĩnh vực phức tạp như phân tích dữ liệu lớn hay ứng dụng trí tuệ nhân tạo vào gợi ý việc làm ở giai đoạn đầu.
+
+**2. Nội dung nghiên cứu**
+
+*   **Chương 1: Cơ sở lý thuyết**
+    *   Tổng quan về kiến trúc Client-Server.
+    *   Nguyên lý thiết kế giao diện và trải nghiệm người dùng (UI/UX).
+    *   Công nghệ Frontend: React.js, Redux.
+    *   Công nghệ Backend: Node.js, Express.js.
+    *   Hệ quản trị cơ sở dữ liệu: MySQL và tối ưu tìm kiếm với Elasticsearch/PostgreSQL.
+    *   Phương thức bảo mật: JSON Web Token (JWT) và phân quyền Role-Based Access Control (RBAC).
+    *   Công nghệ giao tiếp thời gian thực: Socket.io.
+
+*   **Chương 2: Phân tích và Thiết kế hệ thống**
+    *   Phân tích yêu cầu chức năng và phi chức năng.
+    *   Thiết kế kiến trúc hệ thống tổng thể.
+    *   Thiết kế cơ sở dữ liệu (Sơ đồ ERD).
+    *   Thiết kế giao diện người dùng (Wireframe, Mockup).
+
+*   **Chương 3: Triển khai và Phát triển hệ thống**
+    *   Xây dựng các module backend và API.
+    *   Phát triển giao diện người dùng frontend.
+    *   Tích hợp frontend và backend.
+    *   Cấu hình và triển khai các tính năng bảo mật, tìm kiếm và thông báo.
+
+*   **Chương 4: Kiểm thử và Đánh giá**
+    *   Kiểm thử chức năng (Functional Testing) cho các tính năng chính.
+    *   Kiểm thử bảo mật (Security Testing) các lỗ hổng phổ biến (XSS, SQL Injection).
+    *   Kiểm thử hiệu năng (Performance Testing) để đo tốc độ phản hồi.
+    *   Thu thập phản hồi từ người dùng thử nghiệm và đánh giá kết quả.
+
+*   **Chương 5: Kết luận và Hướng phát triển**
+    *   Tổng kết các kết quả đã đạt được.
+    *   Phân tích những hạn chế của hệ thống.
+    *   Đề xuất các hướng phát triển trong tương lai (tích hợp AI, phát triển ứng dụng di động).
+
+**3. Phương pháp nghiên cứu**
+
+*   **Nghiên cứu tài liệu:** Tìm hiểu, tổng hợp kiến thức từ các tài liệu, giáo trình, bài báo khoa học và tài liệu trực tuyến về các công nghệ liên quan.
+*   **Phân tích hệ thống:** Phân tích các hệ thống tuyển dụng tương tự để học hỏi ưu, nhược điểm.
+*   **Phát triển theo mô hình Agile:** Xây dựng và phát triển phần mềm theo từng giai đoạn ngắn, liên tục kiểm thử và cải tiến.
+*   **Thực nghiệm:** Cài đặt, triển khai và kiểm thử hệ thống trong môi trường thực tế để đánh giá hiệu quả.
+
+**IV. DỰ KIẾN KẾT QUẢ**
+
+*   Xây dựng thành công website tuyển dụng "KORRA" với đầy đủ các chức năng cốt lõi đã đề ra.
+*   Hệ thống hoạt động ổn định, an toàn và có khả năng đáp ứng được lượng người dùng cơ bản.
+*   Áp dụng và nắm vững kiến thức về các công nghệ hiện đại như React.js, Node.js, MySQL, Socket.io.
+*   Hoàn thành báo cáo khóa luận tốt nghiệp chi tiết, ghi lại toàn bộ quá trình nghiên cứu và phát triển sản phẩm.
+
+**V. TÀI LIỆU THAM KHẢO**
+
+1.  React Documentation, “https://react.dev/learn”
+2.  Node.js Documentation, “https://nodejs.org/docs/latest/api/”
+3.  Elasticsearch Documentation, “https://www.elastic.co/guide/en/elasticsearch/reference/index.html”
+4.  PostgreSQL Full-Text Search, “https://www.postgresql.org/docs/current/textsearch.html”
+5.  JWT Authentication, “https://jwt.io/introduction”
+6.  Socket.IO Documentation, “https://socket.io/docs/v4/”
+
+**VI. KẾ HOẠCH THỰC HIỆN ĐỀ TÀI**
+
+| **STT** | **Nội dung thực hiện** | **Thời gian** | **Kết quả dự kiến** |
+| :--- | :--- | :--- | :--- |
+| **1** | **Giai đoạn 1: Nghiên cứu và Phân tích** | **11/2025 – 12/2025** | Hoàn thiện đề cương chi tiết. Nắm vững lý thuyết về các công nghệ. Bản phân tích yêu cầu hệ thống. |
+| **2** | **Giai đoạn 2: Thiết kế hệ thống** | **01/2026** | Bản thiết kế kiến trúc, thiết kế CSDL (ERD), thiết kế giao diện (Wireframe), thiết kế API. |
+| **3** | **Giai đoạn 3: Phát triển Backend** | **02/2026 – 03/2026** | Hoàn thiện hệ thống API cho các chức năng chính, tích hợp CSDL và hệ thống bảo mật. |
+| **4** | **Giai đoạn 4: Phát triển Frontend** | **03/2026 – 04/2026** | Hoàn thiện giao diện người dùng, kết nối thành công với API và tích hợp thông báo real-time. |
+| **5** | **Giai đoạn 5: Kiểm thử, Tối ưu và Triển khai** | **05/2026** | Hệ thống đã được kiểm thử, sửa lỗi, tối ưu và triển khai thành công trên môi trường server. |
+| **6** | **Giai đoạn 6: Hoàn thiện báo cáo và Bảo vệ** | **06/2026** | Nộp báo cáo khóa luận hoàn chỉnh và chuẩn bị sẵn sàng cho buổi bảo vệ. |
+
+<br>
+<br>
+<br>
+
+| | |
+| :--- | :--- |
+| **Bình Định, ngày 21 tháng 11 năm 2025** | |
+| **SINH VIÊN THỰC HIỆN** | **NGƯỜI HƯỚNG DẪN** |
+| *(Ký và ghi rõ họ tên)* | *(Ký và ghi rõ họ tên)* |
+| | |
+| <br><br><br> | <br><br><br> |
+| **Nguyễn Ngọc Hải** | **TS. Phan Đình Sinh** |
