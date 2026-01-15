@@ -1,0 +1,36 @@
+# 1. Dependency directories (Thư viện cài đặt)
+node_modules/
+jspm_packages/
+
+# 2. Environment variables (File chứa thông tin bảo mật - QUAN TRỌNG)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 3. Debug logs (File nhật ký lỗi)
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 4. OS metadata (File rác của hệ điều hành)
+.DS_Store
+Thumbs.db
+
+# 5. IDEs and Editors (Cấu hình riêng của trình soạn thảo)
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# 6. Build/Dist folders (Thư mục biên dịch nếu dùng TypeScript)
+dist/
+out/
+build/
+
+# 7. Database (Nếu bạn dùng database file như SQLite)
+*.db
+*.sqlite
