@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 
  function Register() {
+  const [role, setRole] = useState('candidate');
   return (
     <div className="bg-background-light font-display text-[#0f111a] dark:text-white min-h-screen">
       <div className="bubble-bg">
@@ -40,11 +41,14 @@ import React from 'react';
               <section>
                 <h2 className="text-[#0f111a] dark:text-white text-lg font-bold leading-tight pb-4">Choose Your Role</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <label className="relative flex cursor-pointer rounded-lg border-2 border-primary bg-primary/5 p-4 focus:outline-none">
-                    <input defaultChecked className="sr-only" name="role" type="radio" value="candidate" />
+                  <label
+                    className={`relative flex cursor-pointer rounded-lg border-2 p-4 focus:outline-none transition-all ${role === 'candidate' ? 'border-primary bg-primary/5' : 'border-[#d2d5e5] dark:border-white/10 bg-transparent hover:border-primary/50'}`}
+                    onClick={() => setRole('candidate')}
+                  >
+                    <input checked={role === 'candidate'} readOnly className="sr-only" name="role" type="radio" value="candidate" />
                     <div className="flex w-full items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${role === 'candidate' ? 'bg-primary text-white' : 'bg-[#d2d5e5] dark:bg-white/10 text-[#545d92] dark:text-white'}`}>
                           <span className="material-symbols-outlined text-xl">person_search</span>
                         </div>
                         <div>
@@ -52,16 +56,19 @@ import React from 'react';
                           <p className="text-xs text-[#545d92] dark:text-slate-400">Looking for jobs</p>
                         </div>
                       </div>
-                      <div className="text-primary">
+                      <div className={role === 'candidate' ? 'text-primary' : 'text-transparent'}>
                         <span className="material-symbols-outlined text-lg">check_circle</span>
                       </div>
                     </div>
                   </label>
-                  <label className="relative flex cursor-pointer rounded-lg border-2 border-[#d2d5e5] dark:border-white/10 bg-transparent p-4 focus:outline-none hover:border-primary/50 transition-all">
-                    <input className="sr-only" name="role" type="radio" value="recruiter" />
+                  <label
+                    className={`relative flex cursor-pointer rounded-lg border-2 p-4 focus:outline-none transition-all ${role === 'recruiter' ? 'border-primary bg-primary/5' : 'border-[#d2d5e5] dark:border-white/10 bg-transparent hover:border-primary/50'}`}
+                    onClick={() => setRole('recruiter')}
+                  >
+                    <input checked={role === 'recruiter'} readOnly className="sr-only" name="role" type="radio" value="recruiter" />
                     <div className="flex w-full items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#d2d5e5] dark:bg-white/10 text-[#545d92] dark:text-white">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${role === 'recruiter' ? 'bg-primary text-white' : 'bg-[#d2d5e5] dark:bg-white/10 text-[#545d92] dark:text-white'}`}>
                           <span className="material-symbols-outlined text-xl">badge</span>
                         </div>
                         <div>
@@ -69,7 +76,7 @@ import React from 'react';
                           <p className="text-xs text-[#545d92] dark:text-slate-400">Hiring talent</p>
                         </div>
                       </div>
-                      <div className="text-transparent">
+                      <div className={role === 'recruiter' ? 'text-primary' : 'text-transparent'}>
                         <span className="material-symbols-outlined text-lg">check_circle</span>
                       </div>
                     </div>
@@ -135,9 +142,12 @@ import React from 'react';
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <p className="text-[#0f111a] dark:text-white text-sm font-medium">Date of Birth</p>
-                    <div className="flex items-stretch rounded-lg border border-[#d2d5e5] dark:border-white/10 bg-[#f9f9fb] dark:bg-white/5 focus-within:border-primary transition-all">
-                      <input className="flex-1 bg-transparent px-4 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white" type="date" />
-                      <div className="flex items-center pr-3 text-[#545d92]">
+                    <div className="relative flex items-stretch rounded-lg border border-[#d2d5e5] dark:border-white/10 bg-[#f9f9fb] dark:bg-white/5 focus-within:border-primary transition-all overflow-hidden">
+                      <input
+                        className="relative z-10 w-full bg-transparent px-4 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer bg-transparent"
+                        type="date"
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-[#545d92] pointer-events-none z-0">
                         <span className="material-symbols-outlined text-lg">calendar_today</span>
                       </div>
                     </div>
