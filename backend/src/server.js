@@ -4,8 +4,15 @@ require('dotenv').config();
 console.log('hello')
 
 const PORT = process.env.PORT || 3000;
+const authRoutes = require('./routes/auth.routes');
 const app = express();
 
+// Middleware parse JSON body
+app.use(express.json());
+
+
+// Mount API routes
+app.use('/v1/auth', authRoutes);
 
 const startServer = async () => {
   try {
