@@ -61,17 +61,52 @@ class AuthService {
    * @param {string} role
    * @returns {string} JWT
    */
-  generateToken(userId, role) {
+  generateToken(userId, role, expiresIn = '7d') {
     const payload = {
       userId,
       role
     };
 
     const secretKey = process.env.JWT_SECRET || 'korra_secret_key_default';
-    const options = { expiresIn: '7d' }; // Token hết hạn sau 7 ngày
+    const options = { expiresIn }; // Token hết hạn sau 7 ngày
 
     return jwt.sign(payload, secretKey, options);
   }
+
+  /**
+   * Đăng nhập người dùng
+   * @param {string} email
+   * @param {string} password
+   * @returns {Object} { user, token } nếu thành công
+   */
+  async loginUser(email, password) {
+    try {
+      // 1. Lấy thông tin user theo email
+      const user = await authRepository.getUserByEmail(email);
+
+      if (!user) {
+        throw new Error('Email hoặc mật khẩu không chính xác');
+      }
+
+      // 2. Kiểm tra mật khẩu
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordValid) {
+        throw new Error('Email hoặc mật khẩu không chính xác');
+      }
+
+      // 3. Tạo token (thời hạn 1d theo yêu cầu)
+      const token = this.generateToken(user.userId, user.role, '1d');
+
+      // 4. Chuẩn bị dữ liệu user trả về (không bao gồm password)
+      const { password: _, ...userWithoutPassword } = user;
+
+      return { user: userWithoutPassword, token };
+    } catch (error) {
+      throw error;
+    }
+  }
+
 }
 
 module.exports = new AuthService();
