@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 function Homepage() {
   return (
@@ -30,9 +31,9 @@ function Homepage() {
               <button className="hidden sm:flex items-center justify-center rounded-xl h-10 px-6 bg-transparent border border-gray-200 hover:border-primary text-[#2d3748] text-sm font-semibold transition-all hover:bg-white hover:text-primary">
                 Sign In
               </button>
-              <button className="flex items-center justify-center rounded-xl h-10 px-6 bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 text-sm font-bold transition-all transform hover:scale-[1.05] hover:shadow-primary/40">
+              <Link to="/register" className="flex items-center justify-center rounded-xl h-10 px-6 bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 text-sm font-bold transition-all transform hover:scale-[1.05] hover:shadow-primary/40">
                 Join Now
-              </button>
+              </Link>
             </div>
           </div>
         </header>
