@@ -1,7 +1,7 @@
 const express = require('express');
 const { verifyConnection: verifyNeo4j } = require('./config/neo4j');
 require('dotenv').config();
-
+console.log('hello')
 
 const PORT = process.env.PORT || 3000;
 const app = express();
