@@ -1,0 +1,1 @@
+"Hệ thống sử dụng kiến trúc RESTful API tiêu chuẩn, với định dạng dữ liệu là JSON và quy tắc đặt tên camelCase. Các API được phân nhóm theo chức năng nghiệp vụ để đảm bảo tính module hóa và dễ bảo trì. Việc xác thực người dùng được thực hiện thông qua JWT (JSON Web Token) đính kèm trong Header của mỗi request."
