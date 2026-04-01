@@ -68,6 +68,43 @@ class AuthRepository {
       await session.close();
     }
   }
+
+  /**
+   * Lấy thông tin user (bao gồm mật khẩu) qua email để xác thực đăng nhập
+   * @param {string} email
+   * @returns {Object|null} user nếu tồn tại
+   */
+  async getUserByEmail(email) {
+    const session = driver.session();
+    try {
+      const query = `
+        MATCH (u:User {email: $email})
+        RETURN u {
+          .userId,
+          .role,
+          .fullName,
+          .email,
+          .password,
+          .phone,
+          .dateOfBirth,
+          .address,
+          .createdAt
+        } AS user
+        LIMIT 1
+      `;
+
+      const result = await session.executeRead(tx => tx.run(query, { email }));
+
+      if (result.records.length === 0) {
+        return null;
+      }
+
+      return result.records[0].get('user');
+    } finally {
+      await session.close();
+    }
+  }
+
 }
 
 module.exports = new AuthRepository();
