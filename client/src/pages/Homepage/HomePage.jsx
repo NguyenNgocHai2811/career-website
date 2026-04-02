@@ -1,7 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 
 function Homepage() {
+  const [featuredRef, isFeaturedVisible, hasFeaturedIntersected] = useIntersectionObserver();
+
   return (
     <div className="font-display antialiased selection:bg-primary/20 selection:text-primary-dark">
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
@@ -168,24 +171,24 @@ function Homepage() {
             </div>
           </section>
           {/* Updated Section: Featured Opportunities with Background Animation */}
-          <section className="py-24 px-6 bg-white/10 backdrop-blur-md relative overflow-hidden">
+          <section ref={featuredRef} className="py-24 px-6 bg-white/10 backdrop-blur-md relative overflow-hidden">
             {/* Animated Background Container */}
             <div className="absolute inset-0 z-0 flex pointer-events-none">
               {/* Left Side */}
-              <div className="relative flex-1 h-full animate-expand-left">
+              <div className={`relative flex-1 h-full transition-all duration-700 ${hasFeaturedIntersected ? 'animate-expand-left' : 'opacity-0 scale-x-0'}`}>
                 <div className="absolute inset-0 bg-pastel-lavender/10 shape-trapezoid"></div>
                 <div className="absolute top-0 right-0 w-full h-32 bg-secondary shape-hat-top opacity-30"></div>
                 <div className="absolute bottom-0 right-0 w-full h-32 bg-pastel-peach shape-hat-bottom opacity-30"></div>
               </div>
               {/* Right Side */}
-              <div className="relative flex-1 h-full animate-expand-right">
+              <div className={`relative flex-1 h-full transition-all duration-700 ${hasFeaturedIntersected ? 'animate-expand-right' : 'opacity-0 scale-x-0'}`}>
                 <div className="absolute inset-0 bg-pastel-lavender/10 shape-trapezoid" style={{ transform: 'scaleX(-1)' }}></div>
                 <div className="absolute top-0 left-0 w-full h-32 bg-pastel-pink shape-hat-top opacity-30"></div>
                 <div className="absolute bottom-0 left-0 w-full h-32 bg-pastel-lavender shape-hat-bottom opacity-30"></div>
               </div>
             </div>
             <div className="max-w-[1280px] mx-auto relative z-10">
-              <div className="flex items-end justify-between mb-16 px-2 card-reveal" style={{ animationDelay: '0.1s' }}>
+              <div className={`flex items-end justify-between mb-16 px-2 transition-all duration-700 ${hasFeaturedIntersected ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '0.2s' }}>
                 <div className="scroll-reveal-left">
                   <h2 className="text-3xl md:text-4xl font-bold text-[#2d3748] tracking-tight">Featured Opportunities</h2>
                   <p className="text-[#718096] mt-3 font-light text-lg">Hand-picked roles for top tier professionals</p>
@@ -194,9 +197,9 @@ function Homepage() {
                   View all jobs <span className="material-symbols-outlined text-lg ml-1">arrow_forward</span>
                 </a>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-700 ${hasFeaturedIntersected ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '0.4s' }}>
                 {/* Job Card 1 */}
-                <div className="card-reveal group relative bg-white rounded-3xl overflow-hidden border border-secondary/20 shadow-sm card-hover-effect" style={{ animationDelay: '0.2s' }}>
+                <div className={`card-reveal group relative bg-white rounded-3xl overflow-hidden border border-secondary/20 shadow-sm card-hover-effect transition-all duration-700 ${hasFeaturedIntersected ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '0.6s' }}>
                   <div className="h-40 bg-cover bg-center relative" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80")' }}>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
                     <div className="absolute top-4 right-4 bg-white/90 backdrop-blur rounded-lg px-3 py-1 text-xs font-bold text-[#2d3748]">Full-time</div>
@@ -220,7 +223,7 @@ function Homepage() {
                   </div>
                 </div>
                 {/* Job Card 2 */}
-                <div className="card-reveal group relative bg-white rounded-3xl overflow-hidden border border-secondary/20 shadow-sm card-hover-effect lg:translate-y-12" style={{ animationDelay: '0.3s' }}>
+                <div className={`card-reveal group relative bg-white rounded-3xl overflow-hidden border border-secondary/20 shadow-sm card-hover-effect lg:translate-y-12 transition-all duration-700 ${hasFeaturedIntersected ? 'opacity-100 translate-y-12' : 'opacity-0 translate-y-20'}`} style={{ transitionDelay: '0.8s' }}>
                   <div className="h-40 bg-cover bg-center relative" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80")' }}>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
                     <div className="absolute top-4 right-4 bg-white/90 backdrop-blur rounded-lg px-3 py-1 text-xs font-bold text-[#2d3748]">Hybrid</div>
@@ -244,7 +247,7 @@ function Homepage() {
                   </div>
                 </div>
                 {/* Job Card 3 */}
-                <div className="card-reveal group relative bg-white rounded-3xl overflow-hidden border border-secondary/20 shadow-sm card-hover-effect" style={{ animationDelay: '0.4s' }}>
+                <div className={`card-reveal group relative bg-white rounded-3xl overflow-hidden border border-secondary/20 shadow-sm card-hover-effect transition-all duration-700 ${hasFeaturedIntersected ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '1.0s' }}>
                   <div className="h-40 bg-cover bg-center relative" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80")' }}>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
                     <div className="absolute top-4 right-4 bg-white/90 backdrop-blur rounded-lg px-3 py-1 text-xs font-bold text-[#2d3748]">Contract</div>

@@ -23,6 +23,9 @@
   --shadow-soft: 0 10px 30px -5px rgba(108, 126, 225, 0.15);
   --shadow-card: 0 10px 40px -10px rgba(0,0,0,0.05);
   --shadow-float: 0 20px 50px -10px rgba(108, 126, 225, 0.25);
+
+  --animate-expand-left: expand-from-center-left 0.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  --animate-expand-right: expand-from-center-right 0.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
 
 @layer base {
@@ -90,12 +93,11 @@
     to { transform: translateY(0); opacity: 1; }
   }
 
-  .animate-expand-left { animation: expand-from-center-left 0.8s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
-  .animate-expand-right { animation: expand-from-center-right 0.8s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+  .animate-expand-left { animation: var(--animate-expand-left); }
+  .animate-expand-right { animation: var(--animate-expand-right); }
 
   .card-reveal {
-    opacity: 0;
-    animation: content-slide-up 0.4s ease-out forwards;
+    transition: all 0.4s ease-out;
   }
 
   .animate-drift { animation: drift 20s ease-in-out infinite; }
