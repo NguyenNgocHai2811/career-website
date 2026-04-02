@@ -18,7 +18,7 @@ function Homepage() {
                 <span className="material-symbols-outlined text-2xl">diamond</span>
               </div>
               <h2 className="text-[#2d3748] text-xl font-bold tracking-tight">
-                Otomate<span className="font-light text-primary">Careers</span>
+                Korra<span className="font-light text-primary">Careers</span>
               </h2>
             </div>
             <nav className="hidden md:flex items-center gap-8">
@@ -28,9 +28,9 @@ function Homepage() {
               <a className="text-[#4a5568] hover:text-primary text-sm font-medium transition-colors" href="#">Advice</a>
             </nav>
             <div className="flex gap-3">
-              <button className="hidden sm:flex items-center justify-center rounded-xl h-10 px-6 bg-transparent border border-gray-200 hover:border-primary text-[#2d3748] text-sm font-semibold transition-all hover:bg-white hover:text-primary">
+              <Link to="/login" className="hidden sm:flex items-center justify-center rounded-xl h-10 px-6 bg-transparent border border-gray-200 hover:border-primary text-[#2d3748] text-sm font-semibold transition-all hover:bg-white hover:text-primary">
                 Sign In
-              </button>
+              </Link>
               <Link to="/register" className="flex items-center justify-center rounded-xl h-10 px-6 bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 text-sm font-bold transition-all transform hover:scale-[1.05] hover:shadow-primary/40">
                 Join Now
               </Link>

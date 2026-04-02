@@ -79,7 +79,7 @@ function Register() {
                 <path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
               </svg>
             </div>
-            <h2 className="text-[#0f111a] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">NetworkPortal</h2>
+            <h2 className="text-[#0f111a] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Korra</h2>
           </div>
           <div className="flex flex-1 justify-end gap-8">
             <div className="flex items-center gap-9">
@@ -88,7 +88,9 @@ function Register() {
               <a className="text-[#0f111a] dark:text-white text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Recruiters</a>
             </div>
             <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:opacity-90 transition-opacity">
-              <span className="truncate">Log in</span>
+              <span className="truncate"><Link to="/login">
+                              Log in
+                            </Link></span>
             </button>
           </div>
         </header>
