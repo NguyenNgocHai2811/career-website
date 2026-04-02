@@ -24,8 +24,8 @@
   --shadow-card: 0 10px 40px -10px rgba(0,0,0,0.05);
   --shadow-float: 0 20px 50px -10px rgba(108, 126, 225, 0.25);
 
-  --animate-expand-left: expand-from-center-left 0.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
-  --animate-expand-right: expand-from-center-right 0.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  --animate-expand-left: expand-from-center-left 1.4s ease-in-out forwards;
+  --animate-expand-right: expand-from-center-right 1.4s ease-in-out forwards;
 }
 
 @layer base {
