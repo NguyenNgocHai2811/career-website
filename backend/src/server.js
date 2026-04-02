@@ -3,12 +3,16 @@ const { verifyConnection: verifyNeo4j } = require('./config/neo4j');
 require('dotenv').config();
 console.log('hello')
 
+const cors = require('cors');
+
 const PORT = process.env.PORT || 3000;
 const authRoutes = require('./routes/auth.routes');
 const app = express();
 
 // Middleware parse JSON body
 app.use(express.json());
+// Middleware CORS
+app.use(cors());
 
 
 // Mount API routes

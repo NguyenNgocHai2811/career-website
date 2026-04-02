@@ -1,7 +1,68 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 
- function Register() {
+function Register() {
   const [role, setRole] = useState('candidate');
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [address, setAddress] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/v1/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          role: role.toUpperCase(),
+          fullName,
+          email,
+          password,
+          confirmPassword,
+          phone,
+          dateOfBirth,
+          address,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', data.data.token);
+        localStorage.setItem('user', JSON.stringify(data.data.user));
+        navigate('/');
+      } else {
+        setError(data.message || 'Registration failed.');
+      }
+    } catch (err) {
+      console.error('Register error:', err);
+      setError('A network error occurred.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="bg-background-light font-display text-[#0f111a] dark:text-white min-h-screen">
       <div className="bubble-bg">
@@ -37,15 +98,23 @@ import React, { useState } from 'react';
               <h1 className="text-[#0f111a] dark:text-white text-3xl font-black leading-tight tracking-[-0.033em]">Join the Network</h1>
               <p className="text-[#545d92] dark:text-slate-400 text-sm font-normal">Complete your registration to get started.</p>
             </div>
-            <div className="p-8 pt-6 space-y-8">
+            <form onSubmit={handleSubmit} className="p-8 pt-6 space-y-8">
+              {error && (
+                <div className="rounded-md bg-red-50 p-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                    </div>
+                  </div>
+                </div>
+              )}
               <section>
                 <h2 className="text-[#0f111a] dark:text-white text-lg font-bold leading-tight pb-4">Choose Your Role</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <label
                     className={`relative flex cursor-pointer rounded-lg border-2 p-4 focus:outline-none transition-all ${role === 'candidate' ? 'border-primary bg-primary/5' : 'border-[#d2d5e5] dark:border-white/10 bg-transparent hover:border-primary/50'}`}
-                    onClick={() => setRole('candidate')}
                   >
-                    <input checked={role === 'candidate'} readOnly className="sr-only" name="role" type="radio" value="candidate" />
+                    <input checked={role === 'candidate'} onChange={() => setRole('candidate')} className="sr-only" name="role" type="radio" value="candidate" />
                     <div className="flex w-full items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${role === 'candidate' ? 'bg-primary text-white' : 'bg-[#d2d5e5] dark:bg-white/10 text-[#545d92] dark:text-white'}`}>
@@ -63,9 +132,8 @@ import React, { useState } from 'react';
                   </label>
                   <label
                     className={`relative flex cursor-pointer rounded-lg border-2 p-4 focus:outline-none transition-all ${role === 'recruiter' ? 'border-primary bg-primary/5' : 'border-[#d2d5e5] dark:border-white/10 bg-transparent hover:border-primary/50'}`}
-                    onClick={() => setRole('recruiter')}
                   >
-                    <input checked={role === 'recruiter'} readOnly className="sr-only" name="role" type="radio" value="recruiter" />
+                    <input checked={role === 'recruiter'} onChange={() => setRole('recruiter')} className="sr-only" name="role" type="radio" value="recruiter" />
                     <div className="flex w-full items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${role === 'recruiter' ? 'bg-primary text-white' : 'bg-[#d2d5e5] dark:bg-white/10 text-[#545d92] dark:text-white'}`}>
@@ -89,7 +157,7 @@ import React, { useState } from 'react';
                   <div className="flex flex-col gap-1.5">
                     <p className="text-[#0f111a] dark:text-white text-sm font-medium">Full Name</p>
                     <div className="flex items-stretch rounded-lg border border-[#d2d5e5] dark:border-white/10 bg-[#f9f9fb] dark:bg-white/5 focus-within:border-primary transition-all">
-                      <input className="flex-1 rounded-lg bg-transparent px-4 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white placeholder:text-[#545d92]" placeholder="Jane Doe" type="text" />
+                      <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className="flex-1 rounded-lg bg-transparent px-4 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white placeholder:text-[#545d92]" placeholder="Jane Doe" type="text" />
                       <div className="flex items-center pr-3 text-[#545d92]">
                         <span className="material-symbols-outlined text-lg">person</span>
                       </div>
@@ -98,7 +166,7 @@ import React, { useState } from 'react';
                   <div className="flex flex-col gap-1.5">
                     <p className="text-[#0f111a] dark:text-white text-sm font-medium">Email Address</p>
                     <div className="flex items-stretch rounded-lg border border-[#d2d5e5] dark:border-white/10 bg-[#f9f9fb] dark:bg-white/5 focus-within:border-primary transition-all">
-                      <input className="flex-1 rounded-lg bg-transparent px-4 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white placeholder:text-[#545d92]" placeholder="jane@example.com" type="email" />
+                      <input required value={email} onChange={(e) => setEmail(e.target.value)} className="flex-1 rounded-lg bg-transparent px-4 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white placeholder:text-[#545d92]" placeholder="jane@example.com" type="email" />
                       <div className="flex items-center pr-3 text-[#545d92]">
                         <span className="material-symbols-outlined text-lg">mail</span>
                       </div>
@@ -107,19 +175,19 @@ import React, { useState } from 'react';
                   <div className="flex flex-col gap-1.5">
                     <p className="text-[#0f111a] dark:text-white text-sm font-medium">Password</p>
                     <div className="flex items-stretch rounded-lg border border-[#d2d5e5] dark:border-white/10 bg-[#f9f9fb] dark:bg-white/5 focus-within:border-primary transition-all">
-                      <input className="flex-1 rounded-lg bg-transparent px-4 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white placeholder:text-[#545d92]" placeholder="Min. 8 characters" type="password" />
-                      <button className="flex items-center pr-3 text-primary">
-                        <span className="material-symbols-outlined text-lg">visibility</span>
+                      <input required value={password} onChange={(e) => setPassword(e.target.value)} className="flex-1 rounded-lg bg-transparent px-4 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white placeholder:text-[#545d92]" placeholder="Min. 8 characters" type={showPassword ? "text" : "password"} />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="flex items-center pr-3 text-primary">
+                        <span className="material-symbols-outlined text-lg">{showPassword ? "visibility_off" : "visibility"}</span>
                       </button>
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <p className="text-[#0f111a] dark:text-white text-sm font-medium">Confirm Password</p>
                     <div className="flex items-stretch rounded-lg border border-[#d2d5e5] dark:border-white/10 bg-[#f9f9fb] dark:bg-white/5 focus-within:border-primary transition-all">
-                      <input className="flex-1 rounded-lg bg-transparent px-4 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white placeholder:text-[#545d92]" placeholder="Re-enter password" type="password" />
-                      <div className="flex items-center pr-3 text-[#545d92]">
-                        <span className="material-symbols-outlined text-lg">lock</span>
-                      </div>
+                      <input required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="flex-1 rounded-lg bg-transparent px-4 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white placeholder:text-[#545d92]" placeholder="Re-enter password" type={showConfirmPassword ? "text" : "password"} />
+                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="flex items-center pr-3 text-primary hover:text-primary">
+                        <span className="material-symbols-outlined text-lg">{showConfirmPassword ? "visibility_off" : "visibility"}</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -136,7 +204,7 @@ import React, { useState } from 'react';
                         <option>Work</option>
                       </select>
                       <div className="flex-1 flex items-stretch rounded-lg border border-[#d2d5e5] dark:border-white/10 bg-[#f9f9fb] dark:bg-white/5 focus-within:border-primary transition-all">
-                        <input className="flex-1 bg-transparent px-3 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white" placeholder="+1 (555) 000-0000" type="tel" />
+                        <input value={phone} onChange={(e) => setPhone(e.target.value)} className="flex-1 bg-transparent px-3 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white" placeholder="+1 (555) 000-0000" type="tel" />
                       </div>
                     </div>
                   </div>
@@ -144,6 +212,8 @@ import React, { useState } from 'react';
                     <p className="text-[#0f111a] dark:text-white text-sm font-medium">Date of Birth</p>
                     <div className="relative flex items-stretch rounded-lg border border-[#d2d5e5] dark:border-white/10 bg-[#f9f9fb] dark:bg-white/5 focus-within:border-primary transition-all overflow-hidden">
                       <input
+                        value={dateOfBirth}
+                        onChange={(e) => setDateOfBirth(e.target.value)}
                         className="relative z-10 w-full bg-transparent px-4 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer bg-transparent"
                         type="date"
                       />
@@ -155,7 +225,7 @@ import React, { useState } from 'react';
                   <div className="flex flex-col gap-1.5 md:col-span-2">
                     <p className="text-[#0f111a] dark:text-white text-sm font-medium">Mailing Address</p>
                     <div className="flex items-stretch rounded-lg border border-[#d2d5e5] dark:border-white/10 bg-[#f9f9fb] dark:bg-white/5 focus-within:border-primary transition-all">
-                      <input className="flex-1 bg-transparent px-4 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white" placeholder="Street address, City, Country" type="text" />
+                      <input value={address} onChange={(e) => setAddress(e.target.value)} className="flex-1 bg-transparent px-4 py-2.5 outline-none text-sm text-[#0f111a] dark:text-white" placeholder="Street address, City, Country" type="text" />
                       <div className="flex items-center pr-3 text-[#545d92]">
                         <span className="material-symbols-outlined text-lg">location_on</span>
                       </div>
@@ -164,17 +234,17 @@ import React, { useState } from 'react';
                 </div>
               </section>
               <div className="pt-6 border-t border-[#e8eaf2] dark:border-white/10 flex flex-col gap-4">
-                <button className="w-full flex h-12 items-center justify-center rounded-lg bg-primary text-white text-base font-bold shadow-lg hover:shadow-primary/30 hover:translate-y-[-1px] transition-all">
-                  Create Account
+                <button disabled={isLoading} type="submit" className="w-full flex h-12 items-center justify-center rounded-lg bg-primary text-white text-base font-bold shadow-lg hover:shadow-primary/30 hover:translate-y-[-1px] transition-all disabled:opacity-50">
+                  {isLoading ? 'Creating Account...' : 'Create Account'}
                 </button>
                 <p className="text-center text-xs text-[#545d92] dark:text-slate-400">
                   By clicking "Create Account", you agree to our <a className="text-primary font-bold underline" href="#">Terms of Service</a> and <a className="text-primary font-bold underline" href="#">Privacy Policy</a>.
                 </p>
                 <p className="text-center text-sm font-medium text-[#0f111a] dark:text-white mt-2">
-                  Already have an account? <a className="text-primary font-bold hover:underline" href="#">Log in here</a>
+                  Already have an account? <Link to="/login" className="text-primary font-bold hover:underline">Log in here</Link>
                 </p>
               </div>
-            </div>
+            </form>
           </div>
         </main>
         <footer className="py-6 text-center text-[#545d92] dark:text-slate-400 text-xs">
