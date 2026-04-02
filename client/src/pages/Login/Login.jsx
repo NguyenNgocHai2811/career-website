@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { FormInput, Button, ErrorAlert, BackgroundBlobs } from '../../components';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -30,7 +31,7 @@ function Login() {
         // Handle success
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        navigate('/');
+        navigate('/onboarding');
       } else {
         // Handle API errors
         setError(data.message || 'Login failed. Please try again.');
@@ -49,10 +50,12 @@ function Login() {
       <div className="relative flex min-h-screen w-full flex-col justify-center overflow-hidden">
         {/* Background Bubbles */}
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-          <div className="bubble bg-pastel-blue w-[500px] h-[500px] -top-20 -left-20"></div>
-          <div className="bubble bg-pastel-pink w-[400px] h-[400px] top-1/4 -right-20"></div>
-          <div className="bubble bg-pastel-peach w-[450px] h-[450px] -bottom-20 left-1/4"></div>
-          <div className="bubble bg-pastel-lavender w-[350px] h-[350px] top-1/2 right-1/4"></div>
+          <BackgroundBlobs blobs={[
+            { position: "top-[-100px] left-[-50px]", size: "w-[500px] h-[500px]", color: "bg-pastel-blue" },
+            { position: "top-1/4 right-[-100px]", size: "w-[400px] h-[400px]", color: "bg-pastel-pink" },
+            { position: "bottom-[-150px] left-1/4", size: "w-[450px] h-[450px]", color: "bg-pastel-peach" },
+            { position: "top-1/2 right-1/4", size: "w-[350px] h-[350px]", color: "bg-pastel-lavender" }
+          ]} />
         </div>
 
         {/* Main Content */}
@@ -67,73 +70,43 @@ function Login() {
             </div>
 
             <div className="p-10 pt-4">
-              {error && (
-                <div className="mb-4 rounded-md bg-red-50 p-4">
-                  <div className="flex">
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium text-red-800">{error}</h3>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {error && <ErrorAlert message={error} />}
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-primary-dark/70" htmlFor="email">Email Address</label>
-                  <div className="relative group">
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      required
-                      placeholder="name@company.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="form-input transition-all duration-200 ease-in-out block w-full rounded-[10px] border-0 bg-slate-50/50 py-3.5 pl-4 pr-10 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white hover:ring-primary/40 sm:text-sm sm:leading-6 outline-none"
-                    />
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-primary/60 group-focus-within:text-primary transition-colors">
-                      <span className="material-symbols-outlined text-[20px]">mail</span>
-                    </div>
-                  </div>
-                </div>
+                <FormInput
+                  label="Email Address"
+                  type="email"
+                  placeholder="name@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  icon="mail"
+                />
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold uppercase tracking-wider text-primary-dark/70" htmlFor="password">Password</label>
-                  </div>
-                  <div className="relative group">
-                    <input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      required
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="form-input transition-all duration-200 ease-in-out block w-full rounded-[10px] border-0 bg-slate-50/50 py-3.5 pl-4 pr-10 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white hover:ring-primary/40 sm:text-sm sm:leading-6 outline-none"
-                    />
-                    <div
-                      className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-3 text-primary/60 group-focus-within:text-primary hover:text-primary-hover transition-colors"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      <span className="material-symbols-outlined text-[20px]">{showPassword ? "visibility_off" : "visibility"}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-end mt-1">
-                    <a href="#" className="text-xs font-bold text-primary hover:text-primary-hover hover:underline decoration-2 underline-offset-2 transition-all">Forgot Password?</a>
-                  </div>
-                </div>
+                <FormInput
+                  label="Password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  showPasswordToggle
+                />
 
-                <button
+                <div className="flex justify-end mt-1">
+                  <a href="#" className="text-xs font-bold text-primary hover:text-primary-hover hover:underline decoration-2 underline-offset-2 transition-all">Forgot Password?</a>
+                </div>
+                <Button
                   type="submit"
                   disabled={isLoading}
-                  className="group relative flex w-full items-center justify-center rounded-[10px] bg-primary px-4 py-4 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all duration-200 hover:bg-primary-hover hover:scale-[1.01] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
+                  loading={isLoading}
+                  icon="arrow_forward"
+                  iconPosition="right"
+                  className="w-full"
                 >
                   {isLoading ? 'Signing In...' : 'Sign In'}
-                  {!isLoading && <span className="material-symbols-outlined ml-2 text-[18px] transition-transform duration-200 group-hover:translate-x-1">arrow_forward</span>}
-                </button>
+                </Button>
+                
               </form>
 
               <div className="relative mt-8">
