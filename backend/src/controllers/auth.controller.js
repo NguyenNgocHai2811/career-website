@@ -139,6 +139,97 @@ class AuthController {
       });
     }
   }
+
+  /**
+   * Controller API yêu cầu đặt lại mật khẩu
+   * Xử lý POST /v1/auth/forgot-password
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async forgotPassword(req, res) {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Vui lòng cung cấp email.'
+        });
+      }
+
+      // Khắc phục lỗi Host Header Poisoning (Vulnerability): Sử dụng biến môi trường thay vì Header
+      const originUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+      await authService.forgotPassword(email, originUrl);
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Hướng dẫn đặt lại mật khẩu đã được gửi đến email của bạn.'
+      });
+    } catch (error) {
+      console.error('[AuthController.forgotPassword] Error:', error);
+
+      // Khắc phục User Enumeration: Trả về 200 Success giả kể cả khi tài khoản không tồn tại
+      if (error.message === 'Tài khoản không tồn tại.') {
+        return res.status(200).json({
+          status: 'success',
+          message: 'Hướng dẫn đặt lại mật khẩu đã được gửi đến email của bạn.'
+        });
+      }
+
+      return res.status(500).json({
+        status: 'error',
+        message: 'Lỗi hệ thống nội bộ. Vui lòng thử lại sau.'
+      });
+    }
+  }
+
+  /**
+   * Controller API xác nhận đổi mật khẩu mới
+   * Xử lý POST /v1/auth/reset-password
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async resetPassword(req, res) {
+    try {
+      const { token, newPassword } = req.body;
+
+      if (!token || !newPassword) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Token và mật khẩu mới là bắt buộc.'
+        });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Mật khẩu phải có ít nhất 8 ký tự.'
+        });
+      }
+
+      await authService.resetPassword(token, newPassword);
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Đặt lại mật khẩu thành công.'
+      });
+    } catch (error) {
+      console.error('[AuthController.resetPassword] Error:', error);
+
+      if (error.message === 'Token không hợp lệ hoặc đã hết hạn.') {
+        return res.status(400).json({
+          status: 'error',
+          message: error.message
+        });
+      }
+
+      return res.status(500).json({
+        status: 'error',
+        message: 'Lỗi hệ thống nội bộ. Vui lòng thử lại sau.'
+      });
+    }
+  }
 }
 
 module.exports = new AuthController();

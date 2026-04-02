@@ -2,6 +2,8 @@ const authRepository = require('../repositories/auth.repository');
 const bcrypt = require('bcryptjs');
 const { generateUUID } = require('../utils/uuid');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const emailUtil = require('../utils/email');
 
 class AuthService {
   /**
@@ -102,6 +104,68 @@ class AuthService {
       const { password: _, ...userWithoutPassword } = user;
 
       return { user: userWithoutPassword, token };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Xử lý yêu cầu quên mật khẩu
+   * @param {string} email
+   * @param {string} originUrl URL gốc của frontend (để tạo link)
+   */
+  async forgotPassword(email, originUrl = 'http://localhost:5173') {
+    try {
+      // 1. Kiểm tra user tồn tại
+      const user = await authRepository.getUserByEmail(email);
+      if (!user) {
+        // Tránh tiết lộ email có tồn tại hay không vì lý do bảo mật,
+        // trả về thành công giả (hoặc ném lỗi tùy logic nghiệp vụ).
+        // Ở đây ném lỗi để controller xử lý.
+        throw new Error('Tài khoản không tồn tại.');
+      }
+
+      // 2. Tạo reset token ngẫu nhiên
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const tokenExpiry = Date.now() + 15 * 60 * 1000; // 15 phút
+
+      // 3. Lưu token vào DB
+      await authRepository.saveResetToken(email, resetToken, tokenExpiry);
+
+      // 4. Tạo link reset mật khẩu (trỏ về Frontend)
+      const resetUrl = `${originUrl}/reset-password?token=${resetToken}`;
+
+      // 5. Gửi email
+      await emailUtil.sendResetPasswordEmail(email, resetUrl);
+
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Đặt lại mật khẩu mới
+   * @param {string} token
+   * @param {string} newPassword
+   */
+  async resetPassword(token, newPassword) {
+    try {
+      // 1. Tìm user bằng token
+      const user = await authRepository.getUserByResetToken(token);
+
+      if (!user) {
+        throw new Error('Token không hợp lệ hoặc đã hết hạn.');
+      }
+
+      // 2. Băm mật khẩu mới
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+      // 3. Cập nhật vào DB và xóa token
+      await authRepository.updatePasswordAndClearToken(user.userId, hashedPassword);
+
+      return true;
     } catch (error) {
       throw error;
     }
