@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { OptionCard, SkillBubble, BackgroundBlobs, ProgressBar, SearchInput } from '../../components';
 
 const Onboarding = () => {
   // State for step tracking (1 to 5)
@@ -47,15 +48,11 @@ const Onboarding = () => {
   let displayProgress = (currentStep / totalSteps) * 100;
   let progressText = `Step ${currentStep} of ${totalSteps}`;
 
-  if (currentStep === 2) {
-    displayProgress = Math.min((selectedSkills.length / 5) * 100, 100);
-    progressText = `${selectedSkills.length} of 5 skills selected`;
-  }
 
   // Can proceed logic
   let canProceed = false;
   if (currentStep === 1 && employmentType) canProceed = true;
-  if (currentStep === 2 && selectedSkills.length >= 5) canProceed = true;
+  if (currentStep === 2 && selectedSkills) canProceed = true;
   if (currentStep === 3 && workingStyle) canProceed = true;
   if (currentStep === 4 && careerLevel) canProceed = true;
   if (currentStep === 5 && companyCulture) canProceed = true;
@@ -66,7 +63,8 @@ const Onboarding = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="w-full max-w-2xl mx-auto flex flex-col items-center animate-content-slide-up">
+          <div className="w-full max-w-2xl mx-auto flex flex-col items-center animate-content-slide-up relative">
+            <BackgroundBlobs />
             <h1 className="text-[#0f111a] dark:text-white tracking-tight text-3xl md:text-4xl font-bold leading-tight text-center pb-3">
               What is your preferred employment type?
             </h1>
@@ -74,20 +72,19 @@ const Onboarding = () => {
               Select the option that best fits your current goals.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-              {['Full-time', 'Part-time', 'Remote', 'Freelance'].map((type) => (
-                <div
-                  key={type}
-                  onClick={() => setEmploymentType(type)}
-                  className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 flex items-center justify-between
-                    ${employmentType === type
-                      ? 'border-primary bg-primary/5 shadow-soft transform scale-105'
-                      : 'border-black/5 dark:border-white/10 hover:border-primary/50 bg-white dark:bg-gray-800'}`}
-                >
-                  <span className="text-lg font-semibold text-[#0f111a] dark:text-white">{type}</span>
-                  {employmentType === type && (
-                    <span className="material-symbols-outlined text-primary">check_circle</span>
-                  )}
-                </div>
+              {[
+                { name: 'Full-time', color: 'bg-secondary/20', borderColor: 'border-secondary' },
+                { name: 'Part-time', color: 'bg-pastel-peach/30', borderColor: 'border-pastel-peach' },
+                { name: 'Remote', color: 'bg-pastel-pink/20', borderColor: 'border-pastel-pink' },
+                { name: 'Freelance', color: 'bg-pastel-lavender/20', borderColor: 'border-pastel-lavender' }
+              ].map((type, index) => (
+                <OptionCard
+                  key={type.name}
+                  option={type}
+                  isSelected={employmentType === type.name}
+                  onClick={setEmploymentType}
+                  animationDelay={index * 0.2}
+                />
               ))}
             </div>
           </div>
@@ -103,58 +100,31 @@ const Onboarding = () => {
             </p>
 
             <div className="w-full max-w-xl mt-8 px-4">
-              <label className="flex flex-col w-full">
-                <div className="flex w-full items-stretch rounded-xl h-14 shadow-sm border border-black/5 dark:border-white/10 overflow-hidden bg-white dark:bg-gray-800 transition-all focus-within:ring-2 focus-within:ring-primary/40">
-                  <div className="text-[#545d92] flex items-center justify-center pl-5">
-                    <span className="material-symbols-outlined text-2xl">search</span>
-                  </div>
-                  <input
-                    className="form-input flex w-full border-none bg-transparent focus:ring-0 text-[#0f111a] dark:text-white placeholder:text-[#545d92]/60 px-4 text-base font-normal outline-none"
-                    placeholder="Search and add more skills..."
-                    value={skillSearch}
-                    onChange={(e) => setSkillSearch(e.target.value)}
-                  />
-                </div>
-              </label>
+              <SearchInput
+                placeholder="Search and add more skills..."
+                value={skillSearch}
+                onChange={(e) => setSkillSearch(e.target.value)}
+              />
             </div>
 
             <div className="relative w-full min-h-[400px] flex flex-wrap justify-center items-center gap-4 md:gap-6 p-4 md:p-10 mt-6 pb-32">
-              {/* Floating Background Blobs */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
-                <div className="absolute top-10 left-10 w-64 h-64 bg-secondary/10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-10 right-10 w-80 h-80 bg-pastel-pink/10 rounded-full blur-3xl"></div>
-              </div>
-
-              {allSkills.filter(s => s.name.toLowerCase().includes(skillSearch.toLowerCase())).map((skill, index) => {
-                const isSelected = selectedSkills.includes(skill.name);
-                // Varying sizes based on text length roughly, or randomly if preferred. Here we just use a base style.
-                // In a real scenario we could use the predefined classes from HTML.
-                return (
-                  <div
-                    key={skill.name}
-                    onClick={() => toggleSkill(skill.name)}
-                    className={`skill-bubble animate-float flex min-h-[3.5rem] shrink-0 items-center justify-center gap-x-2 rounded-full px-6 md:px-8 border-2 transition-all duration-300 cursor-pointer
-                      ${isSelected
-                        ? `border-primary bg-primary/10 shadow-[0_10px_15px_-3px_rgba(108,126,225,0.2)] transform scale-110 z-10`
-                        : `border-transparent ${skill.color} hover:scale-105 hover:-translate-y-1`
-                      }`}
-                    style={{ animationDelay: `${(index % 5) * 0.3}s` }}
-                  >
-                    <p className={`text-[#0f111a] dark:text-white font-semibold ${isSelected ? 'text-lg' : 'text-base'}`}>
-                      {skill.name}
-                    </p>
-                    {isSelected && (
-                      <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
-                    )}
-                  </div>
-                );
-              })}
+              <BackgroundBlobs />
+              {allSkills.filter(s => s.name.toLowerCase().includes(skillSearch.toLowerCase())).map((skill, index) => (
+                <SkillBubble
+                  key={skill.name}
+                  skill={skill}
+                  isSelected={selectedSkills.includes(skill.name)}
+                  onClick={toggleSkill}
+                  animationDelay={(index % 5) * 0.3}
+                />
+              ))}
             </div>
           </div>
         );
       case 3:
         return (
-          <div className="w-full max-w-2xl mx-auto flex flex-col items-center animate-content-slide-up">
+          <div className="w-full max-w-2xl mx-auto flex flex-col items-center animate-content-slide-up relative">
+            <BackgroundBlobs />
             <h1 className="text-[#0f111a] dark:text-white tracking-tight text-3xl md:text-4xl font-bold leading-tight text-center pb-3">
               What is your ideal working style?
             </h1>
@@ -163,17 +133,18 @@ const Onboarding = () => {
             </p>
             <div className="flex flex-col gap-4 w-full">
               {[
-                { id: 'A', text: 'Prefer clear and stable processes' },
-                { id: 'B', text: 'Thrive in a fast-paced, flexible environment with new challenges' },
-                { id: 'C', text: 'Value autonomy and independent work' }
-              ].map((style) => (
+                { id: 'A', text: 'Prefer clear and stable processes', color: 'bg-secondary/20', borderColor: 'border-secondary' },
+                { id: 'B', text: 'Thrive in a fast-paced, flexible environment with new challenges', color: 'bg-pastel-peach/30', borderColor: 'border-pastel-peach' },
+                { id: 'C', text: 'Value autonomy and independent work', color: 'bg-pastel-pink/20', borderColor: 'border-pastel-pink' }
+              ].map((style, index) => (
                 <div
                   key={style.id}
                   onClick={() => setWorkingStyle(style.id)}
-                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 flex items-center gap-4
+                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 flex items-center gap-4 animate-float
                     ${workingStyle === style.id
-                      ? 'border-primary bg-primary/5 shadow-soft transform scale-[1.02]'
-                      : 'border-black/5 dark:border-white/10 hover:border-primary/50 bg-white dark:bg-gray-800'}`}
+                      ? 'border-primary bg-primary/10 shadow-soft transform scale-[1.02]'
+                      : `border-transparent ${style.color} hover:scale-105 hover:-translate-y-1`}`}
+                  style={{ animationDelay: `${index * 0.2}s` }}
                 >
                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold
                     ${workingStyle === style.id ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500'}`}>
@@ -187,7 +158,8 @@ const Onboarding = () => {
         );
       case 4:
         return (
-           <div className="w-full max-w-2xl mx-auto flex flex-col items-center animate-content-slide-up">
+           <div className="w-full max-w-2xl mx-auto flex flex-col items-center animate-content-slide-up relative">
+            <BackgroundBlobs />
             <h1 className="text-[#0f111a] dark:text-white tracking-tight text-3xl md:text-4xl font-bold leading-tight text-center pb-3">
               What is your current career level?
             </h1>
@@ -195,16 +167,23 @@ const Onboarding = () => {
               This helps us match you with appropriate opportunities.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-              {['Entry-level', 'Mid-level', 'Senior', 'Lead/Manager', 'Executive'].map((level) => (
+              {[
+                { name: 'Entry-level', color: 'bg-secondary/20', borderColor: 'border-secondary' },
+                { name: 'Mid-level', color: 'bg-pastel-peach/30', borderColor: 'border-pastel-peach' },
+                { name: 'Senior', color: 'bg-pastel-pink/20', borderColor: 'border-pastel-pink' },
+                { name: 'Lead/Manager', color: 'bg-pastel-lavender/20', borderColor: 'border-pastel-lavender' },
+                { name: 'Executive', color: 'bg-secondary/20', borderColor: 'border-secondary' }
+              ].map((level, index) => (
                 <div
-                  key={level}
-                  onClick={() => setCareerLevel(level)}
-                  className={`p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center
-                    ${careerLevel === level
+                  key={level.name}
+                  onClick={() => setCareerLevel(level.name)}
+                  className={`p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center animate-float
+                    ${careerLevel === level.name
                       ? 'border-primary bg-primary/10 shadow-soft font-bold'
-                      : 'border-black/5 dark:border-white/10 hover:border-primary/50 bg-white dark:bg-gray-800'}`}
+                      : `border-transparent ${level.color} hover:scale-105 hover:-translate-y-1`}`}
+                  style={{ animationDelay: `${index * 0.2}s` }}
                 >
-                  <span className="text-lg text-[#0f111a] dark:text-white">{level}</span>
+                  <span className="text-lg text-[#0f111a] dark:text-white">{level.name}</span>
                 </div>
               ))}
             </div>
@@ -212,7 +191,8 @@ const Onboarding = () => {
         );
       case 5:
         return (
-          <div className="w-full max-w-3xl mx-auto flex flex-col items-center animate-content-slide-up">
+          <div className="w-full max-w-3xl mx-auto flex flex-col items-center animate-content-slide-up relative">
+            <BackgroundBlobs />
             <h1 className="text-[#0f111a] dark:text-white tracking-tight text-3xl md:text-4xl font-bold leading-tight text-center pb-3">
               What kind of company culture do you prefer?
             </h1>
@@ -220,16 +200,24 @@ const Onboarding = () => {
               Select the culture that aligns with your values.
             </p>
             <div className="flex flex-wrap justify-center gap-4 w-full">
-              {['Startup', 'Corporate', 'Agency', 'Non-profit', 'Innovation-driven', 'Work-life balance'].map((culture) => (
+              {[
+                { name: 'Startup', color: 'bg-secondary/20', borderColor: 'border-secondary' },
+                { name: 'Corporate', color: 'bg-pastel-peach/30', borderColor: 'border-pastel-peach' },
+                { name: 'Agency', color: 'bg-pastel-pink/20', borderColor: 'border-pastel-pink' },
+                { name: 'Non-profit', color: 'bg-pastel-lavender/20', borderColor: 'border-pastel-lavender' },
+                { name: 'Innovation-driven', color: 'bg-secondary/20', borderColor: 'border-secondary' },
+                { name: 'Work-life balance', color: 'bg-pastel-peach/30', borderColor: 'border-pastel-peach' }
+              ].map((culture, index) => (
                 <div
-                  key={culture}
-                  onClick={() => setCompanyCulture(culture)}
-                  className={`px-8 py-4 rounded-full border-2 cursor-pointer transition-all duration-300
-                    ${companyCulture === culture
+                  key={culture.name}
+                  onClick={() => setCompanyCulture(culture.name)}
+                  className={`px-8 py-4 rounded-full border-2 cursor-pointer transition-all duration-300 animate-float
+                    ${companyCulture === culture.name
                       ? 'border-primary bg-primary text-white shadow-lg transform scale-110'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-primary bg-white dark:bg-gray-800 text-[#0f111a] dark:text-white hover:scale-105'}`}
+                      : `border-transparent ${culture.color} hover:scale-105 hover:-translate-y-1 text-[#0f111a] dark:text-white`}`}
+                  style={{ animationDelay: `${index * 0.2}s` }}
                 >
-                  <span className="text-lg font-medium">{culture}</span>
+                  <span className="text-lg font-medium">{culture.name}</span>
                 </div>
               ))}
             </div>
@@ -264,16 +252,10 @@ const Onboarding = () => {
       {/* Progress Indicator Component - Fixed at bottom above footer */}
       <div className="fixed bottom-[120px] left-0 right-0 flex justify-center z-40 px-6 pointer-events-none">
         <div className="w-full max-w-md pointer-events-auto">
-          <div className="flex justify-between items-center mb-3 px-2">
-            <span className="text-sm font-semibold text-[#545d92]">{progressText}</span>
-            <span className="text-sm font-bold text-primary">{Math.round(displayProgress)}%</span>
-          </div>
-          <div className="w-full h-2 bg-black/5 dark:bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="bg-primary h-full rounded-full shadow-[0_0_10px_rgba(108,126,225,0.4)] transition-all duration-500"
-              style={{ width: `${displayProgress}%` }}
-            ></div>
-          </div>
+          <ProgressBar
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+          />
         </div>
       </div>
 
