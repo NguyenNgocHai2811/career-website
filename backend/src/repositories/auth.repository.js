@@ -105,6 +105,81 @@ class AuthRepository {
     }
   }
 
+  /**
+   * Lưu token reset password và thời gian hết hạn vào user
+   * @param {string} email
+   * @param {string} token
+   * @param {number} expiry
+   */
+  async saveResetToken(email, token, expiry) {
+    const session = driver.session();
+    try {
+      const query = `
+        MATCH (u:User {email: $email})
+        SET u.resetPasswordToken = $token,
+            u.resetPasswordExpires = $expiry
+        RETURN u.userId AS userId
+      `;
+      const result = await session.executeWrite(tx => tx.run(query, { email, token, expiry }));
+      return result.records.length > 0;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Tìm user bằng reset token và kiểm tra chưa hết hạn
+   * @param {string} token
+   * @returns {Object|null} user nếu token hợp lệ
+   */
+  async getUserByResetToken(token) {
+    const session = driver.session();
+    try {
+      const currentTime = Date.now();
+      const query = `
+        MATCH (u:User {resetPasswordToken: $token})
+        WHERE u.resetPasswordExpires > $currentTime
+        RETURN u {
+          .userId,
+          .email,
+          .resetPasswordToken,
+          .resetPasswordExpires
+        } AS user
+        LIMIT 1
+      `;
+      const result = await session.executeRead(tx => tx.run(query, { token, currentTime }));
+
+      if (result.records.length === 0) {
+        return null;
+      }
+
+      return result.records[0].get('user');
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Cập nhật mật khẩu mới và xóa reset token
+   * @param {string} userId
+   * @param {string} newHashedPassword
+   */
+  async updatePasswordAndClearToken(userId, newHashedPassword) {
+    const session = driver.session();
+    try {
+      const query = `
+        MATCH (u:User {userId: $userId})
+        SET u.password = $newHashedPassword
+        REMOVE u.resetPasswordToken, u.resetPasswordExpires
+        RETURN u.userId AS userId
+      `;
+      const result = await session.executeWrite(tx => tx.run(query, { userId, newHashedPassword }));
+      return result.records.length > 0;
+    } finally {
+      await session.close();
+    }
+  }
+
 }
 
 module.exports = new AuthRepository();
