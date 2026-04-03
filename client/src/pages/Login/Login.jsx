@@ -31,7 +31,11 @@ function Login() {
         // Handle success
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        navigate('/onboarding');
+        if (data.data.user.isOnboarded === false) {
+          navigate('/onboarding');
+        } else {
+          navigate('/feed');
+        }
       } else {
         // Handle API errors
         setError(data.message || 'Login failed. Please try again.');

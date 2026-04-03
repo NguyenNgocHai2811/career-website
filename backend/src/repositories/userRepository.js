@@ -31,7 +31,22 @@ const createUser = async (userData) => {
   }
 };
 
+const completeOnboarding = async (userId) => {
+  const session = driver.session();
+  try {
+    const result = await session.run(
+      'MATCH (u:User {userId: $userId}) SET u.isOnboarded = true RETURN u',
+      { userId }
+    );
+    if (result.records.length === 0) return null;
+    return result.records[0].get('u').properties;
+  } finally {
+    await session.close();
+  }
+};
+
 module.exports = {
   getAllUsers,
-  createUser
+  createUser,
+  completeOnboarding
 };

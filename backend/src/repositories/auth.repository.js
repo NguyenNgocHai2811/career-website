@@ -23,6 +23,7 @@ class AuthRepository {
           phone: $phone,
           dateOfBirth: $dateOfBirth,
           address: $address,
+          isOnboarded: false,
           createdAt: datetime()
         })
         RETURN u {
@@ -33,6 +34,7 @@ class AuthRepository {
           .phone,
           .dateOfBirth,
           .address,
+          .isOnboarded,
           .createdAt
         } AS user
       `;
@@ -88,6 +90,7 @@ class AuthRepository {
           .phone,
           .dateOfBirth,
           .address,
+          .isOnboarded,
           .createdAt
         } AS user
         LIMIT 1

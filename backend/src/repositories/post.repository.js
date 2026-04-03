@@ -47,7 +47,12 @@ const getPosts = async (cursor, limit = 10) => {
     let query = `
       MATCH (u:User)-[:POSTED]->(p:Post)
     `;
-    const params = { limit: parseInt(limit, 10) };
+    
+    let parsedLimit = parseInt(limit, 10);
+    if (isNaN(parsedLimit)) {
+      parsedLimit = 10;
+    }
+    const params = { limit: parsedLimit };
 
     if (cursor) {
       query += ` WHERE p.createdAt < datetime($cursor) `;
@@ -59,7 +64,7 @@ const getPosts = async (cursor, limit = 10) => {
       OPTIONAL MATCH (p)<-[:COMMENTED_ON]-(c:Comment)
       RETURN p, u, count(DISTINCT liker) as likesCount, count(DISTINCT c) as commentsCount
       ORDER BY p.createdAt DESC
-      LIMIT $limit
+      LIMIT toInteger($limit)
     `;
 
     const result = await session.run(query, params);

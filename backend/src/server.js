@@ -19,6 +19,7 @@ app.use(cors());
 // Mount API routes
 app.use('/v1/auth', authRoutes);
 app.use('/v1/posts', postRoutes);
+app.use('/v1/users', require('./routes/userRoutes'));
 
 const startServer = async () => {
   try {

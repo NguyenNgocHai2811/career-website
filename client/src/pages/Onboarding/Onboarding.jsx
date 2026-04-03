@@ -268,12 +268,32 @@ const Onboarding = () => {
               : 'bg-primary/40 text-white/50 cursor-not-allowed'
             }`}
           disabled={!canProceed}
-          onClick={() => {
+          onClick={async () => {
             if (canProceed && currentStep < totalSteps) {
               setCurrentStep(currentStep + 1);
             } else if (canProceed && currentStep === totalSteps) {
-              // Handle completion (e.g., redirect)
-              window.location.href = '/feed';
+              try {
+                const token = localStorage.getItem('token');
+                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+                await fetch(`${apiUrl}/v1/users/complete-onboarding`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+                
+                // Cập nhật lại user object trong localStorage để khỏi bị hỏi lại
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user) {
+                  user.isOnboarded = true;
+                  localStorage.setItem('user', JSON.stringify(user));
+                }
+
+                window.location.href = '/feed';
+              } catch (error) {
+                console.error('Lỗi khi complete onboarding:', error);
+                window.location.href = '/feed'; // Vẫn cho đi tiếp kể cả lỗi mạn
+              }
             }
           }}
         >

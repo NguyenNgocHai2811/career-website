@@ -18,7 +18,18 @@ const createUser = async (req, res) => {
   }
 };
 
+const completeOnboarding = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    await userService.completeOnboarding(userId);
+    res.status(200).json({ message: 'Onboarding completed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getUsers,
-  createUser
+  createUser,
+  completeOnboarding
 };

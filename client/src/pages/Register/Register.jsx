@@ -52,7 +52,7 @@ function Register() {
       if (response.ok) {
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        navigate('/');
+        navigate('/onboarding');
       } else {
         setError(data.message || 'Registration failed.');
       }

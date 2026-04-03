@@ -12,7 +12,12 @@ const registerUser = async (data) => {
   return await userRepository.createUser(data);
 };
 
+const completeOnboarding = async (userId) => {
+  return await userRepository.completeOnboarding(userId);
+};
+
 module.exports = {
   getUsers,
-  registerUser
+  registerUser,
+  completeOnboarding
 };
