@@ -94,7 +94,7 @@ function Login() {
                 />
 
                 <div className="flex justify-end mt-1">
-                  <a href="#" className="text-xs font-bold text-primary hover:text-primary-hover hover:underline decoration-2 underline-offset-2 transition-all">Forgot Password?</a>
+                  <a href="/forgot-password" className="text-xs font-bold text-primary hover:text-primary-hover hover:underline decoration-2 underline-offset-2 transition-all">Forgot Password?</a>
                 </div>
                 <Button
                   type="submit"

@@ -159,7 +159,7 @@ class AuthController {
 
       // Khắc phục lỗi Host Header Poisoning (Vulnerability): Sử dụng biến môi trường thay vì Header
       const originUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-
+      console.log(originUrl);
       await authService.forgotPassword(email, originUrl);
 
       return res.status(200).json({

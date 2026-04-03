@@ -76,11 +76,14 @@ function Register() {
       </div>
       <div className="relative flex min-h-screen w-full flex-col">
         <Header rightElement={
-          <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:opacity-90 transition-opacity">
-            <span className="truncate"><Link to="/register">
+          <Link to="/login" className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:opacity-90 transition-opacity">
+            <span className="truncate">
                             Sign up
-                          </Link></span>
-          </button>
+                           
+                          </span>
+                          
+                          
+          </Link>
         } />
         <main className="flex flex-1 justify-center items-center py-8 px-4">
           <div className="layout-content-container flex flex-col w-full max-w-[720px] bg-white dark:bg-background-dark rounded-xl shadow-2xl border border-white/20 dark:border-white/5 overflow-hidden">
