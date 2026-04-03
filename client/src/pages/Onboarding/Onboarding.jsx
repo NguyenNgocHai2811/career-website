@@ -273,7 +273,7 @@ const Onboarding = () => {
               setCurrentStep(currentStep + 1);
             } else if (canProceed && currentStep === totalSteps) {
               // Handle completion (e.g., redirect)
-              window.location.href = '/';
+              window.location.href = '/feed';
             }
           }}
         >
