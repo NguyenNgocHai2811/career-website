@@ -233,10 +233,8 @@ const Onboarding = () => {
       {/* TopNavBar Component */}
       <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-black/5 px-6 md:px-20 py-4 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3 text-primary">
-          <div className="size-8">
-            <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
-            </svg>
+          <div className="flex items-center justify-center size-8 rounded-xl bg-primary/10 text-primary">
+            <span className="material-symbols-outlined text-2xl">diamond</span>
           </div>
           <h2 className="text-[#0f111a] dark:text-white text-xl font-bold leading-tight tracking-tight">Korra</h2>
         </div>
@@ -268,12 +266,32 @@ const Onboarding = () => {
               : 'bg-primary/40 text-white/50 cursor-not-allowed'
             }`}
           disabled={!canProceed}
-          onClick={() => {
+          onClick={async () => {
             if (canProceed && currentStep < totalSteps) {
               setCurrentStep(currentStep + 1);
             } else if (canProceed && currentStep === totalSteps) {
-              // Handle completion (e.g., redirect)
-              window.location.href = '/';
+              try {
+                const token = localStorage.getItem('token');
+                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+                await fetch(`${apiUrl}/v1/users/complete-onboarding`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+                
+                // Cập nhật lại user object trong localStorage để khỏi bị hỏi lại
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user) {
+                  user.isOnboarded = true;
+                  localStorage.setItem('user', JSON.stringify(user));
+                }
+
+                window.location.href = '/feed';
+              } catch (error) {
+                console.error('Lỗi khi complete onboarding:', error);
+                window.location.href = '/feed'; // Vẫn cho đi tiếp kể cả lỗi mạn
+              }
             }
           }}
         >

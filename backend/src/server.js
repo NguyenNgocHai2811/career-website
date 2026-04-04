@@ -7,6 +7,7 @@ const cors = require('cors');
 
 const PORT = process.env.PORT || 3000;
 const authRoutes = require('./routes/auth.routes');
+const postRoutes = require('./routes/post.routes');
 const app = express();
 
 // Middleware parse JSON body
@@ -17,6 +18,9 @@ app.use(cors());
 
 // Mount API routes
 app.use('/v1/auth', authRoutes);
+app.use('/v1/posts', postRoutes);
+app.use('/v1/comments', require('./routes/comment.routes'));
+app.use('/v1/users', require('./routes/userRoutes'));
 
 const startServer = async () => {
   try {

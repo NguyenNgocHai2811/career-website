@@ -12,12 +12,10 @@ const ResetSuccess = () => {
 
       <header className="w-full flex items-center justify-between px-8 py-6 max-w-[1440px] mx-auto z-10">
         <div className="flex items-center gap-3 text-text-main dark:text-white">
-          <div className="size-8 text-primary">
-            <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path clipRule="evenodd" d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z" fill="currentColor" fillRule="evenodd"></path>
-            </svg>
+          <div className="flex items-center justify-center size-8 rounded-xl bg-primary/10 text-primary">
+            <span className="material-symbols-outlined text-2xl">diamond</span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight">Otomate</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Korra</h2>
         </div>
         <nav className="hidden md:flex gap-6 text-sm font-medium font-sans text-text-muted dark:text-gray-400">
           <a className="hover:text-primary transition-colors" href="#">Help Center</a>
@@ -46,7 +44,7 @@ const ResetSuccess = () => {
             </p>
 
             <Link to="/login" className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 px-6 rounded-xl shadow-lg hover:shadow-primary/30 transition-all transform active:scale-[0.98] font-sans text-lg flex items-center justify-center gap-2 group/btn">
-              <span>Log In to Otomate</span>
+              <span>Log In to Korra</span>
               <span className="material-symbols-outlined transition-transform group-hover/btn:translate-x-1">arrow_forward</span>
             </Link>
           </div>
@@ -61,7 +59,7 @@ const ResetSuccess = () => {
       </main>
 
       <footer className="w-full py-8 text-center text-xs text-text-muted/60 font-sans z-10">
-        <p>© 2024 Otomate Inc. All rights reserved.</p>
+        <p>© 2024 Korra Inc. All rights reserved.</p>
       </footer>
     </div>
   );

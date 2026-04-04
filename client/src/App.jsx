@@ -8,12 +8,14 @@ import ForgotPassword from './pages/ForgotPassword/ForgotPassword.jsx';
 import CheckEmail from './pages/CheckEmail/CheckEmail.jsx';
 import ResetPassword from './pages/ResetPassword/ResetPassword.jsx';
 import ResetSuccess from './pages/ResetSuccess/ResetSuccess.jsx';
+import Feed from './pages/Feed/Feed.jsx';
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Homepage />} />
+        <Route path="/feed" element={<Feed />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />

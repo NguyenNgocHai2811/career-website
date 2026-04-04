@@ -52,7 +52,7 @@ function Register() {
       if (response.ok) {
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        navigate('/');
+        navigate('/onboarding');
       } else {
         setError(data.message || 'Registration failed.');
       }
@@ -78,11 +78,10 @@ function Register() {
         <Header rightElement={
           <Link to="/login" className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:opacity-90 transition-opacity">
             <span className="truncate">
-                            Sign up
-                           
-                          </span>
-                          
-                          
+              Sign up
+            </span>
+
+
           </Link>
         } />
         <main className="flex flex-1 justify-center items-center py-8 px-4">
