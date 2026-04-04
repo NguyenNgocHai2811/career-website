@@ -12,7 +12,8 @@ const createPost = async (userId, postData) => {
       CREATE (p:Post {
         id: randomUUID(),
         content: $content,
-        mediaUrls: $mediaUrls,
+        mediaUrl: $mediaUrl,
+        mediaType: $mediaType,
         privacy: $privacy,
         createdAt: datetime(),
         updatedAt: datetime()
@@ -23,7 +24,8 @@ const createPost = async (userId, postData) => {
       {
         userId,
         content: postData.content || '',
-        mediaUrls: postData.mediaUrls || [],
+        mediaUrl: postData.mediaUrl || null,
+        mediaType: postData.mediaType || null,
         privacy: postData.privacy || 'Public'
       }
     );
@@ -64,10 +66,17 @@ const getPosts = async (currentUserId, cursor, limit = 10) => {
     }
 
     query += `
-      OPTIONAL MATCH (p)<-[:LIKES]-(liker:User)
       OPTIONAL MATCH (p)<-[:COMMENTED_ON]-(c:Comment)
-      ${currentUserId ? 'OPTIONAL MATCH (p)<-[r:LIKES]-(currentUser:User {userId: $currentUserId})' : ''}
-      RETURN p, u, count(DISTINCT liker) as likesCount, count(DISTINCT c) as commentsCount${currentUserId ? ', count(r) > 0 as isLiked' : ', false as isLiked'}
+      WITH p, u, count(DISTINCT c) as commentsCount
+      
+      OPTIONAL MATCH (p)<-[r:REACTED_TO]-(liker:User)
+      WITH p, u, commentsCount, r.type as rType, liker.userId as rUserId
+      WITH p, u, commentsCount, collect(CASE WHEN rType IS NULL THEN null ELSE {type: rType, userId: rUserId} END) as rawReacts
+      WITH p, u, commentsCount, [x IN rawReacts WHERE x IS NOT NULL] as reacts
+      
+      RETURN p, u, commentsCount, size(reacts) as reactionsCount,
+             head([x IN reacts WHERE x.userId = $currentUserId | x.type]) as userReactionType,
+             [x IN reacts | x.type] as allTypes
       ORDER BY p.createdAt DESC
       LIMIT toInteger($limit)
     `;
@@ -84,11 +93,16 @@ const getPosts = async (currentUserId, cursor, limit = 10) => {
       }
 
       const author = record.get('u').properties;
+      const reactionsCount = record.get('reactionsCount');
+      const userReactionType = record.get('userReactionType');
+      const allTypes = record.get('allTypes');
+
       return {
         ...post,
-        likesCount: record.get('likesCount').toNumber(),
         commentsCount: record.get('commentsCount').toNumber(),
-        isLiked: record.get('isLiked'),
+        reactionsCount: typeof reactionsCount?.toNumber === 'function' ? reactionsCount.toNumber() : (reactionsCount || 0),
+        userReactionType: userReactionType || null,
+        allTypes: allTypes || [],
         author: {
           userId: author.userId,
           fullName: author.fullName,
@@ -110,19 +124,33 @@ const getPostById = async (postId) => {
     const result = await session.run(
       `
       MATCH (u:User)-[:POSTED]->(p:Post {id: $postId})
-      OPTIONAL MATCH (p)<-[:LIKES]-(liker:User)
       OPTIONAL MATCH (p)<-[:COMMENTED_ON]-(c:Comment)
-      RETURN p, u, count(DISTINCT liker) as likesCount, count(DISTINCT c) as commentsCount
+      WITH p, u, count(DISTINCT c) as commentsCount
+      
+      OPTIONAL MATCH (p)<-[r:REACTED_TO]-(liker:User)
+      WITH p, u, commentsCount, r.type as rType, liker.userId as rUserId
+      WITH p, u, commentsCount, collect(CASE WHEN rType IS NULL THEN null ELSE {type: rType, userId: rUserId} END) as rawReacts
+      WITH p, u, commentsCount, [x IN rawReacts WHERE x IS NOT NULL] as reacts
+      
+      RETURN p, u, commentsCount, size(reacts) as reactionsCount,
+             head([x IN reacts WHERE x.userId = $currentUserId | x.type]) as userReactionType,
+             [x IN reacts | x.type] as allTypes
       `,
-      { postId }
+      { postId, currentUserId: null } // Single fetch doesn't usually use current user id in our current flow
     );
     if (result.records.length === 0) return null;
     const post = result.records[0].get('p').properties;
     const author = result.records[0].get('u').properties;
+    const reactionsCount = result.records[0].get('reactionsCount');
+    const userReactionType = result.records[0].get('userReactionType');
+    const allTypes = result.records[0].get('allTypes');
+
     return {
       ...post,
-      likesCount: result.records[0].get('likesCount').toNumber(),
       commentsCount: result.records[0].get('commentsCount').toNumber(),
+      reactionsCount: typeof reactionsCount?.toNumber === 'function' ? reactionsCount.toNumber() : (reactionsCount || 0),
+      userReactionType: userReactionType || null,
+      allTypes: allTypes || [],
       author: {
         userId: author.userId,
         fullName: author.fullName,
@@ -144,7 +172,7 @@ const addReaction = async (userId, postId, type) => {
       `
       MATCH (u:User {userId: $userId})
       MATCH (p:Post {id: $postId})
-      MERGE (u)-[r:LIKES]->(p)
+      MERGE (u)-[r:REACTED_TO]->(p)
       SET r.type = $type, r.createdAt = datetime()
       RETURN p
       `,
@@ -164,7 +192,7 @@ const removeReaction = async (userId, postId) => {
   try {
     const result = await session.run(
       `
-      MATCH (u:User {userId: $userId})-[r:LIKES]->(p:Post {id: $postId})
+      MATCH (u:User {userId: $userId})-[r:REACTED_TO]->(p:Post {id: $postId})
       DELETE r
       RETURN p
       `,
