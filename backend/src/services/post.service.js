@@ -1,7 +1,7 @@
 const postRepository = require('../repositories/post.repository');
 
 const createPost = async (userId, postData) => {
-  if (!postData.content && (!postData.mediaUrls || postData.mediaUrls.length === 0)) {
+  if (!postData.content && !postData.mediaUrl) {
     throw new Error('Post must have content or media');
   }
   return await postRepository.createPost(userId, postData);
@@ -17,7 +17,10 @@ const getPostById = async (postId) => {
   return post;
 };
 
-const addReaction = async (userId, postId, type = 'LIKE') => {
+const addReaction = async (userId, postId, type = 'Like') => {
+  if (!['Like', 'Celebrate', 'Insightful', 'Love'].includes(type)) {
+    throw new Error('Invalid reaction type');
+  }
   // Ensure post exists
   await getPostById(postId);
   return await postRepository.addReaction(userId, postId, type);

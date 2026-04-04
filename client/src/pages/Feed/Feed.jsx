@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PostItem from '../../components/PostItem/PostItem';
 
@@ -70,27 +70,64 @@ const Feed = () => {
     }
   };
 
+  const [mediaFile, setMediaFile] = useState(null);
+  const [mediaPreview, setMediaPreview] = useState(null);
+  const [mediaType, setMediaType] = useState(null); // 'image' | 'video'
+  const fileInputRef = useRef(null);
+
+  const handleMediaSelect = (type) => {
+    setMediaType(type);
+    if (fileInputRef.current) {
+      fileInputRef.current.accept = type === 'image' ? 'image/*' : 'video/*';
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setMediaFile(file);
+    const url = URL.createObjectURL(file);
+    setMediaPreview(url);
+    setMediaType(file.type.startsWith('video/') ? 'video' : 'image');
+  };
+
+  const handleRemoveMedia = () => {
+    setMediaFile(null);
+    setMediaPreview(null);
+    setMediaType(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleCreatePost = async (e) => {
     e.preventDefault();
-    if (!postContent.trim()) return;
+    if (!postContent.trim() && !mediaFile) return;
 
     setIsSubmitting(true);
     try {
+      const formData = new FormData();
+      formData.append('content', postContent);
+      formData.append('privacy', 'Public');
+      if (mediaFile) {
+        formData.append('media', mediaFile);
+      }
+
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/v1/posts`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${getAuthToken()}`
+          // Do NOT set Content-Type — browser sets it with boundary for FormData
         },
-        body: JSON.stringify({
-          content: postContent,
-          privacy: 'Public'
-        })
+        body: formData
       });
 
       if (response.ok) {
         setPostContent('');
-        fetchPosts(); // Refresh feed
+        handleRemoveMedia();
+        fetchPosts();
+      } else {
+        const err = await response.json();
+        console.error('Create post error:', err);
       }
     } catch (error) {
       console.error('Failed to create post', error);
@@ -99,14 +136,37 @@ const Feed = () => {
     }
   };
 
-  const handleToggleLike = async (postId, currentIsLiked) => {
+  const handleToggleLike = async (postId, type, isRemoving) => {
+    // Find previous state for revert logic
+    const postToUpdate = posts.find(p => p.id === postId);
+    const previousType = postToUpdate?.userReactionType;
+    const previousCount = postToUpdate?.reactionsCount || 0;
+    const previousAllTypes = postToUpdate?.allTypes || [];
+    
     // Optimistic UI Update
     setPosts(currentPosts => currentPosts.map(post => {
       if (post.id === postId) {
+        let newReactionsCount = post.reactionsCount || 0;
+        let newAllTypes = [...(post.allTypes || [])];
+        
+        if (isRemoving) {
+          newReactionsCount = Math.max(0, newReactionsCount - 1);
+          const idx = newAllTypes.indexOf(type);
+          if (idx > -1) newAllTypes.splice(idx, 1);
+        } else {
+          newReactionsCount = previousType ? newReactionsCount : newReactionsCount + 1;
+          if (previousType) {
+             const idx = newAllTypes.indexOf(previousType);
+             if (idx > -1) newAllTypes.splice(idx, 1);
+          }
+          newAllTypes.push(type);
+        }
+
         return { 
           ...post, 
-          isLiked: !currentIsLiked, 
-          likesCount: currentIsLiked ? Math.max(0, post.likesCount - 1) : post.likesCount + 1 
+          userReactionType: isRemoving ? null : type, 
+          reactionsCount: newReactionsCount,
+          allTypes: newAllTypes
         };
       }
       return post;
@@ -114,8 +174,8 @@ const Feed = () => {
 
     try {
       const url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/v1/posts/${postId}/reactions`;
-      const method = currentIsLiked ? 'DELETE' : 'POST';
-      const body = currentIsLiked ? null : JSON.stringify({ type: 'LIKE' });
+      const method = isRemoving ? 'DELETE' : 'POST';
+      const body = isRemoving ? null : JSON.stringify({ type });
       const headers = {
         'Authorization': `Bearer ${getAuthToken()}`,
         'Content-Type': 'application/json'
@@ -124,17 +184,18 @@ const Feed = () => {
       const response = await fetch(url, { method, headers, ...(body && { body }) });
       
       if (!response.ok) {
-        throw new Error('Failed to toggle like');
+        throw new Error('Failed to toggle reaction');
       }
     } catch (error) {
-      console.error('Error toggling like:', error);
+      console.error('Error toggling reaction:', error);
       // Revert Optimistic Update
       setPosts(currentPosts => currentPosts.map(post => {
         if (post.id === postId) {
           return { 
             ...post, 
-            isLiked: currentIsLiked, 
-            likesCount: currentIsLiked ? post.likesCount + 1 : Math.max(0, post.likesCount - 1) 
+            userReactionType: previousType, 
+            reactionsCount: previousCount,
+            allTypes: previousAllTypes
           };
         }
         return post;
@@ -252,9 +313,16 @@ const Feed = () => {
           {/* Middle Column (Feed) */}
           <div className="col-span-1 lg:col-span-6 space-y-6">
             {/* Create Post */}
-            <div className="bg-card-light dark:bg-card-dark rounded-lg p-5 shadow-sm border border-gray-100 dark:border-gray-700 animate-fade-in-up">
+            <div className="bg-card-light dark:bg-card-dark rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 animate-fade-in-up">
               <form onSubmit={handleCreatePost}>
-                <div className="flex gap-4 mb-4">
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <div className="flex gap-3 mb-3">
                   <div className="size-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0 overflow-hidden">
                     {user.avatar ? (
                       <img alt="User avatar" className="w-full h-full object-cover" src={user.avatar} />
@@ -263,43 +331,81 @@ const Feed = () => {
                     )}
                   </div>
                   <div className="flex-1">
-                    <input
+                    <textarea
                       value={postContent}
                       onChange={(e) => setPostContent(e.target.value)}
-                      className="w-full h-10 px-4 rounded-full border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow outline-none"
-                      placeholder={`Start a post, ${user.fullName.split(' ')[0]}?`}
-                      type="text"
+                      className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow outline-none resize-none min-h-[80px]"
+                      placeholder={`What's on your mind, ${user.fullName.split(' ')[0]}?`}
                       disabled={isSubmitting}
+                      rows={3}
                     />
                   </div>
                 </div>
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex gap-2">
-                    <button type="button" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary dark:text-gray-400 text-sm font-medium transition-colors">
-                      <span className="material-symbols-outlined text-blue-500 text-[20px]">image</span>
-                      Media
+                
+                {/* Media Preview */}
+                {mediaPreview && (
+                  <div className="relative mb-3 ml-13 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 bg-black">
+                    {mediaType === 'video' ? (
+                      <video src={mediaPreview} controls className="w-full max-h-72 object-contain" />
+                    ) : (
+                      <img src={mediaPreview} alt="Preview" className="w-full max-h-72 object-contain" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleRemoveMedia}
+                      className="absolute top-2 right-2 size-7 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">close</span>
                     </button>
-                    <button type="button" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary dark:text-gray-400 text-sm font-medium transition-colors">
-                      <span className="material-symbols-outlined text-orange-500 text-[20px]">calendar_month</span>
-                      Event
+                    <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      {mediaType === 'video' ? '🎬 Video' : '🖼 Image'}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleMediaSelect('image')}
+                      disabled={!!mediaFile}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${mediaFile ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-50 dark:hover:bg-gray-800 text-blue-500'}`}
+                    >
+                      <span className="material-symbols-outlined text-[20px]">image</span>
+                      <span className="hidden sm:inline">Photo</span>
                     </button>
-                    <button type="button" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary dark:text-gray-400 text-sm font-medium transition-colors">
-                      <span className="material-symbols-outlined text-red-400 text-[20px]">article</span>
-                      Article
+                    <button
+                      type="button"
+                      onClick={() => handleMediaSelect('video')}
+                      disabled={!!mediaFile}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${mediaFile ? 'opacity-40 cursor-not-allowed' : 'hover:bg-purple-50 dark:hover:bg-gray-800 text-purple-500'}`}
+                    >
+                      <span className="material-symbols-outlined text-[20px]">videocam</span>
+                      <span className="hidden sm:inline">Video</span>
+                    </button>
+                    <button type="button" className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-orange-50 dark:hover:bg-gray-800 text-orange-500 text-sm font-medium transition-colors">
+                      <span className="material-symbols-outlined text-[20px]">calendar_month</span>
+                      <span className="hidden sm:inline">Event</span>
                     </button>
                   </div>
                   <button
                     type="submit"
-                    disabled={!postContent.trim() || isSubmitting}
-                    className="px-4 py-1.5 bg-primary text-white rounded-full text-sm font-bold disabled:opacity-50 transition-opacity"
+                    disabled={(!postContent.trim() && !mediaFile) || isSubmitting}
+                    className="px-5 py-2 bg-primary text-white rounded-full text-sm font-bold disabled:opacity-40 transition-all hover:bg-primary/90 flex items-center gap-2"
                   >
-                    Post
+                    {isSubmitting ? (
+                      <>
+                        <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+                        Posting...
+                      </>
+                    ) : 'Post'}
                   </button>
                 </div>
               </form>
             </div>
 
             {/* Render Real Posts */}
+
             {posts.map((post) => (
               <PostItem 
                 key={post.id} 

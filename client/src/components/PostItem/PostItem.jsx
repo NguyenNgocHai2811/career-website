@@ -1,6 +1,23 @@
 import React, { useState } from 'react';
 import CommentSection from '../Comments/CommentSection';
 
+const REACTION_ICONS = {
+  'Like': { icon: '👍', color: 'text-blue-500' },
+  'Celebrate': { icon: '👏', color: 'text-green-500' },
+  'Insightful': { icon: '💡', color: 'text-yellow-500' },
+  'Love': { icon: '❤️', color: 'text-red-500' }
+};
+
+const getTopReactions = (allTypes) => {
+  if (!allTypes || allTypes.length === 0) return [];
+  const counts = allTypes.reduce((acc, t) => {
+     acc[t] = (acc[t] || 0) + 1;
+     return acc;
+  }, {});
+  const sorted = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
+  return sorted.slice(0, 2);
+};
+
 const formatDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -48,26 +65,70 @@ const PostItem = ({ post, onToggleLike, getAuthToken, user }) => {
           {post.content}
         </p>
         
-        {post.mediaUrls && post.mediaUrls.length > 0 && (
-          <div className="rounded-lg overflow-hidden mb-4 bg-gray-100 dark:bg-gray-800">
-            <div className="h-64 w-full bg-cover bg-center" style={{ backgroundImage: `url('${post.mediaUrls[0]}')` }}></div>
+        {post.mediaUrl && (
+          <div className="rounded-xl overflow-hidden mb-4 bg-gray-100 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+            {post.mediaType === 'video' ? (
+              <video
+                src={post.mediaUrl}
+                controls
+                className="w-full max-h-[480px] object-contain bg-black"
+                playsInline
+              />
+            ) : (
+              <img
+                src={post.mediaUrl}
+                alt="Post media"
+                className="w-full max-h-[480px] object-cover"
+                loading="lazy"
+              />
+            )}
           </div>
         )}
         
         <div className="flex items-center justify-between text-xs text-text-secondary dark:text-gray-400 border-b border-gray-100 dark:border-gray-700 pb-3 mb-3">
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-blue-500 text-[14px] font-bold">thumb_up</span>
-            <span className="font-bold text-text-main dark:text-gray-300">{post.likesCount || 0} likes</span>
+             {post.reactionsCount > 0 ? (
+                <>
+                   {getTopReactions(post.allTypes).map(r => <span key={r} className="text-[14px]">{REACTION_ICONS[r]?.icon}</span>)}
+                   <span className="font-bold text-text-main dark:text-gray-300 px-1">{post.reactionsCount} reactions</span>
+                </>
+             ) : (
+                <>
+                   <span className="material-symbols-outlined text-[14px] font-bold">thumb_up</span>
+                   <span className="font-bold text-text-main dark:text-gray-300">0 reactions</span>
+                </>
+             )}
           </div>
           <span className="font-bold text-text-main dark:text-gray-300 cursor-pointer hover:underline" onClick={() => setShowComments(!showComments)}>{post.commentsCount || 0} comments</span>
         </div>
         
         <div className="flex items-center justify-between gap-2">
-          <button 
-            onClick={() => onToggleLike(post.id, post.isLiked)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium text-sm ${post.isLiked ? 'text-primary bg-primary/5' : 'text-text-secondary dark:text-gray-400'}`}>
-            <span className={`material-symbols-outlined text-[20px] ${post.isLiked ? 'filled-icon' : ''}`} style={post.isLiked ? {fontVariationSettings: "'FILL' 1"} : {}}>thumb_up</span> Like
-          </button>
+          <div className="flex-1 relative group">
+            <button 
+              onClick={() => onToggleLike(post.id, 'Like', post.userReactionType === 'Like')}
+              className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium text-sm ${post.userReactionType ? 'text-primary bg-primary/5' : 'text-text-secondary dark:text-gray-400'} ${post.userReactionType ? REACTION_ICONS[post.userReactionType]?.color : ''}`}>
+              {post.userReactionType && REACTION_ICONS[post.userReactionType] ? (
+                 <span className="text-[20px]">{REACTION_ICONS[post.userReactionType].icon}</span>
+              ) : (
+                 <span className="material-symbols-outlined text-[20px]">thumb_up</span>
+              )}
+              {post.userReactionType || 'Like'}
+            </button>
+            <div className="absolute bottom-full left-0 pb-2 w-full flex justify-center z-20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0">
+               <div className="bg-white dark:bg-gray-800 rounded-full shadow-xl border border-gray-100 dark:border-gray-700 flex gap-2 p-1.5 animate-fade-in-up">
+                 {Object.keys(REACTION_ICONS).map(type => (
+                    <button 
+                       key={type}
+                       onClick={() => onToggleLike(post.id, type, post.userReactionType === type)}
+                       className="hover:scale-125 transition-transform origin-bottom text-2xl p-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-full"
+                       title={type}
+                    >
+                       {REACTION_ICONS[type].icon}
+                    </button>
+                 ))}
+               </div>
+            </div>
+          </div>
           <button onClick={() => setShowComments(!showComments)} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium text-sm ${showComments ? 'text-korra_active bg-gray-50 dark:bg-gray-800' : 'text-text-secondary dark:text-gray-400'}`}>
             <span className="material-symbols-outlined text-[20px]">chat_bubble</span> Comment
           </button>

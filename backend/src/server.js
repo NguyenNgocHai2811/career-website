@@ -11,7 +11,9 @@ const postRoutes = require('./routes/post.routes');
 const app = express();
 
 // Middleware parse JSON body
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+// Middleware parse URL-encoded body
+app.use(express.urlencoded({ extended: true }));
 // Middleware CORS
 app.use(cors());
 

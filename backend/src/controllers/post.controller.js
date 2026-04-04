@@ -3,9 +3,17 @@ const postService = require('../services/post.service');
 const createPost = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { content, mediaUrls, privacy } = req.body;
+    const { content, privacy } = req.body;
 
-    const newPost = await postService.createPost(userId, { content, mediaUrls, privacy });
+    // multer-storage-cloudinary puts the result in req.file
+    let mediaUrl = null;
+    let mediaType = null;
+    if (req.file) {
+      mediaUrl = req.file.path; // Cloudinary secure URL
+      mediaType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
+    }
+
+    const newPost = await postService.createPost(userId, { content, mediaUrl, mediaType, privacy });
     if (!newPost) {
       return res.status(400).json({ error: 'Failed to create post' });
     }
