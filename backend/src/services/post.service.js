@@ -7,8 +7,8 @@ const createPost = async (userId, postData) => {
   return await postRepository.createPost(userId, postData);
 };
 
-const getPosts = async (cursor, limit) => {
-  return await postRepository.getPosts(cursor, limit);
+const getPosts = async (currentUserId, cursor, limit) => {
+  return await postRepository.getPosts(currentUserId, cursor, limit);
 };
 
 const getPostById = async (postId) => {

@@ -308,7 +308,7 @@ function Homepage() {
                   <div className="flex items-center justify-center size-8 rounded-xl bg-primary/10 text-primary">
                     <span className="material-symbols-outlined text-lg">diamond</span>
                   </div>
-                  <span className="text-[#2d3748] font-bold text-xl">Otomate Careers</span>
+                  <span className="text-[#2d3748] font-bold text-xl">Korra</span>
                 </div>
                 <p className="text-[#718096] text-sm leading-relaxed mb-6">
                   Elevating recruitment to an art form. We connect exceptional talent with visionary companies.
@@ -352,7 +352,7 @@ function Homepage() {
               </div>
             </div>
             <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 scroll-reveal-late">
-              <p className="text-xs text-[#a0aec0]">© 2023 Otomate Careers. All rights reserved.</p>
+              <p className="text-xs text-[#a0aec0]">© 2023 Korra. All rights reserved.</p>
               <div className="flex gap-6 text-xs text-[#a0aec0]">
                 <a className="hover:text-[#2d3748]" href="#">Privacy Policy</a>
                 <a className="hover:text-[#2d3748]" href="#">Terms of Service</a>

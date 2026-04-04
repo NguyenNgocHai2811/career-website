@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Korra News Feed Dashboard</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;500;700&amp;family=Manrope:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#4153b4", korra_active: "#6C7EE1", "background-light": "#FDF8F2", "background-dark": "#111921", "card-light": "#FFFFFF", "card-dark": "#1e293b", "text-main": "#0e141b", "text-secondary": "#507395", surface: "#fef9f3", "on-primary": "#ffffff", tertiary: "#7c429f", "secondary-container": "#abd3fe", "on-background": "#1d1b18", "primary-fixed-dim": "#bac3ff", "error-container": "#ffdad6", "surface-container-high": "#ece7e2", "on-tertiary-container": "#fffbff", "on-secondary-fixed": "#001d34", "inverse-surface": "#32302c", "tertiary-fixed-dim": "#e5b4ff", "on-primary-fixed-variant": "#293d9d", "primary-fixed": "#dee0ff", "on-tertiary-fixed-variant": "#642b88", "primary-container": "#5b6dcf", "on-tertiary": "#ffffff", "inverse-primary": "#bac3ff", "on-error-container": "#93000a", background: "#fef9f3", "outline-variant": "#c5c5d4", "on-surface-variant": "#454652", "on-secondary-container": "#335b80", outline: "#757684", "surface-dim": "#ded9d4", "on-secondary-fixed-variant": "#1f496e", "surface-container": "#f2ede7", "tertiary-container": "#965bba", "secondary-fixed": "#cfe5ff", "secondary-fixed-dim": "#a3caf5", "on-primary-fixed": "#00105a", "on-surface": "#1d1b18", "tertiary-fixed": "#f4d9ff", "on-primary-container": "#fffbff", "surface-container-lowest": "#ffffff", "surface-container-highest": "#e6e2dc", "surface-container-low": "#f8f3ed", "surface-variant": "#e6e2dc", "inverse-on-surface": "#f5f0ea", "surface-bright": "#fef9f3", secondary: "#3a6187", "on-secondary": "#ffffff", error: "#ba1a1a", "on-error": "#ffffff", "on-tertiary-fixed": "#30004b", "surface-tint": "#4456b6"}, fontFamily: {display: "Noto Serif", headline: ["Noto Serif"], body: ["Manrope"], label: ["Manrope"]}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, animation: {"fade-in-up": "fadeInUp 0.6s ease-out forwards", "slide-in-left": "slideInLeft 0.5s ease-out forwards", "slide-in-right": "slideInRight 0.5s ease-out forwards"}, keyframes: {fadeInUp: {"0%": {opacity: "0", transform: "translateY(20px)"}, "100%": {opacity: "1", transform: "translateY(0)"}}, slideInLeft: {"0%": {opacity: "0", transform: "translateX(-20px)"}, "100%": {opacity: "1", transform: "translateX(0)"}}, slideInRight: {"0%": {opacity: "0", transform: "translateX(20px)"}, "100%": {opacity: "1", transform: "translateX(0)"}}}}}};</script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        
+        .font-display { font-family: 'Noto Serif', serif; }
+        .font-body { font-family: 'Manrope', sans-serif; }
+
+        /* Animation delays for staggered effect */
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        
+        /* Floating bubbles background */
+        .bg-bubbles {
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(255, 223, 186, 0.4) 0%, transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(186, 225, 255, 0.4) 0%, transparent 20%),
+                radial-gradient(circle at 50% 80%, rgba(255, 200, 221, 0.3) 0%, transparent 25%);
+            background-attachment: fixed;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main antialiased bg-bubbles min-h-screen flex flex-col">
+<!-- Header -->
+<header class="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/60 bg-white/80 dark:bg-card-dark/90 backdrop-blur-md px-6 py-3 shadow-sm">
+<div class="layout-container w-full max-w-[1280px] mx-auto flex items-center justify-between">
+<div class="flex items-center gap-8">
+<!-- Logo -->
+<div class="flex items-center gap-3 text-primary">
+<div class="size-8 bg-primary text-white rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">hexagon</span>
+</div>
+<h2 class="text-text-main dark:text-white text-xl font-bold tracking-tight">Korra</h2>
+</div>
+<!-- Nav Links -->
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-semibold transition-colors" href="#">Home</a>
+<a class="text-text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-semibold transition-colors" href="#">Jobs</a>
+<a class="text-text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-semibold transition-colors" href="#">Roadmap</a>
+<a class="text-primary text-sm font-bold relative after:content-[''] after:absolute after:-bottom-[22px] after:left-0 after:w-full after:h-[3px] after:bg-primary after:rounded-t-full" href="#">Feed</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<!-- Search -->
+<div class="hidden lg:flex relative items-center">
+<span class="material-symbols-outlined absolute left-3 text-text-secondary text-[20px]">search</span>
+<input class="h-10 w-64 rounded-lg border-none bg-gray-100 dark:bg-gray-800 text-sm pl-10 pr-4 focus:ring-2 focus:ring-primary/50 placeholder:text-text-secondary" placeholder="Search" type="text"/>
+</div>
+<!-- Tools -->
+<div class="flex items-center gap-3">
+<button class="relative flex items-center justify-center size-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-main dark:text-white">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-card-dark"></span>
+</button>
+<button class="flex items-center justify-center size-10 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="Portrait of a man with glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0yOkO2SE7TnYQpAW1ojdl_soA2Wzpb7H9X5zcTzGzb-s9aLlSX7P87YPoZ8qFa7hHHt2PPgn5q5QslPCQ1_JqHh8i05sK23f_zb23BOK-LsXNbUZLJkfLXbGXCCE99dDZ1CexJDaFxqGh3yHjEKh8mt_56sKwyu8ilBiJ71ey44kKDNu6z3TmrIugqlpXiZGqlfSzqxUM5iaND9dc784q6l_1z9aaeAbzqUqC3k5A_3VJjyBsHMDhdbS-6f89YH92RZ9p0nmsrQY"/>
+</button>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Grid -->
+<main class="flex-1 w-full max-w-[1280px] mx-auto px-4 md:px-6 py-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- Left Sidebar -->
+<aside class="hidden lg:block lg:col-span-3 space-y-4 animate-slide-in-left sticky top-24">
+<!-- Profile Card -->
+<div class="dark:bg-card-dark p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center text-center bg-white rounded-xl">
+<div class="relative mb-4">
+<div class="w-24 h-24 rounded-full overflow-hidden border-4 border-background-light dark:border-background-dark shadow-md">
+<img alt="Profile Picture" class="w-full h-full object-cover" data-alt="Close up portrait of Alex Johnson" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoytix5SopBytqUFPyCVw9TkBz4CIdjGX6DvyAXdwkM7FOp4Ou_keLINcbY-jH1XdIOTgXERNXWl8IyJJvzVlreEi5EkLXsVEIxsNrKRsuAEtYIV1RwDVMHGRzTcCL0PNg_qqG-EU7AXIS2FBGG7KbcN8GifIQvYkgil5aWK3ta6qGOG4uDYn32dZ_-7HCZ1_CKb2H1kHWkcyuQUxRqDnSWfC7TIADfqdrP_4yoT3zWD0MSsqoyDkTtMLucNwT6PIvQ3rMI0JJhdM"/>
+</div>
+<div class="absolute bottom-0 right-1 size-5 bg-green-500 rounded-full border-2 border-white dark:border-card-dark" title="Online"></div>
+</div>
+<h3 class="text-lg font-display font-bold text-text-main dark:text-white">Alex Johnson</h3>
+<p class="text-sm text-text-secondary dark:text-gray-400 mt-1 mb-4 font-body"><span class="font-bold text-text-main dark:text-gray-200">Senior Product Designer</span><br/><span class="text-xs font-medium">500+ connections</span></p>
+<button class="w-full py-2 px-4 rounded-lg border border-gray-200 dark:border-gray-600 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-text-main dark:text-white font-body">View Profile</button>
+</div>
+<!-- Navigation Menu -->
+<div class="dark:bg-card-dark shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden bg-white rounded-xl">
+<div class="flex flex-col">
+<a class="flex items-center justify-between px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-50 dark:border-gray-700/50" href="#">
+<div class="flex items-center gap-3">
+<div class="size-8 bg-orange-100 text-orange-600 flex items-center justify-center rounded-xl">
+<span class="material-symbols-outlined text-[20px]">mail</span>
+</div>
+<span class="text-sm text-text-main dark:text-white font-bold font-body">Invitations</span>
+</div>
+<span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">3 New</span>
+</a>
+<a class="flex items-center justify-between px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-50 dark:border-gray-700/50" href="#">
+<div class="flex items-center gap-3">
+<div class="size-8 bg-blue-100 text-blue-600 flex items-center justify-center rounded-xl">
+<span class="material-symbols-outlined text-[20px]">group</span>
+</div>
+<span class="text-sm text-text-main dark:text-white font-bold font-body">My Network</span>
+</div>
+<span class="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
+</a>
+<a class="flex items-center justify-between px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" href="#">
+<div class="flex items-center gap-3">
+<div class="size-8 bg-purple-100 text-purple-600 flex items-center justify-center rounded-xl">
+<span class="material-symbols-outlined text-[20px]">bookmark</span>
+</div>
+<span class="text-sm text-text-main dark:text-white font-bold font-body">Saved Jobs</span>
+</div>
+<span class="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Middle Column (Feed) -->
+<div class="col-span-1 lg:col-span-6 space-y-6">
+<!-- Create Post -->
+<div class="bg-card-light dark:bg-card-dark rounded-lg p-5 shadow-sm border border-gray-100 dark:border-gray-700 animate-fade-in-up">
+<div class="flex gap-4 mb-4">
+<img alt="User avatar" class="size-10 rounded-full object-cover shrink-0" data-alt="Small thumbnail of logged in user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_BROY6WVRqy6OIbhp-DYYpqM_htGSncTLdbZ5KF0_4wCiyDzwxBZQYpEBCcSJlgZ_-hr_E6ckY0YDCwVksQ9oHdnL1eDyCPVwQ2p3GvjEdkgV5VoDzR0cE8kbMCSwavZf5-rptf0-PMrbgvhgD46kyCdJForue2fKi_t1UlehQCq9ea1dvR9IW-nGzLRnG78D-3czqtRMv7OvExi8-bXlD4S_M8Jo355qHEbwa7J5dfF8xVRXjHfBlWF42FzyvYhe4FVYof-0KRg"/>
+<div class="flex-1">
+<input class="w-full h-10 px-4 rounded-full border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow font-body" placeholder="Start a post, Alex?" type="text"/>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary dark:text-gray-400 text-sm font-medium transition-colors font-body">
+<span class="material-symbols-outlined text-blue-500 text-[20px]">image</span>
+                                Media
+                            </button>
+<button class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary dark:text-gray-400 text-sm font-medium transition-colors font-body">
+<span class="material-symbols-outlined text-orange-500 text-[20px]">calendar_month</span>
+                                Event
+                            </button>
+<button class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary dark:text-gray-400 text-sm font-medium transition-colors font-body">
+<span class="material-symbols-outlined text-red-400 text-[20px]">article</span>
+                                Article
+                            </button>
+</div>
+</div>
+</div>
+<!-- Feed Post 1 (Expanded Comments State) -->
+<article class="bg-card-light dark:bg-card-dark rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden animate-fade-in-up delay-100">
+<div class="p-5">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<img alt="Sarah Miller Avatar" class="size-10 rounded-full object-cover" data-alt="Portrait of Sarah Miller" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBa3So72ygbtOtBfSVf6Kh-nPPmOq_kMxe7NlSSZtMV2EPb3RLIZTxctbUAkBqvowgyuL1g4di3xG8jeBdF6HP6ql_X7WM-pdEzH1om4AAqpGp9XRLrVr_GpQYm8lSh0h2oSzu-YFZjHTnQ2DsYALVi92aT4M3ZA1ohwrNDlpbVxZ3sNEg2m31It4qwUPepf_runQBXcVObWAqyMn7ZAsj7_sIvrxp_RgWo7IQ6PEvvmUi3plBfixU1iK6_axOmennCpxnJfcL6dag"/>
+<div>
+<h4 class="text-base font-display font-bold text-text-main dark:text-white">Sarah Miller</h4>
+<p class="text-xs text-text-secondary dark:text-gray-400 font-body">Head of Talent at Creative Co • 2h</p>
+</div>
+</div>
+<button class="text-text-secondary hover:text-text-main dark:text-gray-400 dark:hover:text-white">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<p class="text-text-main dark:text-gray-200 leading-relaxed mb-4 text-[15px] font-medium font-body">
+                            Excited to announce that we are expanding our design team! looking for passionate UX researchers who want to make a real impact. Check out the job description in the comments below. #hiring #uxresearch #designjobs
+                        </p>
+<div class="rounded-lg overflow-hidden mb-4 bg-gray-100 dark:bg-gray-800">
+<div class="h-64 w-full bg-cover bg-center" data-alt="Team of people working together around a laptop in a modern office" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDJnwKJSPFDWA0d5huzhsB-Mw9aATdjn8cf2951fUjDCHDvX_4NMr4I7n5GWw7sudZ3wG6EiSFse_vrBDmM7Wr26oioK7kgmr3Hj5GUcyzpOoriHPUIR5ZIGMqKn9v9Qj7pp9oYq4a6sLQENXSMrq-xCkMZKx5vVLsyBmOXmQqYxTAqmayjNG_88vSpNfLQ4LooeajQzpKHXNdd0wNxdxzfdoTruSnQEwHJ66RqYASasbtLCeu1bjDvP2BHiyGOIx2YT-haRWj6oJI');"></div>
+</div>
+<div class="flex items-center justify-between text-xs text-text-secondary dark:text-gray-400 border-b border-gray-100 dark:border-gray-700 pb-3 mb-3 font-body">
+<div class="flex items-center gap-1">
+<div class="flex -space-x-1">
+<div class="size-4 rounded-full bg-blue-500 flex items-center justify-center text-[10px] text-white">
+<span class="material-symbols-outlined text-[10px] font-bold">thumb_up</span>
+</div>
+<div class="size-4 rounded-full bg-red-400 flex items-center justify-center text-[10px] text-white">
+<span class="material-symbols-outlined text-[10px] font-bold">favorite</span>
+</div>
+</div>
+<span class="font-bold text-text-main dark:text-gray-300 ml-1">124 likes</span>
+</div>
+<span class="font-bold text-text-main dark:text-gray-300">42 comments • 12 shares</span>
+</div>
+<div class="flex items-center justify-between gap-2 mb-4">
+<button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-bold text-sm font-body">
+<span class="material-symbols-outlined text-[20px]">thumb_up</span> Like
+                            </button>
+<button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 text-korra_active font-bold text-sm transition-colors font-body">
+<span class="material-symbols-outlined text-[20px] fill-1">chat_bubble</span> Comment
+                            </button>
+<button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-bold text-sm font-body">
+<span class="material-symbols-outlined text-[20px]">share</span> Share
+                            </button>
+</div>
+<!-- Expanded Comments Section -->
+<div class="mt-2 pt-4 border-t border-gray-100 dark:border-gray-700 space-y-6">
+<!-- Comment Input -->
+<div class="flex gap-3 items-start">
+<img alt="User Avatar" class="size-8 rounded-full object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_BROY6WVRqy6OIbhp-DYYpqM_htGSncTLdbZ5KF0_4wCiyDzwxBZQYpEBCcSJlgZ_-hr_E6ckY0YDCwVksQ9oHdnL1eDyCPVwQ2p3GvjEdkgV5VoDzR0cE8kbMCSwavZf5-rptf0-PMrbgvhgD46kyCdJForue2fKi_t1UlehQCq9ea1dvR9IW-nGzLRnG78D-3czqtRMv7OvExi8-bXlD4S_M8Jo355qHEbwa7J5dfF8xVRXjHfBlWF42FzyvYhe4FVYof-0KRg"/>
+<div class="flex-1 relative">
+<input class="w-full py-2 px-4 rounded-full border border-gray-200 dark:border-gray-600 bg-surface-container-low dark:bg-gray-800 text-sm focus:ring-2 focus:ring-korra_active focus:border-transparent font-body" placeholder="Add a comment..." type="text"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-korra_active">
+<span class="material-symbols-outlined text-[20px]">send</span>
+</button>
+</div>
+</div>
+<!-- Comments List -->
+<div class="space-y-4">
+<!-- Primary Comment -->
+<div class="flex gap-3">
+<img alt="Michael Scott" class="size-8 rounded-full object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4PxW8KKlArR2Sx9a5j2bpo1Y29t9TFOkTa_45kRvkfPpIZDFb81oE7ZNKfJ1dGg8nOfLhmnlXjXj3e5XjBljMK-wk8pngi7tpuaFS_esuTkATchshBOYzx5QHkS9LL7uIVJODV-Zr7u5fZs_9SK0ec4KmElbnscd-SdFICUccjdrvGdPr5eMEukxR159JH9CIOLBb9zhbqAlY0rPRV-1Pg85yZ_miilEQRR_CgffoUHewMsZ-TvoQba5jhEAA_WM-v2HIit33LTA"/>
+<div class="flex-1">
+<div class="bg-surface-container-low dark:bg-gray-800 p-3 rounded-2xl rounded-tl-none">
+<div class="flex justify-between items-start mb-1">
+<h5 class="text-sm font-display font-bold text-text-main dark:text-white">Michael Scott</h5>
+<span class="text-[10px] text-text-secondary dark:text-gray-400 font-body">1h ago</span>
+</div>
+<p class="text-sm text-text-main dark:text-gray-200 font-body">This is amazing! I've been looking for a role exactly like this. Just sent over my portfolio. Thanks for sharing, Sarah!</p>
+</div>
+<div class="flex gap-4 mt-1 ml-2 text-[11px] font-bold text-text-secondary dark:text-gray-400 font-body">
+<button class="hover:text-korra_active">Like</button>
+<button class="hover:text-korra_active">Reply</button>
+</div>
+<!-- Nested Replies -->
+<div class="mt-4 relative pl-8">
+<div class="absolute left-3 top-0 bottom-4 w-px bg-gray-200 dark:bg-gray-700"></div>
+<div class="flex gap-3">
+<img alt="Sarah Miller" class="size-6 rounded-full object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBa3So72ygbtOtBfSVf6Kh-nPPmOq_kMxe7NlSSZtMV2EPb3RLIZTxctbUAkBqvowgyuL1g4di3xG8jeBdF6HP6ql_X7WM-pdEzH1om4AAqpGp9XRLrVr_GpQYm8lSh0h2oSzu-YFZjHTnQ2DsYALVi92aT4M3ZA1ohwrNDlpbVxZ3sNEg2m31It4qwUPepf_runQBXcVObWAqyMn7ZAsj7_sIvrxp_RgWo7IQ6PEvvmUi3plBfixU1iK6_axOmennCpxnJfcL6dag"/>
+<div class="flex-1">
+<div class="bg-surface-container-low dark:bg-gray-800 p-2.5 rounded-2xl rounded-tl-none">
+<div class="flex justify-between items-start mb-1">
+<h5 class="text-xs font-display font-bold text-text-main dark:text-white">Sarah Miller <span class="ml-1 px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[9px] font-body uppercase tracking-wider">Author</span></h5>
+<span class="text-[10px] text-text-secondary dark:text-gray-400 font-body">45m ago</span>
+</div>
+<p class="text-xs text-text-main dark:text-gray-200 font-body">Thanks Michael! Looking forward to reviewing it. We're moving fast on this round.</p>
+</div>
+<div class="flex gap-4 mt-1 ml-2 text-[10px] font-bold text-text-secondary dark:text-gray-400 font-body">
+<button class="hover:text-korra_active">Like</button>
+<button class="hover:text-korra_active">Reply</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full py-2 text-xs font-bold text-text-secondary hover:text-korra_active transition-colors font-body">View 40 more comments</button>
+</div>
+</div>
+</article>
+<!-- Feed Post 2 -->
+<article class="bg-card-light dark:bg-card-dark rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden animate-fade-in-up delay-200">
+<div class="p-5">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<img alt="David Chen Avatar" class="size-10 rounded-full object-cover" data-alt="Portrait of David Chen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCF8bew7BSmJYm0hS2H-IcyHmmmf1FPSp7keFTADDvecePfcf_lhTN-zkoi3oS_REkuOtGiqOV_afarK4u5VLR2GSx57qWqxF4iJO4PeG-rwchUJgrG3EVLztlEhyxUHaFESf6-HhKvBLERfN4AvR59UDz8Hi0uOduHSCipup4mob1x7rOOoz3_WpNZ7oPKeYmOO4WjtnrUWasRXsAzxl9r41l0MnveXzyfxeNoptzy6tLFvKy5o1NE54tnrCH7yJfimm0rt3Yx04g"/>
+<div>
+<h4 class="text-base font-display font-bold text-text-main dark:text-white">David Chen</h4>
+<p class="text-xs text-text-secondary dark:text-gray-400 font-body">Frontend Engineer at TechFlow • 5h</p>
+</div>
+</div>
+<button class="text-text-secondary hover:text-text-main dark:text-gray-400 dark:hover:text-white">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<p class="text-text-main dark:text-gray-200 leading-relaxed mb-2 text-[15px] font-medium font-body">
+                            Just finished a deep dive into the new React Server Components. The performance implications for large scale applications are mind-blowing. Is anyone else experimenting with this in production yet?
+                        </p>
+<p class="text-primary text-sm font-bold mb-4 font-body">#reactjs #webdev #frontend</p>
+<div class="flex items-center justify-between text-xs text-text-secondary dark:text-gray-400 border-b border-gray-100 dark:border-gray-700 pb-3 mb-3 font-body">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-blue-500 text-[14px] font-bold">thumb_up</span>
+<span class="font-bold text-text-main dark:text-gray-300 ml-1">89 likes</span>
+</div>
+<span class="font-bold text-text-main dark:text-gray-300">35 comments • 5 shares</span>
+</div>
+<div class="flex items-center justify-between gap-2">
+<button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-bold text-sm font-body">
+<span class="material-symbols-outlined text-[20px]">thumb_up</span> Like
+                            </button>
+<button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-bold text-sm font-body">
+<span class="material-symbols-outlined text-[20px]">chat_bubble</span> Comment
+                            </button>
+<button class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-bold text-sm font-body">
+<span class="material-symbols-outlined text-[20px]">share</span> Share
+                            </button>
+</div>
+</div>
+</article>
+</div>
+<!-- Right Sidebar -->
+<aside class="hidden lg:block lg:col-span-3 space-y-6 animate-slide-in-right sticky top-24">
+<!-- Suggestions -->
+<div class="dark:bg-card-dark p-5 shadow-sm border border-gray-100 dark:border-gray-700 bg-white rounded-xl">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-display font-bold text-text-main dark:text-white text-base">People You May Know</h3>
+<a class="text-xs font-semibold text-primary hover:underline font-body" href="#">View all</a>
+</div>
+<div class="space-y-4">
+<!-- Person 1 -->
+<div class="flex items-center gap-3">
+<img alt="Elena Rodriguez" class="size-10 rounded-full object-cover" data-alt="Portrait of Elena Rodriguez" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4PxW8KKlArR2Sx9a5j2bpo1Y29t9TFOkTa_45kRvkfPpIZDFb81oE7ZNKfJ1dGg8nOfLhmnlXjXj3e5XjBljMK-wk8pngi7tpuaFS_esuTkATchshBOYzx5QHkS9LL7uIVJODV-Zr7u5fZs_9SK0ec4KmElbnscd-SdFICUccjdrvGdPr5eMEukxR159JH9CIOLBb9zhbqAlY0rPRV-1Pg85yZ_miilEQRR_CgffoUHewMsZ-TvoQba5jhEAA_WM-v2HIit33LTA"/>
+<div class="flex-1 min-w-0">
+<h5 class="text-sm font-display font-bold text-text-main dark:text-white truncate">Elena Rodriguez</h5>
+<p class="text-xs text-text-secondary dark:text-gray-400 truncate font-body">Product Manager @ Stripe</p>
+</div>
+<button class="size-8 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+</button>
+</div>
+<!-- Person 2 -->
+<div class="flex items-center gap-3">
+<img alt="Marcus Jones" class="size-10 rounded-full object-cover" data-alt="Portrait of Marcus Jones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxUxVubEnr75IdRj4w2uPCXqfydohbWTXreMBlq7Ldl4tUIFw5HZEPg7o4t9ckHG8M5qU7bROBWh1OqvtkQj_D7fUo5ATqG5GV8NtW-hS6exjlgCJu0Jb6IyflNm3oRvxohyIUS9sduKBKenBX_ytGNYzJDEhlvmq7xNtDEpGFrtzqMVIKSoYK-r8wld6sVQ7Mlsd3XPzT6EnjIQzg5CrAoAcmLmOQUi6KQkJ1ROP-TRyhpSyjBUvJcqfNHn2prmkxunL2M1agD3w"/>
+<div class="flex-1 min-w-0">
+<h5 class="text-sm font-display font-bold text-text-main dark:text-white truncate">Marcus Jones</h5>
+<p class="text-xs text-text-secondary dark:text-gray-400 truncate font-body">Senior Recruiter</p>
+</div>
+<button class="size-8 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+</button>
+</div>
+<!-- Person 3 -->
+<div class="flex items-center gap-3">
+<img alt="Anita Patel" class="size-10 rounded-full object-cover" data-alt="Portrait of Anita Patel" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACX7hwPduTGPB4FkrRwkeHYkscsqCrpU3POdFAr9UvAxb-l5FsHpG8M27Jm7Wp3DSXwBETXqvFmOt_QYRgEKI2hZNGnRYJHR30ssJZM9iMZflPoYQJoPKItrvplhb1ynpszdJp_e9V4P8TFwNOxBnJdsL48-3CHuzvozkicuCgYsAsTqKuQz4-jFsUfw1vZiPTQ2JvHBVxWJ2VhYEluP3yLnhc_wrgoaSImnWvnv1_LokvCJ2PMi7-OQErJnVqqNx74_RkrfP1jmM"/>
+<div class="flex-1 min-w-0">
+<h5 class="text-sm font-display font-bold text-text-main dark:text-white truncate">Anita Patel</h5>
+<p class="text-xs text-text-secondary dark:text-gray-400 truncate font-body">Designer @ Google</p>
+</div>
+<button class="size-8 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Trending Jobs -->
+<div class="dark:bg-card-dark p-5 shadow-sm border border-gray-100 dark:border-gray-700 bg-white rounded-xl">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-display font-bold text-text-main dark:text-white text-base">Trending Jobs</h3>
+<a class="text-xs font-semibold text-primary hover:underline font-body" href="#">More</a>
+</div>
+<div class="space-y-4">
+<div class="group cursor-pointer">
+<h5 class="text-sm font-display font-bold text-text-main dark:text-white group-hover:text-primary transition-colors">Senior React Developer</h5>
+<p class="text-xs text-text-secondary dark:text-gray-400 font-body">TechCorp • Remote</p>
+<div class="mt-2 flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-md bg-green-100 text-green-700 text-[10px] font-bold font-body">Active Hiring</span>
+<span class="text-[10px] text-text-secondary font-body">3 days ago</span>
+</div>
+</div>
+<div class="w-full h-px bg-gray-100 dark:bg-gray-700"></div>
+<div class="group cursor-pointer">
+<h5 class="text-sm font-display font-bold text-text-main dark:text-white group-hover:text-primary transition-colors">UX/UI Designer</h5>
+<p class="text-xs text-text-secondary dark:text-gray-400 font-body">CreativeStudio • New York</p>
+<div class="mt-2 flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-[10px] font-bold font-body">Easy Apply</span>
+<span class="text-[10px] text-text-secondary font-body">5 hrs ago</span>
+</div>
+</div>
+</div>
+<button class="w-full mt-4 py-2 border border-primary/30 text-primary rounded-lg text-sm font-bold hover:bg-primary/5 transition-colors font-body">
+                        View Recommendations
+                    </button>
+</div>
+<!-- Footer Links -->
+<div class="flex flex-wrap gap-x-4 gap-y-2 px-2 text-center justify-center">
+<a class="text-xs text-text-secondary/70 hover:text-primary font-body" href="#">About</a>
+<a class="text-xs text-text-secondary/70 hover:text-primary font-body" href="#">Accessibility</a>
+<a class="text-xs text-text-secondary/70 hover:text-primary font-body" href="#">Help Center</a>
+<a class="text-xs text-text-secondary/70 hover:text-primary font-body" href="#">Privacy &amp; Terms</a>
+<p class="text-xs text-text-secondary/50 w-full mt-2 font-body">© 2023 Korra Corporation</p>
+</div>
+</aside>
+</div>
+</main>
+</body></html>

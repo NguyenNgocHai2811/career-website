@@ -1,5 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import PostItem from '../../components/PostItem/PostItem';
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Invalid Date';
+  
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+  
+  if (diffInSeconds < 60) return 'Vừa xong';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} phút trước`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} giờ trước`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} ngày trước`;
+  
+  return date.toLocaleDateString();
+};
 
 const Feed = () => {
   const [user, setUser] = useState({
@@ -79,6 +96,49 @@ const Feed = () => {
       console.error('Failed to create post', error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleLike = async (postId, currentIsLiked) => {
+    // Optimistic UI Update
+    setPosts(currentPosts => currentPosts.map(post => {
+      if (post.id === postId) {
+        return { 
+          ...post, 
+          isLiked: !currentIsLiked, 
+          likesCount: currentIsLiked ? Math.max(0, post.likesCount - 1) : post.likesCount + 1 
+        };
+      }
+      return post;
+    }));
+
+    try {
+      const url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/v1/posts/${postId}/reactions`;
+      const method = currentIsLiked ? 'DELETE' : 'POST';
+      const body = currentIsLiked ? null : JSON.stringify({ type: 'LIKE' });
+      const headers = {
+        'Authorization': `Bearer ${getAuthToken()}`,
+        'Content-Type': 'application/json'
+      };
+
+      const response = await fetch(url, { method, headers, ...(body && { body }) });
+      
+      if (!response.ok) {
+        throw new Error('Failed to toggle like');
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      // Revert Optimistic Update
+      setPosts(currentPosts => currentPosts.map(post => {
+        if (post.id === postId) {
+          return { 
+            ...post, 
+            isLiked: currentIsLiked, 
+            likesCount: currentIsLiked ? post.likesCount + 1 : Math.max(0, post.likesCount - 1) 
+          };
+        }
+        return post;
+      }));
     }
   };
 
@@ -240,151 +300,21 @@ const Feed = () => {
             </div>
 
             {/* Render Real Posts */}
-            {posts.map((post, index) => (
-              <article key={post.id} className={`bg-card-light dark:bg-card-dark rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden animate-fade-in-up delay-${(index % 3 + 1) * 100}`}>
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                        {post.author?.avatar ? (
-                          <img alt={`${post.author.fullName} Avatar`} className="w-full h-full object-cover" src={post.author.avatar} />
-                        ) : (
-                          <span className="material-symbols-outlined text-gray-500">person</span>
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-text-main dark:text-white text-base font-extrabold">{post.author?.fullName || 'Unknown User'}</h4>
-                        <p className="text-xs text-text-secondary dark:text-gray-400">
-                          {new Date(post.createdAt || Date.now()).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <button className="text-text-secondary hover:text-text-main dark:text-gray-400 dark:hover:text-white">
-                      <span className="material-symbols-outlined">more_horiz</span>
-                    </button>
-                  </div>
-                  <p className="text-text-main dark:text-gray-200 leading-relaxed mb-4 text-[15px] font-medium">
-                    {post.content}
-                  </p>
-                  {post.mediaUrls && post.mediaUrls.length > 0 && (
-                    <div className="rounded-lg overflow-hidden mb-4 bg-gray-100 dark:bg-gray-800">
-                      <div className="h-64 w-full bg-cover bg-center" style={{ backgroundImage: `url('${post.mediaUrls[0]}')` }}></div>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between text-xs text-text-secondary dark:text-gray-400 border-b border-gray-100 dark:border-gray-700 pb-3 mb-3">
-                    <div className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-blue-500 text-[14px] font-bold">thumb_up</span>
-                      <span className="font-bold text-text-main dark:text-gray-300">{post.likesCount || 0} likes</span>
-                    </div>
-                    <span className="font-bold text-text-main dark:text-gray-300">{post.commentsCount || 0} comments</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-medium text-sm">
-                      <span className="material-symbols-outlined text-[20px]">thumb_up</span> Like
-                    </button>
-                    <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-medium text-sm">
-                      <span className="material-symbols-outlined text-[20px]">chat_bubble</span> Comment
-                    </button>
-                    <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-medium text-sm">
-                      <span className="material-symbols-outlined text-[20px]">share</span> Share
-                    </button>
-                  </div>
-                </div>
-              </article>
+            {posts.map((post) => (
+              <PostItem 
+                key={post.id} 
+                post={post} 
+                onToggleLike={handleToggleLike} 
+                getAuthToken={getAuthToken} 
+                user={user} 
+              />
             ))}
 
             {/* Fallback mock post if no real posts exist */}
             {posts.length === 0 && (
-              <>
-              {/* Feed Post 1 (Mock) */}
-              <article className="bg-card-light dark:bg-card-dark rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden animate-fade-in-up delay-100">
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                    <img alt="Sarah Miller Avatar" className="size-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBa3So72ygbtOtBfSVf6Kh-nPPmOq_kMxe7NlSSZtMV2EPb3RLIZTxctbUAkBqvowgyuL1g4di3xG8jeBdF6HP6ql_X7WM-pdEzH1om4AAqpGp9XRLrVr_GpQYm8lSh0h2oSzu-YFZjHTnQ2DsYALVi92aT4M3ZA1ohwrNDlpbVxZ3sNEg2m31It4qwUPepf_runQBXcVObWAqyMn7ZAsj7_sIvrxp_RgWo7IQ6PEvvmUi3plBfixU1iK6_axOmennCpxnJfcL6dag" />
-                    <div>
-                      <h4 className="font-bold text-text-main dark:text-white text-base font-extrabold">Sarah Miller</h4>
-                      <p className="text-xs text-text-secondary dark:text-gray-400">Head of Talent at Creative Co • 2h</p>
-                    </div>
-                  </div>
-                  <button className="text-text-secondary hover:text-text-main dark:text-gray-400 dark:hover:text-white">
-                    <span className="material-symbols-outlined">more_horiz</span>
-                  </button>
-                </div>
-                <p className="text-text-main dark:text-gray-200 leading-relaxed mb-4 text-[15px] font-medium">
-                  Excited to announce that we are expanding our design team! looking for passionate UX researchers who want to make a real impact. Check out the job description in the comments below. #hiring #uxresearch #designjobs
-                </p>
-                <div className="rounded-lg overflow-hidden mb-4 bg-gray-100 dark:bg-gray-800">
-                  <div className="h-64 w-full bg-cover bg-center" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDJnwKJSPFDWA0d5huzhsB-Mw9aATdjn8cf2951fUjDCHDvX_4NMr4I7n5GWw7sudZ3wG6EiSFse_vrBDmM7Wr26oioK7kgmr3Hj5GUcyzpOoriHPUIR5ZIGMqKn9v9Qj7pp9oYq4a6sLQENXSMrq-xCkMZKx5vVLsyBmOXmQqYxTAqmayjNG_88vSpNfLQ4LooeajQzpKHXNdd0wNxdxzfdoTruSnQEwHJ66RqYASasbtLCeu1bjDvP2BHiyGOIx2YT-haRWj6oJI')" }}></div>
-                </div>
-                <div className="flex items-center justify-between text-xs text-text-secondary dark:text-gray-400 border-b border-gray-100 dark:border-gray-700 pb-3 mb-3">
-                  <div className="flex items-center gap-1">
-                    <div className="flex -space-x-1">
-                      <div className="size-4 rounded-full bg-blue-500 flex items-center justify-center text-[10px] text-white">
-                        <span className="material-symbols-outlined text-[10px] font-bold">thumb_up</span>
-                      </div>
-                      <div className="size-4 rounded-full bg-red-400 flex items-center justify-center text-[10px] text-white">
-                        <span className="material-symbols-outlined text-[10px] font-bold">favorite</span>
-                      </div>
-                    </div>
-                    <span className="font-bold text-text-main dark:text-gray-300">124 likes</span>
-                  </div>
-                  <span className="font-bold text-text-main dark:text-gray-300">42 comments • 12 shares</span>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-medium text-sm">
-                    <span className="material-symbols-outlined text-[20px]">thumb_up</span> Like
-                  </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-medium text-sm">
-                    <span className="material-symbols-outlined text-[20px]">chat_bubble</span> Comment
-                  </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-medium text-sm">
-                    <span className="material-symbols-outlined text-[20px]">share</span> Share
-                  </button>
-                </div>
+              <div className="text-center p-8 text-gray-500">
+                Chưa có bài viết nào. Hãy là người đầu tiên đăng bài!
               </div>
-            </article>
-
-            {/* Feed Post 2 (Mock) */}
-            <article className="bg-card-light dark:bg-card-dark rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden animate-fade-in-up delay-200">
-              <div className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <img alt="David Chen Avatar" className="size-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCF8bew7BSmJYm0hS2H-IcyHmmmf1FPSp7keFTADDvecePfcf_lhTN-zkoi3oS_REkuOtGiqOV_afarK4u5VLR2GSx57qWqxF4iJO4PeG-rwchUJgrG3EVLztlEhyxUHaFESf6-HhKvBLERfN4AvR59UDz8Hi0uOduHSCipup4mob1x7rOOoz3_WpNZ7oPKeYmOO4WjtnrUWasRXsAzxl9r41l0MnveXzyfxeNoptzy6tLFvKy5o1NE54tnrCH7yJfimm0rt3Yx04g" />
-                    <div>
-                      <h4 className="font-bold text-text-main dark:text-white text-base font-extrabold">David Chen</h4>
-                      <p className="text-xs text-text-secondary dark:text-gray-400">Frontend Engineer at TechFlow • 5h</p>
-                    </div>
-                  </div>
-                  <button className="text-text-secondary hover:text-text-main dark:text-gray-400 dark:hover:text-white">
-                    <span className="material-symbols-outlined">more_horiz</span>
-                  </button>
-                </div>
-                <p className="text-text-main dark:text-gray-200 leading-relaxed mb-2 text-[15px] font-medium">
-                  Just finished a deep dive into the new React Server Components. The performance implications for large scale applications are mind-blowing. Is anyone else experimenting with this in production yet?
-                </p>
-                <p className="text-primary text-sm font-medium mb-4">#reactjs #webdev #frontend</p>
-                <div className="flex items-center justify-between text-xs text-text-secondary dark:text-gray-400 border-b border-gray-100 dark:border-gray-700 pb-3 mb-3">
-                  <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-blue-500 text-[14px] font-bold">thumb_up</span>
-                    <span className="font-bold text-text-main dark:text-gray-300">89 likes</span>
-                  </div>
-                  <span className="font-bold text-text-main dark:text-gray-300">35 comments • 5 shares</span>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-medium text-sm">
-                    <span className="material-symbols-outlined text-[20px]">thumb_up</span> Like
-                  </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-medium text-sm">
-                    <span className="material-symbols-outlined text-[20px]">chat_bubble</span> Comment
-                  </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-medium text-sm">
-                    <span className="material-symbols-outlined text-[20px]">share</span> Share
-                  </button>
-                </div>
-              </div>
-            </article>
-            </>
             )}
           </div>
 

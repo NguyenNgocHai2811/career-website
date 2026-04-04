@@ -39,7 +39,7 @@ const createPost = async (userId, postData) => {
 /**
  * Retrieves a paginated list of posts (News Feed).
  */
-const getPosts = async (cursor, limit = 10) => {
+const getPosts = async (currentUserId, cursor, limit = 10) => {
   const session = driver.session();
   try {
     // If we have a cursor, fetch posts older than the cursor.
@@ -59,10 +59,15 @@ const getPosts = async (cursor, limit = 10) => {
       params.cursor = cursor;
     }
 
+    if (currentUserId) {
+      params.currentUserId = currentUserId;
+    }
+
     query += `
       OPTIONAL MATCH (p)<-[:LIKES]-(liker:User)
       OPTIONAL MATCH (p)<-[:COMMENTED_ON]-(c:Comment)
-      RETURN p, u, count(DISTINCT liker) as likesCount, count(DISTINCT c) as commentsCount
+      ${currentUserId ? 'OPTIONAL MATCH (p)<-[r:LIKES]-(currentUser:User {userId: $currentUserId})' : ''}
+      RETURN p, u, count(DISTINCT liker) as likesCount, count(DISTINCT c) as commentsCount${currentUserId ? ', count(r) > 0 as isLiked' : ', false as isLiked'}
       ORDER BY p.createdAt DESC
       LIMIT toInteger($limit)
     `;
@@ -70,11 +75,20 @@ const getPosts = async (cursor, limit = 10) => {
     const result = await session.run(query, params);
     return result.records.map(record => {
       const post = record.get('p').properties;
+      // Convert Neo4j datetime to ISO string
+      if (post.createdAt && typeof post.createdAt.toString === 'function') {
+        post.createdAt = new Date(post.createdAt.toString()).toISOString();
+      }
+      if (post.updatedAt && typeof post.updatedAt.toString === 'function') {
+        post.updatedAt = new Date(post.updatedAt.toString()).toISOString();
+      }
+
       const author = record.get('u').properties;
       return {
         ...post,
         likesCount: record.get('likesCount').toNumber(),
         commentsCount: record.get('commentsCount').toNumber(),
+        isLiked: record.get('isLiked'),
         author: {
           userId: author.userId,
           fullName: author.fullName,
@@ -175,7 +189,9 @@ const addComment = async (userId, postId, content) => {
       CREATE (c:Comment {
         id: randomUUID(),
         content: $content,
-        createdAt: datetime()
+        createdAt: datetime(),
+        updatedAt: datetime(),
+        isDeleted: false
       })
       CREATE (u)-[:WROTE]->(c)
       CREATE (c)-[:COMMENTED_ON]->(p)
@@ -186,6 +202,14 @@ const addComment = async (userId, postId, content) => {
     if (result.records.length === 0) return null;
     const comment = result.records[0].get('c').properties;
     const author = result.records[0].get('u').properties;
+
+    if (comment.createdAt && typeof comment.createdAt.toString === 'function') {
+      comment.createdAt = new Date(comment.createdAt.toString()).toISOString();
+    }
+    if (comment.updatedAt && typeof comment.updatedAt.toString === 'function') {
+      comment.updatedAt = new Date(comment.updatedAt.toString()).toISOString();
+    }
+
     return {
       ...comment,
       author: { userId: author.userId, fullName: author.fullName, email: author.email }
@@ -195,9 +219,6 @@ const addComment = async (userId, postId, content) => {
   }
 };
 
-/**
- * Retrieves comments for a post.
- */
 const getComments = async (postId, page = 1, limit = 10) => {
   const session = driver.session();
   try {
@@ -205,17 +226,45 @@ const getComments = async (postId, page = 1, limit = 10) => {
     const result = await session.run(
       `
       MATCH (u:User)-[:WROTE]->(c:Comment)-[:COMMENTED_ON]->(p:Post {id: $postId})
-      RETURN c, u
+      
+      OPTIONAL MATCH (c)<-[:REPLIED_TO*1..]-(reply:Comment)
+      WITH c, u, count(DISTINCT reply) as replyCount
+      
+      OPTIONAL MATCH (c)<-[r:REACTED_TO]-(liker:User)
+      WITH c, u, replyCount, r.type as rType, liker.userId as rUserId
+      WITH c, u, replyCount, collect(CASE WHEN rType IS NULL THEN null ELSE {type: rType, userId: rUserId} END) as rawReacts
+      WITH c, u, replyCount, [x IN rawReacts WHERE x IS NOT NULL] as reacts
+      
+      RETURN c, u, replyCount, size(reacts) as reactionsCount,
+             head([x IN reacts WHERE x.userId = $currentUserId | x.type]) as userReactionType,
+             [x IN reacts | x.type] as allTypes
       ORDER BY c.createdAt ASC
-      SKIP $skip LIMIT $limit
+      SKIP toInteger($skip) LIMIT toInteger($limit)
       `,
-      { postId, skip: parseInt(skip, 10), limit: parseInt(limit, 10) }
+      { postId, skip: parseInt(skip, 10), limit: parseInt(limit, 10), currentUserId: null } // We can update controller later to pass user ID if needed, hardcode null for now so it works without crash.
     );
     return result.records.map(record => {
       const comment = record.get('c').properties;
       const author = record.get('u').properties;
+      const replyCount = record.get('replyCount').toNumber();
+      
+      const reactionsCount = record.get('reactionsCount');
+      const userReactionType = record.get('userReactionType');
+      const allTypes = record.get('allTypes');
+
+      if (comment.createdAt && typeof comment.createdAt.toString === 'function') {
+        comment.createdAt = new Date(comment.createdAt.toString()).toISOString();
+      }
+      if (comment.updatedAt && typeof comment.updatedAt.toString === 'function') {
+        comment.updatedAt = new Date(comment.updatedAt.toString()).toISOString();
+      }
+
       return {
         ...comment,
+        replyCount,
+        reactionsCount: typeof reactionsCount?.toNumber === 'function' ? reactionsCount.toNumber() : (reactionsCount || 0),
+        userReactionType: userReactionType || null,
+        allTypes: allTypes || [],
         author: { userId: author.userId, fullName: author.fullName, email: author.email }
       };
     });

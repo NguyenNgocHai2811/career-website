@@ -19,7 +19,8 @@ const createPost = async (req, res) => {
 const getPosts = async (req, res) => {
   try {
     const { cursor, limit } = req.query;
-    const posts = await postService.getPosts(cursor, limit);
+    const currentUserId = req.user ? req.user.userId : null;
+    const posts = await postService.getPosts(currentUserId, cursor, limit);
     res.status(200).json({ posts });
   } catch (error) {
     res.status(500).json({ error: error.message });
