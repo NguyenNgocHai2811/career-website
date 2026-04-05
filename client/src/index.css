@@ -4,17 +4,34 @@
   --color-primary: #6C7EE1;
   --color-primary-dark: #5A6AC0;
   --color-secondary: #92B9E3;
+  --color-peach: #FFC4A4;
   --color-pastel-peach: #FFC4A4;
   --color-pastel-pink: #FBA2D0;
   --color-pastel-lavender: #C688EB;
-  --color-background-light: #FAFAFC;
+  --color-tertiary: #FBA2D0;
+  --color-pastel-blue: #92B9E3;
+  --color-background-light: #F0F4F8;
   --color-background-dark: #201d12;
   --color-cream: #FFFFFF;
   --color-dusty-rose: #FBA2D0;
+  --color-surface-light: #ffffff;
+  --color-surface-dark: #24283b;
+  --color-slate-50: #F5F7FF;
+  --color-slate-100: #EBEFFF;
+  --color-slate-200: #DCE3FF;
+  --color-slate-300: #BFC6EF;
+  --color-slate-400: #9DA7E0;
+  --color-slate-500: #7C8BCF;
+  --color-slate-600: #5A6AB0;
+  --color-slate-700: #4B5E99;
+  --color-slate-800: #3A4B8A;
+  --color-slate-900: #2D3A6E;
 
-  --font-display: "Manrope", sans-serif;
-  --font-body: "Manrope", sans-serif;
+  --font-display: "Be Vietnam Pro", sans-serif;
+  --font-body: "Be Vietnam Pro", sans-serif;
 
+  --radius-sm: 4px;
+  --radius-md: 10px;
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-2xl: 20px;

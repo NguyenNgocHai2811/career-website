@@ -28,8 +28,19 @@ const completeOnboarding = async (req, res) => {
   }
 };
 
+const getUserProfile = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const profile = await userService.getUserProfile(userId);
+    res.status(200).json(profile);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getUsers,
   createUser,
-  completeOnboarding
+  completeOnboarding,
+  getUserProfile
 };

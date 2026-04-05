@@ -9,6 +9,7 @@ import CheckEmail from './pages/CheckEmail/CheckEmail.jsx';
 import ResetPassword from './pages/ResetPassword/ResetPassword.jsx';
 import ResetSuccess from './pages/ResetSuccess/ResetSuccess.jsx';
 import Feed from './pages/Feed/Feed.jsx';
+import Profile from './pages/Profile/Profile.jsx';
 
 function App() {
   return (
@@ -16,6 +17,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Homepage />} />
         <Route path="/feed" element={<Feed />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:userId" element={<Profile />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />
