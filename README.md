@@ -1,59 +1,143 @@
-# career-website
-Dự án KORRA của bạn là một nền tảng tìm việc làm (Job Search Platform). Sau đây là phân tích vai trò các thư mục/file và luồng hoạt động từ Client đến Server:
+# KORRA - Career Social Network & Job Search Platform
 
-1. Vai trò của các thư mục và file
-Dự án được chia làm 2 phần chính: client (Frontend) và backend (Server).
+KORRA là một hệ thống mạng xã hội nghề nghiệp và nền tảng tìm kiếm việc làm toàn diện. Dự án kết hợp các tính năng của một cổng thông tin việc làm truyền thống với sự tương tác của một mạng xã hội, cung cấp tính năng chat realtime, quản lý kết nối (connections), và cập nhật bảng tin (news feed).
 
-Client (Frontend)
-Thư mục client/ chứa mã nguồn giao diện người dùng, được xây dựng bằng React, Vite, và Tailwind CSS.
+## 🚀 Tech Stack (Công nghệ sử dụng)
 
-client/src/: Nơi chứa toàn bộ mã nguồn React.
-main.jsx (hoặc index.jsx): Điểm bắt đầu (entry point) của React, nơi ứng dụng được render vào file HTML.
-App.jsx: Component gốc của ứng dụng (chứa giao diện trang chủ mà chúng ta vừa tạo).
-index.css: Nơi import Tailwind CSS và cấu hình các biến màu sắc, hiệu ứng animations (@theme, @layer).
-client/index.html: Trang HTML gốc. Khi chạy ứng dụng, React sẽ inject giao diện vào file này. Nơi đây cũng chứa các link import Font chữ (Manrope) và Icons (Material Symbols).
-client/vite.config.js: File cấu hình của Vite (bundler), bao gồm plugin @tailwindcss/vite để hỗ trợ Tailwind v4.
-Backend (Server)
-Thư mục backend/ chứa mã nguồn API, được xây dựng bằng Node.js, Express.js, sử dụng cơ sở dữ liệu Neo4j (Graph Database) và Elasticsearch.
+### Client (Frontend)
+- **Framework**: React 19 (với Vite bundler)
+- **Styling**: Tailwind CSS v4
+- **Routing**: React Router DOM v7
+- **Real-time**: Socket.io-client
+- **Testing**: Vitest, React Testing Library
 
-backend/src/server.js: Điểm bắt đầu của Backend. Chứa logic khởi tạo ứng dụng Express, kết nối với Neo4j và Elasticsearch, sau đó lắng nghe các request từ client.
-Các thư mục con trong backend/src/:
-routes/: Định nghĩa các đường dẫn API (ví dụ: /v1/auth, /v1/jobs). Nhận request và chuyển đến Controller tương ứng.
-controllers/: Tiếp nhận request từ Route, trích xuất dữ liệu (body, params) và gọi Service. Sau đó trả kết quả (Response) về cho Client.
-services/: Chứa toàn bộ logic nghiệp vụ (business logic) của ứng dụng. Nhận dữ liệu từ Controller, xử lý, và gọi Repository. (Lưu ý: Layer này không được chứa câu lệnh Cypher).
-repositories/: Lớp duy nhất tương tác trực tiếp với Database (Neo4j driver). Chứa các câu truy vấn Cypher để lấy/lưu dữ liệu và parse kết quả trả về cho Service.
-middlewares/: Chứa các hàm trung gian, ví dụ authMiddleware.js để xác thực JWT token bảo vệ các API dùng nội bộ.
-config/: Chứa các file cấu hình kết nối Database, môi trường.
-2. Luồng hoạt động từ Client đến Server
-Người dùng tương tác: Người dùng truy cập trang web (VD: Nhấn nút "Search" trên trang chủ).
-Client (React):
-Component React bắt sự kiện (event).
-Sử dụng fetch hoặc axios để gửi một HTTP Request (VD: GET /v1/jobs?keyword=...) đến Backend.
-Backend Route & Middleware:
-Request đi vào backend/src/server.js, sau đó được router định tuyến đến backend/src/routes/jobRoutes.js.
-Nếu API yêu cầu đăng nhập, nó sẽ đi qua authMiddleware.js để kiểm tra JWT token.
-Backend Controller -> Service -> Repository:
-Controller (jobController.js) nhận request, lấy ra từ khóa tìm kiếm và gọi Service.
-Service (jobService.js) xử lý logic nghiệp vụ và gọi hàm trong Repository.
-Repository (jobRepository.js) thực thi câu lệnh truy vấn (Cypher/Elasticsearch) xuống Database.
-Database (Neo4j/Elasticsearch) -> Trả về Client:
-Database trả dữ liệu về Repository -> Service -> Controller.
-Controller đóng gói dữ liệu thành JSON (kèm status code như 200 OK) và gửi HTTP Response về lại cho Client.
-Client (React): Nhận JSON, cập nhật state, và render lại giao diện hiển thị kết quả cho người dùng.
-3. Khi chạy lệnh npm run dev thì chạy từ đâu đến đâu?
-Lệnh npm run dev sẽ hoạt động khác nhau tùy thuộc vào bạn đang đứng ở thư mục nào:
+### Backend (Server)
+- **Runtime & Framework**: Node.js, Express v5
+- **Database (Đồ thị)**: Neo4j (quản lý người dùng, công việc, kết nối mạng lưới bạn bè/follower)
+- **Search Engine**: Elasticsearch (tối ưu hóa tìm kiếm việc làm)
+- **Real-time Communication**: Socket.io
+- **Authentication & Security**: JWT (JSON Web Token), BcryptJS, Helmet, Express Rate Limit
+- **Storage/Media**: Cloudinary, Multer
+- **Mail**: Nodemailer
 
-Nếu bạn chạy ở thư mục client/:
+---
 
-Lệnh vite được thực thi.
-Nó sẽ đọc cấu hình từ vite.config.js, biên dịch nhanh các file React/Tailwind, và khởi tạo một Dev Server (thường ở http://localhost:5173).
-File được gọi đầu tiên là index.html, sau đó load script main.jsx, và cuối cùng render toàn bộ App.jsx lên trình duyệt. Bất cứ khi nào bạn sửa code, giao diện sẽ tự động cập nhật (Hot Module Replacement - HMR).
-Nếu bạn chạy ở thư mục backend/:
+## 📂 Tổ chức mã nguồn & Kiến trúc
 
-Lệnh nodemon src/server.js được thực thi.
-Nodemon sẽ khởi chạy file backend/src/server.js.
-Nó sẽ tiến hành kết nối với Database (Neo4j, Elastic), thiết lập các Routes, và bắt đầu lắng nghe ở một cổng (ví dụ: http://localhost:5000).
-Nodemon sẽ theo dõi các file trong backend, nếu có thay đổi code, server sẽ tự động khởi động lại.
-Để hệ thống hoạt động đầy đủ, bạn cần mở 2 terminal và chạy npm run dev ở cả 2 thư mục client và backend cùng lúc.
+Dự án được chia làm 2 phần chính độc lập (Monorepo-style):
+- `/client`: Mã nguồn Frontend (React).
+- `/backend`: Mã nguồn Backend (Node.js/Express).
 
-Bạn có muốn tôi thực hiện thêm công việc gì với dự án này không? (Ví dụ: tạo thêm các API cho trang chủ, hay chỉnh sửa thêm giao diện?)
+### Cấu trúc Backend
+Backend được tổ chức theo kiến trúc **Layered Architecture (Route-Controller-Service-Repository)** để đảm bảo tính phân tách và dễ bảo trì:
+
+1. **`routes/`**: Định nghĩa các API endpoint (ví dụ: `/v1/auth`, `/v1/jobs`, `/v1/companies`).
+2. **`middlewares/`**: Chứa các hàm trung gian như `authMiddleware.js` (xác thực token), xử lý lỗi chuyên sâu.
+3. **`controllers/`**: Tiếp nhận Request từ người dùng, trích xuất dữ liệu, gọi Service xử lý và trả về Response JSON.
+4. **`services/`**: Xử lý toàn bộ logic nghiệp vụ (Business Logic). Không tương tác trực tiếp với cơ sở dữ liệu.
+5. **`repositories/`**: Lớp duy nhất chứa các câu lệnh truy vấn (Cypher của Neo4j hoặc query của Elasticsearch) để tương tác trực tiếp với Database.
+6. **`config/`**: Các file cấu hình kết nối Neo4j, Elasticsearch.
+
+### Cấu trúc Client
+- **`src/pages/`**: Chứa các component ở cấp độ trang (ví dụ: `Dashboard`, `MessagingView`, `CompanyDetail`).
+- **`src/components/`**: Các UI component có thể tái sử dụng.
+- **`index.css`**: Cấu hình Tailwind CSS, theme và các biến màu sắc.
+- **`main.jsx`**: Điểm neo đầu tiên (Entry Point) của React 19.
+
+---
+
+## ✨ Các tính năng chính (Core Features)
+
+1. **Xác thực và Quản lý tài khoản**: Đăng ký, đăng nhập bảo mật với JWT và Bcrypt.
+2. **Quản lý Hồ sơ (Profiles)**: 
+   - Hồ sơ Người ứng tuyển (Candidates).
+   - Hồ sơ Công ty (Company Profiles) với bảng điều khiển dành cho nhà tuyển dụng (Recruiter Dashboard).
+3. **Mạng lưới kết nối (Social Graph)**:
+   - Gửi/Nhận lời mời kết nối (Friend Requests, Follows).
+   - Quản lý danh sách kết nối sử dụng Đồ thị Neo4j.
+4. **Hệ thống tìm kiếm Việc làm cực nhanh**:
+   - Sử dụng Elasticsearch để tìm kiếm và lập chỉ mục tin tuyển dụng.
+5. **Trò chuyện trực tuyến (Real-time Chat)**:
+   - Hệ thống tin nhắn 1-1, lưu lịch sử chat vào Neo4j.
+   - Cập nhật thông báo theo thời gian thực (Socket.io).
+6. **Bảng tin (News Feed)**:
+   - Cập nhật thông tin từ mạng lưới kết nối và công ty đã theo dõi.
+
+---
+
+## 💻 Hướng dẫn chạy dự án (Getting Started)
+
+### 1. Yêu cầu hệ thống thiết yếu
+- Node.js (phiên bản khuyến nghị >= 18.x)
+- Neo4j Desktop / Neo4j Aura (đã khởi chạy database)
+- Elasticsearch instance
+- Tài khoản Cloudinary (cho tính năng upload ảnh/CV)
+
+### 2. Cài đặt các biến môi trường (Environment Variables)
+
+<!-- AUTO-GENERATED:ENV -->
+| Biến | Ý nghĩa | Ví dụ |
+|------|---------|-------|
+| `NEO4J_URI` | Địa chỉ kết nối cơ sở dữ liệu Neo4j | `bolt://localhost:7687` |
+| `NEO4J_USERNAME` | Tên đăng nhập Neo4j | `neo4j` |
+| `NEO4J_PASSWORD` | Mật khẩu Neo4j | `password123` |
+| `JWT_SECRET` | Mã bí mật để mã hóa Token JWT | `your-secret-key` |
+| `FRONTEND_URL` | Địa chỉ của ứng dụng Frontend | `http://localhost:5173` |
+| `SMTP_HOST` | Địa chỉ máy chủ Email (SMTP) | `smtp.gmail.com` |
+| `SMTP_PORT` | Cổng máy chủ Email | `587` |
+| `SMTP_USER` | Email gửi thông báo | `example@gmail.com` |
+| `SMTP_PASS` | Mật khẩu ứng dụng Email | `abcd efgh ijkl mnop` |
+| `CLOUDINARY_CLOUD_NAME` | Tên Cloudinary account | `your-cloud-name` |
+| `CLOUDINARY_API_KEY` | API Key của Cloudinary | `123456789` |
+| `CLOUDINARY_API_SECRET` | API Secret của Cloudinary | `secret-cloudinary-key` |
+<!-- /AUTO-GENERATED:ENV -->
+
+### 3. Các lệnh chính (Available Scripts)
+
+#### Backend
+<!-- AUTO-GENERATED:SCRIPTS_BACKEND -->
+| Lệnh | Mô tả |
+|------|-------|
+| `npm start` | Chạy Server bằng node (Production) |
+| `npm run dev` | Chạy Server với Nodemon (Development) |
+<!-- /AUTO-GENERATED:SCRIPTS_BACKEND -->
+
+#### Frontend
+<!-- AUTO-GENERATED:SCRIPTS_FRONTEND -->
+| Lệnh | Mô tả |
+|------|-------|
+| `npm run dev` | Khởi chạy Vite Dev Server |
+| `npm run build` | Build dự án cho Production |
+| `npm run lint` | Chạy ESLint kiểm tra code |
+| `npm run preview` | Xem trước bản Build |
+<!-- /AUTO-GENERATED:SCRIPTS_FRONTEND -->
+
+### 4. Cài đặt Dependencies & Khởi chạy
+
+Bạn cần chạy đồng thời cả Client và Backend ở 2 terminal khác nhau.
+
+**Terminal 1: Khởi chạy Backend**
+```bash
+cd backend
+npm install
+npm run dev
+```
+*Backend sẽ chạy tại http://localhost:5000*
+
+**Terminal 2: Khởi chạy Client**
+```bash
+cd client
+npm install
+npm run dev
+```
+*Client (Vite) sẽ chạy tại http://localhost:5173* (Có hỗ trợ Hot Module Replacement).
+
+---
+
+## 🔄 Luồng hoạt động cơ bản (Ví dụ: Tìm việc)
+
+1. **Trình duyệt (Client)**: Người dùng nhập từ khóa và nhấn "Tìm kiếm". React component gọi API qua `fetch` / `axios` ví dụ: `GET /v1/jobs?keyword=react`.
+2. **Backend Route & Middleware**: Express nhận request ở `jobRoutes` và kiểm tra xác thực (nếu cần).
+3. **Controller & Service**: `jobController` chuyển từ khóa tìm kiếm sang `jobService`.
+4. **Repository**: `jobRepository` tạo câu query gửi đến Elasticsearch hoặc thẻ tìm kiếm đồ thị trên Neo4j.
+5. **Phản hồi**: Dữ liệu việc làm trả về dạng dữ liệu JSON. Client cập nhật State và hiển thị kết quả ra UI.

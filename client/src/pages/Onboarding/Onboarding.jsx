@@ -238,7 +238,19 @@ const Onboarding = () => {
           </div>
           <h2 className="text-[#0f111a] dark:text-white text-xl font-bold leading-tight tracking-tight">Korra</h2>
         </div>
-        <button className="flex min-w-[100px] cursor-pointer items-center justify-center rounded-lg h-10 px-5 bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:text-white text-[#0f111a] text-sm font-semibold transition-colors">
+        <button 
+          onClick={() => {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+              const user = JSON.parse(userStr);
+              if (user.role === 'RECRUITER') {
+                window.location.href = '/recruiter';
+                return;
+              }
+            }
+            window.location.href = '/feed';
+          }}
+          className="flex min-w-[100px] cursor-pointer items-center justify-center rounded-lg h-10 px-5 bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:text-white text-[#0f111a] text-sm font-semibold transition-colors">
           <span className="truncate">Skip for now</span>
         </button>
       </header>
@@ -285,11 +297,23 @@ const Onboarding = () => {
                 if (user) {
                   user.isOnboarded = true;
                   localStorage.setItem('user', JSON.stringify(user));
+                  if (user.role === 'RECRUITER') {
+                    window.location.href = '/recruiter';
+                    return;
+                  }
                 }
 
                 window.location.href = '/feed';
               } catch (error) {
                 console.error('Lỗi khi complete onboarding:', error);
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                  const user = JSON.parse(userStr);
+                  if (user.role === 'RECRUITER') {
+                     window.location.href = '/recruiter';
+                     return;
+                  }
+                }
                 window.location.href = '/feed'; // Vẫn cho đi tiếp kể cả lỗi mạn
               }
             }

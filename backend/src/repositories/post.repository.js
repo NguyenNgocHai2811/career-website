@@ -38,76 +38,52 @@ const createPost = async (userId, postData) => {
   }
 };
 
+const POST_DETAILS_FRAGMENT = `
+  OPTIONAL MATCH (p)<-[:COMMENTED_ON]-(c:Comment)
+  WITH p, u, count(DISTINCT c) as commentsCount
+  
+  OPTIONAL MATCH (p)<-[r:REACTED_TO]-(liker:User)
+  WITH p, u, commentsCount, r.type as rType, liker.userId as rUserId
+  WITH p, u, commentsCount, collect(CASE WHEN rType IS NULL THEN null ELSE {type: rType, userId: rUserId} END) as rawReacts
+  WITH p, u, commentsCount, [x IN rawReacts WHERE x IS NOT NULL] as reacts
+  
+  RETURN p, u, commentsCount, size(reacts) as reactionsCount,
+         head([x IN reacts WHERE x.userId = $currentUserId | x.type]) as userReactionType,
+         [x IN reacts | x.type] as allTypes
+`;
+
 /**
  * Retrieves a paginated list of posts (News Feed).
  */
 const getPosts = async (currentUserId, cursor, limit = 10) => {
   const session = driver.session();
   try {
-    // If we have a cursor, fetch posts older than the cursor.
-    // We order by createdAt DESC.
-    let query = `
-      MATCH (u:User)-[:POSTED]->(p:Post)
-    `;
-    
-    let parsedLimit = parseInt(limit, 10);
-    if (isNaN(parsedLimit)) {
-      parsedLimit = 10;
-    }
-    const params = { limit: parsedLimit };
+    let query = `MATCH (u:User)-[:POSTED]->(p:Post)`;
+    const params = { limit: parseInt(limit, 10) || 10, currentUserId };
 
     if (cursor) {
       query += ` WHERE p.createdAt < datetime($cursor) `;
       params.cursor = cursor;
     }
 
-    if (currentUserId) {
-      params.currentUserId = currentUserId;
-    }
-
-    query += `
-      OPTIONAL MATCH (p)<-[:COMMENTED_ON]-(c:Comment)
-      WITH p, u, count(DISTINCT c) as commentsCount
-      
-      OPTIONAL MATCH (p)<-[r:REACTED_TO]-(liker:User)
-      WITH p, u, commentsCount, r.type as rType, liker.userId as rUserId
-      WITH p, u, commentsCount, collect(CASE WHEN rType IS NULL THEN null ELSE {type: rType, userId: rUserId} END) as rawReacts
-      WITH p, u, commentsCount, [x IN rawReacts WHERE x IS NOT NULL] as reacts
-      
-      RETURN p, u, commentsCount, size(reacts) as reactionsCount,
-             head([x IN reacts WHERE x.userId = $currentUserId | x.type]) as userReactionType,
-             [x IN reacts | x.type] as allTypes
-      ORDER BY p.createdAt DESC
-      LIMIT toInteger($limit)
-    `;
+    query += POST_DETAILS_FRAGMENT + ` ORDER BY p.createdAt DESC LIMIT toInteger($limit)`;
 
     const result = await session.run(query, params);
     return result.records.map(record => {
       const post = record.get('p').properties;
-      // Convert Neo4j datetime to ISO string
-      if (post.createdAt && typeof post.createdAt.toString === 'function') {
-        post.createdAt = new Date(post.createdAt.toString()).toISOString();
-      }
-      if (post.updatedAt && typeof post.updatedAt.toString === 'function') {
-        post.updatedAt = new Date(post.updatedAt.toString()).toISOString();
-      }
+      if (post.createdAt) post.createdAt = new Date(post.createdAt.toString()).toISOString();
+      if (post.updatedAt) post.updatedAt = new Date(post.updatedAt.toString()).toISOString();
 
       const author = record.get('u').properties;
       const reactionsCount = record.get('reactionsCount');
-      const userReactionType = record.get('userReactionType');
-      const allTypes = record.get('allTypes');
 
       return {
         ...post,
         commentsCount: record.get('commentsCount').toNumber(),
         reactionsCount: typeof reactionsCount?.toNumber === 'function' ? reactionsCount.toNumber() : (reactionsCount || 0),
-        userReactionType: userReactionType || null,
-        allTypes: allTypes || [],
-        author: {
-          userId: author.userId,
-          fullName: author.fullName,
-          email: author.email
-        }
+        userReactionType: record.get('userReactionType') || null,
+        allTypes: record.get('allTypes') || [],
+        author: { userId: author.userId, fullName: author.fullName, email: author.email }
       };
     });
   } finally {
@@ -118,45 +94,65 @@ const getPosts = async (currentUserId, cursor, limit = 10) => {
 /**
  * Retrieves a single post by ID.
  */
-const getPostById = async (postId) => {
+const getPostById = async (postId, currentUserId = null) => {
   const session = driver.session();
   try {
-    const result = await session.run(
-      `
+    const query = `
       MATCH (u:User)-[:POSTED]->(p:Post {id: $postId})
-      OPTIONAL MATCH (p)<-[:COMMENTED_ON]-(c:Comment)
-      WITH p, u, count(DISTINCT c) as commentsCount
-      
-      OPTIONAL MATCH (p)<-[r:REACTED_TO]-(liker:User)
-      WITH p, u, commentsCount, r.type as rType, liker.userId as rUserId
-      WITH p, u, commentsCount, collect(CASE WHEN rType IS NULL THEN null ELSE {type: rType, userId: rUserId} END) as rawReacts
-      WITH p, u, commentsCount, [x IN rawReacts WHERE x IS NOT NULL] as reacts
-      
-      RETURN p, u, commentsCount, size(reacts) as reactionsCount,
-             head([x IN reacts WHERE x.userId = $currentUserId | x.type]) as userReactionType,
-             [x IN reacts | x.type] as allTypes
-      `,
-      { postId, currentUserId: null } // Single fetch doesn't usually use current user id in our current flow
-    );
+      ${POST_DETAILS_FRAGMENT}
+    `;
+    const result = await session.run(query, { postId, currentUserId });
     if (result.records.length === 0) return null;
-    const post = result.records[0].get('p').properties;
-    const author = result.records[0].get('u').properties;
-    const reactionsCount = result.records[0].get('reactionsCount');
-    const userReactionType = result.records[0].get('userReactionType');
-    const allTypes = result.records[0].get('allTypes');
+    
+    const record = result.records[0];
+    const post = record.get('p').properties;
+    const author = record.get('u').properties;
+    const reactionsCount = record.get('reactionsCount');
 
     return {
       ...post,
-      commentsCount: result.records[0].get('commentsCount').toNumber(),
+      commentsCount: record.get('commentsCount').toNumber(),
       reactionsCount: typeof reactionsCount?.toNumber === 'function' ? reactionsCount.toNumber() : (reactionsCount || 0),
-      userReactionType: userReactionType || null,
-      allTypes: allTypes || [],
-      author: {
-        userId: author.userId,
-        fullName: author.fullName,
-        email: author.email
-      }
+      userReactionType: record.get('userReactionType') || null,
+      allTypes: record.get('allTypes') || [],
+      author: { userId: author.userId, fullName: author.fullName, email: author.email }
     };
+  } finally {
+    await session.close();
+  }
+};
+
+/**
+ * Retrieves posts created by a specific user.
+ */
+const getUserPosts = async (userId, currentUserId = null) => {
+  const session = driver.session();
+  try {
+    const query = `
+      MATCH (u:User)
+      WHERE u.userId = $userId OR u.id = $userId
+      MATCH (u)-[:POSTED]->(p:Post)
+      ${POST_DETAILS_FRAGMENT}
+      ORDER BY p.createdAt DESC
+    `;
+    const result = await session.run(query, { userId, currentUserId });
+    return result.records.map(record => {
+      const post = record.get('p').properties;
+      if (post.createdAt) post.createdAt = new Date(post.createdAt.toString()).toISOString();
+      if (post.updatedAt) post.updatedAt = new Date(post.updatedAt.toString()).toISOString();
+
+      const author = record.get('u').properties;
+      const reactionsCount = record.get('reactionsCount');
+
+      return {
+        ...post,
+        commentsCount: record.get('commentsCount').toNumber(),
+        reactionsCount: typeof reactionsCount?.toNumber === 'function' ? reactionsCount.toNumber() : (reactionsCount || 0),
+        userReactionType: record.get('userReactionType') || null,
+        allTypes: record.get('allTypes') || [],
+        author: { userId: author.userId, fullName: author.fullName, email: author.email, headline: author.headline, avatarUrl: author.avatarUrl }
+      };
+    });
   } finally {
     await session.close();
   }
@@ -308,5 +304,6 @@ module.exports = {
   addReaction,
   removeReaction,
   addComment,
-  getComments
+  getComments,
+  getUserPosts
 };

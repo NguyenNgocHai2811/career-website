@@ -25,15 +25,58 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
   fileFilter: (req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
-    if (allowed.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('File type not supported. Only images and videos are allowed.'));
-    }
+    allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('File type not supported.'));
   },
 });
 
-module.exports = { cloudinary, upload };
+const profileImageStorage = new CloudinaryStorage({
+  cloudinary,
+  params: (req, file) => ({
+    folder: 'korra/profiles',
+    resource_type: 'image',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ quality: 'auto', fetch_format: 'auto', width: 800, crop: 'limit' }],
+    public_id: `${req.user.userId}_${file.fieldname}_${Date.now()}`,
+  }),
+});
+
+const uploadProfileImage = multer({
+  storage: profileImageStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Only JPG, PNG, WebP images are allowed for profile photos.'));
+  },
+});
+
+// ===========================
+// CV DOCUMENT UPLOAD (for job applications)
+// ===========================
+const cvStorage = new CloudinaryStorage({
+  cloudinary,
+  params: (req, file) => ({
+    folder: 'korra/cv',
+    resource_type: 'raw', // raw = non-image/video files (PDF, DOC, etc.)
+    allowed_formats: ['pdf', 'doc', 'docx'],
+    public_id: `${req.user.userId}_cv_${Date.now()}`,
+  }),
+});
+
+const uploadCV = multer({
+  storage: cvStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+    allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Only PDF, DOC, DOCX files are allowed for CV uploads.'));
+  },
+});
+
+module.exports = { cloudinary, upload, uploadProfileImage, uploadCV };
+

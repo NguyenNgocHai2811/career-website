@@ -16,15 +16,15 @@ async function testApi() {
   });
   const registerData = await registerRes.json();
   console.log("Kết quả đăng ký:", registerData.message);
-  
+
   if (registerData.status !== "success") return;
-  
+
   const token = registerData.data.token;
-  
+
   console.log("\n2. Đăng bài viết mới...");
   const postRes = await fetch("http://localhost:3000/v1/posts", {
     method: "POST",
-    headers: { 
+    headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`
     },
@@ -34,14 +34,24 @@ async function testApi() {
   });
   const postData = await postRes.json();
   console.log("Kết quả đăng bài:", postData);
-  
+
   console.log("\n3. Lấy danh sách Feed...");
   const getRes = await fetch("http://localhost:3000/v1/posts", {
     method: "GET",
     headers: { "Authorization": `Bearer ${token}` }
   });
   const getData = await getRes.json();
-  console.log("Kết quả danh sách Feed:", getData);
+  console.log("\n4. Test AI Career Predict...");
+  const aiRes = await fetch("http://localhost:3000/v1/ai/career-predict", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ message: "Tôi thích thiết kế đồ họa" })
+  });
+  const aiData = await aiRes.json();
+  console.log("Kết quả AI:", JSON.stringify(aiData, null, 2));
 }
 
 testApi().catch(console.error);

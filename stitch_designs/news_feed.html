@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Korra Connection Invitations View</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#368ce2",
+                        "periwinkle": "#6C7EE1",
+                        "background-light": "#FDF8F2","background-dark": "#111921",
+                        "card-light": "#FFFFFF",
+                        "card-dark": "#1e293b",
+                        "text-main": "#0e141b",
+                        "text-secondary": "#507395",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"],
+                        "serif": ["Playfair Display", "serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "12px","xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+                        'slide-in-left': 'slideInLeft 0.5s ease-out forwards',
+                        'slide-in-right': 'slideInRight 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideInLeft: {
+                            '0%': { opacity: '0', transform: 'translateX(-20px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' },
+                        },
+                        slideInRight: {
+                            '0%': { opacity: '0', transform: 'translateX(20px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' },
+                        },
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }.delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }.bg-bubbles {
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(255, 223, 186, 0.4) 0%, transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(186, 225, 255, 0.4) 0%, transparent 20%),
+                radial-gradient(circle at 50% 80%, rgba(255, 200, 221, 0.3) 0%, transparent 25%);
+            background-attachment: fixed;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main antialiased bg-bubbles min-h-screen flex flex-col">
+<header class="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/60 bg-white/80 dark:bg-card-dark/90 backdrop-blur-md px-6 py-3 shadow-sm">
+<div class="layout-container w-full max-w-[1280px] mx-auto flex items-center justify-between">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-primary">
+<div class="size-8 bg-primary text-white rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">hexagon</span>
+</div>
+<h2 class="text-text-main dark:text-white text-xl font-bold tracking-tight">Korra</h2>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-semibold transition-colors" href="#">Home</a>
+<a class="text-text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-semibold transition-colors" href="#">Jobs</a>
+<a class="text-text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-semibold transition-colors" href="#">Roadmap</a>
+<a class="text-primary text-sm font-bold relative after:content-[''] after:absolute after:-bottom-[22px] after:left-0 after:w-full after:h-[3px] after:bg-primary after:rounded-t-full" href="#">Feed</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex relative items-center">
+<span class="material-symbols-outlined absolute left-3 text-text-secondary text-[20px]">search</span>
+<input class="h-10 w-64 rounded-lg border-none bg-gray-100 dark:bg-gray-800 text-sm pl-10 pr-4 focus:ring-2 focus:ring-primary/50 placeholder:text-text-secondary" placeholder="Search" type="text"/>
+</div>
+<div class="flex items-center gap-3">
+<button class="relative flex items-center justify-center size-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-main dark:text-white">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-card-dark"></span>
+</button>
+<button class="flex items-center justify-center size-10 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="Portrait of a man with glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0yOkO2SE7TnYQpAW1ojdl_soA2Wzpb7H9X5zcTzGzb-s9aLlSX7P87YPoZ8qFa7hHHt2PPgn5q5QslPCQ1_JqHh8i05sK23f_zb23BOK-LsXNbUZLJkfLXbGXCCE99dDZ1CexJDaFxqGh3yHjEKh8mt_56sKwyu8ilBiJ71ey44kKDNu6z3TmrIugqlpXiZGqlfSzqxUM5iaND9dc784q6l_1z9aaeAbzqUqC3k5A_3VJjyBsHMDhdbS-6f89YH92RZ9p0nmsrQY"/>
+</button>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 w-full max-w-[1280px] mx-auto px-4 md:px-6 py-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<aside class="hidden lg:block lg:col-span-3 space-y-4 animate-slide-in-left sticky top-24">
+<div class="bg-card-light dark:bg-card-dark rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden py-2">
+<div class="flex flex-col gap-1 px-3">
+<a class="flex items-center justify-between px-4 py-3 bg-periwinkle/10 dark:bg-periwinkle/20 rounded-lg text-periwinkle transition-colors" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[22px]">group_add</span>
+<span class="text-sm font-bold">Invitations</span>
+</div>
+<span class="bg-periwinkle text-white text-xs font-bold px-2 py-0.5 rounded-full">12</span>
+</a>
+<a class="flex items-center justify-between px-4 py-3 text-text-secondary dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-text-main dark:hover:text-white rounded-lg transition-colors" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[22px]">group</span>
+<span class="text-sm font-medium">My Connections</span>
+</div>
+</a>
+<a class="flex items-center justify-between px-4 py-3 text-text-secondary dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-text-main dark:hover:text-white rounded-lg transition-colors" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[22px]">person_check</span>
+<span class="text-sm font-medium">People You Follow</span>
+</div>
+</a>
+</div>
+</div>
+</aside>
+<div class="col-span-1 lg:col-span-9 space-y-6">
+<div class="bg-card-light dark:bg-card-dark rounded-lg p-6 shadow-sm border-b border-gray-100 dark:border-gray-700 flex items-center justify-between animate-fade-in-up">
+<h1 class="text-xl font-bold text-text-main dark:text-white">Received Invitations <span class="text-periwinkle font-normal text-lg ml-2">(12 pending)</span></h1>
+<button class="text-sm font-semibold text-text-secondary hover:text-periwinkle transition-colors">Manage all</button>
+</div>
+<div class="space-y-4">
+<div class="bg-card-light dark:bg-card-dark rounded-lg p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row items-start md:items-center gap-6 animate-fade-in-up delay-100 transition-shadow hover:shadow-md">
+<div class="size-20 rounded-full overflow-hidden shrink-0 border border-gray-200 dark:border-gray-700">
+<img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBa3So72ygbtOtBfSVf6Kh-nPPmOq_kMxe7NlSSZtMV2EPb3RLIZTxctbUAkBqvowgyuL1g4di3xG8jeBdF6HP6ql_X7WM-pdEzH1om4AAqpGp9XRLrVr_GpQYm8lSh0h2oSzu-YFZjHTnQ2DsYALVi92aT4M3ZA1ohwrNDlpbVxZ3sNEg2m31It4qwUPepf_runQBXcVObWAqyMn7ZAsj7_sIvrxp_RgWo7IQ6PEvvmUi3plBfixU1iK6_axOmennCpxnJfcL6dag"/>
+</div>
+<div class="flex-1 min-w-0">
+<h3 class="font-serif text-xl font-bold text-text-main dark:text-white mb-1">Sarah Miller</h3>
+<p class="text-sm text-text-secondary dark:text-gray-400 mb-2 truncate">Head of Talent at Creative Co | Seeking Design Leaders</p>
+<div class="flex items-center gap-2 text-xs text-text-secondary dark:text-gray-500">
+<div class="flex -space-x-2">
+<img alt="mutual" class="size-6 rounded-full border-2 border-white dark:border-card-dark" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4PxW8KKlArR2Sx9a5j2bpo1Y29t9TFOkTa_45kRvkfPpIZDFb81oE7ZNKfJ1dGg8nOfLhmnlXjXj3e5XjBljMK-wk8pngi7tpuaFS_esuTkATchshBOYzx5QHkS9LL7uIVJODV-Zr7u5fZs_9SK0ec4KmElbnscd-SdFICUccjdrvGdPr5eMEukxR159JH9CIOLBb9zhbqAlY0rPRV-1Pg85yZ_miilEQRR_CgffoUHewMsZ-TvoQba5jhEAA_WM-v2HIit33LTA"/>
+<img alt="mutual" class="size-6 rounded-full border-2 border-white dark:border-card-dark" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCF8bew7BSmJYm0hS2H-IcyHmmmf1FPSp7keFTADDvecePfcf_lhTN-zkoi3oS_REkuOtGiqOV_afarK4u5VLR2GSx57qWqxF4iJO4PeG-rwchUJgrG3EVLztlEhyxUHaFESf6-HhKvBLERfN4AvR59UDz8Hi0uOduHSCipup4mob1x7rOOoz3_WpNZ7oPKeYmOO4WjtnrUWasRXsAzxl9r41l0MnveXzyfxeNoptzy6tLFvKy5o1NE54tnrCH7yJfimm0rt3Yx04g"/>
+</div>
+<span class="ml-1">8 mutual connections</span>
+</div>
+</div>
+<div class="flex items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
+<button class="flex-1 md:flex-none px-6 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/50 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-100 dark:hover:border-red-900/50 text-text-secondary dark:text-gray-400 font-semibold text-sm transition-all">Ignore</button>
+<button class="flex-1 md:flex-none px-6 py-2.5 rounded-lg bg-periwinkle hover:bg-periwinkle/90 text-white font-semibold text-sm shadow-sm transition-all">Accept</button>
+</div>
+</div>
+<div class="bg-card-light dark:bg-card-dark rounded-lg p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row items-start md:items-center gap-6 animate-fade-in-up delay-200 transition-shadow hover:shadow-md">
+<div class="size-20 rounded-full overflow-hidden shrink-0 border border-gray-200 dark:border-gray-700">
+<img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCF8bew7BSmJYm0hS2H-IcyHmmmf1FPSp7keFTADDvecePfcf_lhTN-zkoi3oS_REkuOtGiqOV_afarK4u5VLR2GSx57qWqxF4iJO4PeG-rwchUJgrG3EVLztlEhyxUHaFESf6-HhKvBLERfN4AvR59UDz8Hi0uOduHSCipup4mob1x7rOOoz3_WpNZ7oPKeYmOO4WjtnrUWasRXsAzxl9r41l0MnveXzyfxeNoptzy6tLFvKy5o1NE54tnrCH7yJfimm0rt3Yx04g"/>
+</div>
+<div class="flex-1 min-w-0">
+<h3 class="font-serif text-xl font-bold text-text-main dark:text-white mb-1">David Chen</h3>
+<p class="text-sm text-text-secondary dark:text-gray-400 mb-2 truncate">Frontend Engineer at TechFlow | React &amp; TypeScript Enthusiast</p>
+<div class="flex items-center gap-2 text-xs text-text-secondary dark:text-gray-500">
+<div class="flex -space-x-2">
+<img alt="mutual" class="size-6 rounded-full border-2 border-white dark:border-card-dark" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxUxVubEnr75IdRj4w2uPCXqfydohbWTXreMBlq7Ldl4tUIFw5HZEPg7o4t9ckHG8M5qU7bROBWh1OqvtkQj_D7fUo5ATqG5GV8NtW-hS6exjlgCJu0Jb6IyflNm3oRvxohyIUS9sduKBKenBX_ytGNYzJDEhlvmq7xNtDEpGFrtzqMVIKSoYK-r8wld6sVQ7Mlsd3XPzT6EnjIQzg5CrAoAcmLmOQUi6KQkJ1ROP-TRyhpSyjBUvJcqfNHn2prmkxunL2M1agD3w"/>
+<img alt="mutual" class="size-6 rounded-full border-2 border-white dark:border-card-dark" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACX7hwPduTGPB4FkrRwkeHYkscsqCrpU3POdFAr9UvAxb-l5FsHpG8M27Jm7Wp3DSXwBETXqvFmOt_QYRgEKI2hZNGnRYJHR30ssJZM9iMZflPoYQJoPKItrvplhb1ynpszdJp_e9V4P8TFwNOxBnJdsL48-3CHuzvozkicuCgYsAsTqKuQz4-jFsUfw1vZiPTQ2JvHBVxWJ2VhYEluP3yLnhc_wrgoaSImnWvnv1_LokvCJ2PMi7-OQErJnVqqNx74_RkrfP1jmM"/>
+</div>
+<span class="ml-1">14 mutual connections</span>
+</div>
+</div>
+<div class="flex items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
+<button class="flex-1 md:flex-none px-6 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/50 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-100 dark:hover:border-red-900/50 text-text-secondary dark:text-gray-400 font-semibold text-sm transition-all">Ignore</button>
+<button class="flex-1 md:flex-none px-6 py-2.5 rounded-lg bg-periwinkle hover:bg-periwinkle/90 text-white font-semibold text-sm shadow-sm transition-all">Accept</button>
+</div>
+</div>
+<div class="bg-card-light dark:bg-card-dark rounded-lg p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row items-start md:items-center gap-6 animate-fade-in-up delay-300 transition-shadow hover:shadow-md">
+<div class="size-20 rounded-full overflow-hidden shrink-0 border border-gray-200 dark:border-gray-700">
+<img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4PxW8KKlArR2Sx9a5j2bpo1Y29t9TFOkTa_45kRvkfPpIZDFb81oE7ZNKfJ1dGg8nOfLhmnlXjXj3e5XjBljMK-wk8pngi7tpuaFS_esuTkATchshBOYzx5QHkS9LL7uIVJODV-Zr7u5fZs_9SK0ec4KmElbnscd-SdFICUccjdrvGdPr5eMEukxR159JH9CIOLBb9zhbqAlY0rPRV-1Pg85yZ_miilEQRR_CgffoUHewMsZ-TvoQba5jhEAA_WM-v2HIit33LTA"/>
+</div>
+<div class="flex-1 min-w-0">
+<h3 class="font-serif text-xl font-bold text-text-main dark:text-white mb-1">Elena Rodriguez</h3>
+<p class="text-sm text-text-secondary dark:text-gray-400 mb-2 truncate">Product Manager @ Stripe | Building Global Payments</p>
+<div class="flex items-center gap-2 text-xs text-text-secondary dark:text-gray-500">
+<span class="material-symbols-outlined text-[16px] text-gray-400">domain</span>
+<span>Talks about #productmanagement, #fintech</span>
+</div>
+</div>
+<div class="flex items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
+<button class="flex-1 md:flex-none px-6 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/50 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-100 dark:hover:border-red-900/50 text-text-secondary dark:text-gray-400 font-semibold text-sm transition-all">Ignore</button>
+<button class="flex-1 md:flex-none px-6 py-2.5 rounded-lg bg-periwinkle hover:bg-periwinkle/90 text-white font-semibold text-sm shadow-sm transition-all">Accept</button>
+</div>
+</div>
+<div class="bg-card-light dark:bg-card-dark rounded-lg p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row items-start md:items-center gap-6 animate-fade-in-up delay-400 transition-shadow hover:shadow-md">
+<div class="size-20 rounded-full overflow-hidden shrink-0 border border-gray-200 dark:border-gray-700">
+<img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxUxVubEnr75IdRj4w2uPCXqfydohbWTXreMBlq7Ldl4tUIFw5HZEPg7o4t9ckHG8M5qU7bROBWh1OqvtkQj_D7fUo5ATqG5GV8NtW-hS6exjlgCJu0Jb6IyflNm3oRvxohyIUS9sduKBKenBX_ytGNYzJDEhlvmq7xNtDEpGFrtzqMVIKSoYK-r8wld6sVQ7Mlsd3XPzT6EnjIQzg5CrAoAcmLmOQUi6KQkJ1ROP-TRyhpSyjBUvJcqfNHn2prmkxunL2M1agD3w"/>
+</div>
+<div class="flex-1 min-w-0">
+<h3 class="font-serif text-xl font-bold text-text-main dark:text-white mb-1">Marcus Jones</h3>
+<p class="text-sm text-text-secondary dark:text-gray-400 mb-2 truncate">Senior Recruiter at GlobalTech | Connecting Talent</p>
+<div class="flex items-center gap-2 text-xs text-text-secondary dark:text-gray-500">
+<div class="flex -space-x-2">
+<img alt="mutual" class="size-6 rounded-full border-2 border-white dark:border-card-dark" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBa3So72ygbtOtBfSVf6Kh-nPPmOq_kMxe7NlSSZtMV2EPb3RLIZTxctbUAkBqvowgyuL1g4di3xG8jeBdF6HP6ql_X7WM-pdEzH1om4AAqpGp9XRLrVr_GpQYm8lSh0h2oSzu-YFZjHTnQ2DsYALVi92aT4M3ZA1ohwrNDlpbVxZ3sNEg2m31It4qwUPepf_runQBXcVObWAqyMn7ZAsj7_sIvrxp_RgWo7IQ6PEvvmUi3plBfixU1iK6_axOmennCpxnJfcL6dag"/>
+</div>
+<span class="ml-1">3 mutual connections</span>
+</div>
+</div>
+<div class="flex items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
+<button class="flex-1 md:flex-none px-6 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/50 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-100 dark:hover:border-red-900/50 text-text-secondary dark:text-gray-400 font-semibold text-sm transition-all">Ignore</button>
+<button class="flex-1 md:flex-none px-6 py-2.5 rounded-lg bg-periwinkle hover:bg-periwinkle/90 text-white font-semibold text-sm shadow-sm transition-all">Accept</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>
