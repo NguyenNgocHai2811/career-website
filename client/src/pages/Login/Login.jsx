@@ -33,6 +33,8 @@ function Login() {
         localStorage.setItem('user', JSON.stringify(data.data.user));
         if (data.data.user.isOnboarded === false) {
           navigate('/onboarding');
+        } else if (data.data.user.role === 'RECRUITER') {
+          navigate('/recruiter');
         } else {
           navigate('/feed');
         }

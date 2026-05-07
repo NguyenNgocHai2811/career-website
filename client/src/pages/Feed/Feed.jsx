@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PostItem from '../../components/PostItem/PostItem';
+import AppHeader from '../../components/AppHeader/AppHeader';
+import { searchUsersToConnect, sendConnectionRequest } from '../../services/networkService';
 
 const formatDate = (dateString) => {
   if (!dateString) return '';
@@ -29,6 +31,7 @@ const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [postContent, setPostContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
 
   const navigate = useNavigate();
 
@@ -52,7 +55,29 @@ const Feed = () => {
 
     // Fetch posts from API
     fetchPosts();
+    // Load friend suggestions
+    loadSuggestions();
   }, []);
+
+  const loadSuggestions = async () => {
+    try {
+      const token = getAuthToken();
+      if(token) {
+        const data = await searchUsersToConnect(token, '');
+        setSuggestions(data.slice(0, 3)); // show top 3
+      }
+    } catch(err) { console.error('Failed to load suggestions:', err); }
+  };
+
+  const handleConnect = async (userId) => {
+    try {
+      await sendConnectionRequest(getAuthToken(), userId);
+      alert('Kết bạn thành công! (Request sent)');
+      setSuggestions(prev => prev.filter(s => s.id !== userId));
+    } catch(err) {
+      alert(err.message);
+    }
+  };
 
   const fetchPosts = async () => {
     try {
@@ -205,48 +230,7 @@ const Feed = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-text-main antialiased bg-bubbles min-h-screen flex flex-col font-body">
-      {/* Header */}
-      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/60 bg-white/80 dark:bg-card-dark/90 backdrop-blur-md px-6 py-3 shadow-sm">
-        <div className="layout-container w-full max-w-[1280px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            {/* Logo */}
-            <div className="flex items-center gap-3 text-primary">
-              <div className="size-8 bg-primary text-white rounded-lg flex items-center justify-center">
-                <span className="material-symbols-outlined text-[24px]">hexagon</span>
-              </div>
-              <h2 className="text-text-main dark:text-white text-xl font-bold tracking-tight">Korra</h2>
-            </div>
-            {/* Nav Links */}
-            <nav className="hidden md:flex items-center gap-8">
-              <Link to="/" className="text-text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-semibold transition-colors">Home</Link>
-              <a href="#" className="text-text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-semibold transition-colors">Jobs</a>
-              <a href="#" className="text-text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-semibold transition-colors">Roadmap</a>
-              <Link to="/feed" className="text-primary text-sm font-bold relative after:content-[''] after:absolute after:-bottom-[22px] after:left-0 after:w-full after:h-[3px] after:bg-primary after:rounded-t-full">Feed</Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-6">
-            {/* Search */}
-            <div className="hidden lg:flex relative items-center">
-              <span className="material-symbols-outlined absolute left-3 text-text-secondary text-[20px]">search</span>
-              <input className="h-10 w-64 rounded-lg border-none bg-gray-100 dark:bg-gray-800 text-sm pl-10 pr-4 focus:ring-2 focus:ring-primary/50 placeholder:text-text-secondary" placeholder="Search" type="text" />
-            </div>
-            {/* Tools */}
-            <div className="flex items-center gap-3">
-              <button className="relative flex items-center justify-center size-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-main dark:text-white">
-                <span className="material-symbols-outlined">notifications</span>
-                <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-card-dark"></span>
-              </button>
-              <button className="flex items-center justify-center size-10 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-200">
-                {user.avatar ? (
-                  <img alt="User Avatar" className="w-full h-full object-cover" src={user.avatar} />
-                ) : (
-                  <span className="material-symbols-outlined text-gray-500">person</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AppHeader activeTab="feed" />
 
       {/* Main Content Grid */}
       <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 md:px-6 py-8">
@@ -271,9 +255,12 @@ const Feed = () => {
                 <span className="font-bold text-text-main dark:text-gray-200">{user.role}</span><br />
                 <span className="text-xs font-medium">{user.email}</span>
               </p>
-              <button className="w-full py-2 px-4 rounded-lg border border-gray-200 dark:border-gray-600 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-text-main dark:text-white">
+              <Link
+                to={`/profile/${user.userId}`}
+                className="w-full py-2 px-4 rounded-lg border border-gray-200 dark:border-gray-600 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-text-main dark:text-white block text-center no-underline"
+              >
                 View Profile
-              </button>
+              </Link>
             </div>
 
             {/* Navigation Menu */}
@@ -433,28 +420,21 @@ const Feed = () => {
                 <a className="text-xs font-semibold text-primary hover:underline" href="#">View all</a>
               </div>
               <div className="space-y-4">
-                {/* Person 1 */}
-                <div className="flex items-center gap-3">
-                  <img alt="Elena Rodriguez" className="size-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4PxW8KKlArR2Sx9a5j2bpo1Y29t9TFOkTa_45kRvkfPpIZDFb81oE7ZNKfJ1dGg8nOfLhmnlXjXj3e5XjBljMK-wk8pngi7tpuaFS_esuTkATchshBOYzx5QHkS9LL7uIVJODV-Zr7u5fZs_9SK0ec4KmElbnscd-SdFICUccjdrvGdPr5eMEukxR159JH9CIOLBb9zhbqAlY0rPRV-1Pg85yZ_miilEQRR_CgffoUHewMsZ-TvoQba5jhEAA_WM-v2HIit33LTA" />
-                  <div className="flex-1 min-w-0">
-                    <h5 className="text-sm text-text-main dark:text-white truncate font-bold">Elena Rodriguez</h5>
-                    <p className="text-xs text-text-secondary dark:text-gray-400 truncate">Product Manager @ Stripe</p>
+                {suggestions.map(person => (
+                  <div key={person.id} className="flex items-center gap-3">
+                    <div className="size-10 rounded-full flex items-center justify-center font-bold text-[#6b7de1] bg-[#e8eaf2] overflow-hidden shrink-0">
+                      {person.avatarUrl ? <img src={person.avatarUrl} className="w-full h-full object-cover"/> : person.fullName?.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h5 className="text-sm text-text-main dark:text-white truncate font-bold">{person.fullName}</h5>
+                      <p className="text-xs text-text-secondary dark:text-gray-400 truncate">{person.headline || 'Korra Member'}</p>
+                    </div>
+                    <button onClick={()=>handleConnect(person.id)} className="size-8 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white flex items-center justify-center transition-colors">
+                      <span className="material-symbols-outlined text-[18px]">person_add</span>
+                    </button>
                   </div>
-                  <button className="size-8 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white flex items-center justify-center transition-colors">
-                    <span className="material-symbols-outlined text-[18px]">person_add</span>
-                  </button>
-                </div>
-                {/* Person 2 */}
-                <div className="flex items-center gap-3">
-                  <img alt="Marcus Jones" className="size-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxUxVubEnr75IdRj4w2uPCXqfydohbWTXreMBlq7Ldl4tUIFw5HZEPg7o4t9ckHG8M5qU7bROBWh1OqvtkQj_D7fUo5ATqG5GV8NtW-hS6exjlgCJu0Jb6IyflNm3oRvxohyIUS9sduKBKenBX_ytGNYzJDEhlvmq7xNtDEpGFrtzqMVIKSoYK-r8wld6sVQ7Mlsd3XPzT6EnjIQzg5CrAoAcmLmOQUi6KQkJ1ROP-TRyhpSyjBUvJcqfNHn2prmkxunL2M1agD3w" />
-                  <div className="flex-1 min-w-0">
-                    <h5 className="text-sm text-text-main dark:text-white truncate font-bold">Marcus Jones</h5>
-                    <p className="text-xs text-text-secondary dark:text-gray-400 truncate">Senior Recruiter</p>
-                  </div>
-                  <button className="size-8 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white flex items-center justify-center transition-colors">
-                    <span className="material-symbols-outlined text-[18px]">person_add</span>
-                  </button>
-                </div>
+                ))}
+                {suggestions.length === 0 && <p className="text-xs text-gray-400 text-center">No new recommendations</p>}
               </div>
             </div>
 

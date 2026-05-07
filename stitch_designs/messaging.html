@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Korra - Messages</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#6b7de1",
+                        "secondary": "#FDF8F2",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#121420",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "xl": "12px",
+                        "2xl": "16px", 
+                    },
+                    animation: {
+                        'slide-in-left': 'slideInLeft 0.5s ease-out forwards',
+                        'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        slideInLeft: {
+                            '0%': { opacity: '0', transform: 'translateX(-20px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-[#f9f9fb] text-[#0f111a] font-display overflow-hidden h-screen flex flex-col relative">
+<!-- Decorative Background Blobs (Otomate-inspired pastel bubbles) -->
+<div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#6b7de1]/10 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
+<div class="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-[#FDF8F2] rounded-full blur-[60px] -z-10 pointer-events-none"></div>
+<div class="absolute top-[20%] right-[30%] w-[300px] h-[300px] bg-purple-100/40 rounded-full blur-[50px] -z-10 pointer-events-none"></div>
+<!-- Header -->
+<header class="flex-none flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e8eaf2]/60 glass-panel px-10 py-3 z-20">
+<div class="flex items-center gap-4 text-[#0f111a]">
+<div class="size-8 text-primary">
+<svg class="h-full w-full" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-[#0f111a] text-xl font-bold leading-tight tracking-[-0.015em]">Korra</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8">
+<nav class="flex items-center gap-9 hidden md:flex">
+<a class="text-[#545d92] hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Home</a>
+<a class="text-[#545d92] hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Jobs</a>
+<a class="text-[#545d92] hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Roadmap</a>
+<a class="text-primary text-sm font-bold leading-normal" href="#">Feed</a>
+<a class="text-[#545d92] hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Tools</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-[#545d92] hover:text-primary transition-colors">notifications</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 ring-white cursor-pointer" data-alt="User profile picture showing a professional headshot" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCifK-b_8es3PafkTM7xueWYmsq_RrqMyJI85d-2W-urOAxCBplsNqoNbw55uL7n_1iJdZSSDgC-eTtOuTvkx09l-IN6Bi9bXBknsVzS9Fjp_lMXfZzrPLh-04sCGY2YeGekO_IWcZZNNAy9aZPLXxWjoTrLwajeam8AHOJxmatmTo7AraREcCLO4qbnf4uNt8w-xeS3RKTaxf6_GsWZzb2BAbajgc60Doh2_KSJva1W60j5JDf7TihW7Jse01LLTcPHQ2iFO8bIzA");'></div>
+</div>
+</div>
+</header>
+<!-- Main Content Layout -->
+<div class="flex flex-1 overflow-hidden p-4 md:px-10 md:py-6 gap-6 max-w-[1600px] mx-auto w-full">
+<!-- Left Sidebar (Chat List) -->
+<aside class="w-full md:w-[320px] lg:w-[380px] flex flex-col glass-panel rounded-2xl shadow-sm border-white/40 h-full animate-slide-in-left">
+<!-- Search Header -->
+<div class="p-5 border-b border-gray-100">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-xl font-bold text-[#0f111a]">Messages</h2>
+<button class="material-symbols-outlined text-[#545d92] hover:bg-gray-100 p-2 rounded-full transition-colors text-[20px]">edit_square</button>
+</div>
+<div class="relative w-full">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-[#545d92] text-[20px]">search</span>
+</div>
+<input class="w-full pl-10 pr-4 py-2.5 bg-white/60 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-[#0f111a] placeholder:text-[#9ca3af]" placeholder="Search contacts..." type="text"/>
+</div>
+</div>
+<!-- Conversation List -->
+<div class="flex-1 overflow-y-auto p-3 space-y-1">
+<!-- Active Chat Item -->
+<div class="group flex items-center gap-3 p-3 rounded-xl bg-white shadow-sm border border-primary/10 cursor-pointer hover:shadow-md transition-all">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-12 w-12" data-alt="Headshot of Sarah Recruiter" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBMLrXq2ixUrFfq2JBZEN_3CIS2y6VHJN6rzZun6JSOWNJUBhJdGDBSqlyR3MJOmSgmRhU5jPPOme3A_gOVtFgomsy69wHlKVg_zr_gb2hJAIZ-oEg51JKCXpEgn0S5ER6RuPSaQnscNHgqE1B4sA-b7uZCIsp-h8AyHRoFJLbWM_HmNyFHoFSEp4H8VL6RIG6VhPahkuTqWKE-3PgYL_P-dqAbvRJwjGlWu77tsbprhc-iWmoDeiebflaF3LfIIMTj1YUfxNUDr8Q");'></div>
+<div class="absolute bottom-0 right-0 size-3.5 border-2 border-white bg-[#07883f] rounded-full"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-0.5">
+<p class="text-[#0f111a] font-semibold truncate">Sarah Recruiter</p>
+<span class="text-xs text-primary font-medium">10:42 AM</span>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-[#545d92] text-sm truncate pr-2">Can we schedule a call for tomorrow?</p>
+<div class="size-2.5 bg-primary rounded-full shrink-0"></div>
+</div>
+</div>
+</div>
+<!-- Chat Item -->
+<div class="group flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 cursor-pointer transition-colors">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-12 w-12" data-alt="Company logo for Tech Solutions Inc." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBjgMOsNTqvRqzUja6OUR0rYDe9TWpZsz_fO2JMoJq6jrGcZ94AIpCctmvBlCSF30MykR64PIljAywYaXL074RIZIDudpE2BCuEO4wv6l2cHkxOz7aKMkj3_XuTuM8YRc93Xj3Jhf8VPNmvoDJrRJfcQlw9CxYxqJk46jvljiAv8G28Bx5pPyryU2z_X9D1EJMFAy9Hqei6N_YeXaJU0Qim86mBsWwGbsxYVm6Agl3xe22aikJcebu6Bim3Y2XulXMbmYZp7kLliFo");'></div>
+<div class="absolute bottom-0 right-0 size-3.5 border-2 border-white bg-gray-400 rounded-full"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-0.5">
+<p class="text-[#0f111a] font-medium truncate">Tech Solutions Inc.</p>
+<span class="text-xs text-[#9ca3af]">Yesterday</span>
+</div>
+<p class="text-[#545d92]/80 text-sm truncate">Your application has been viewed.</p>
+</div>
+</div>
+<!-- Chat Item -->
+<div class="group flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 cursor-pointer transition-colors">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-12 w-12" data-alt="Headshot of David Chen" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC0YpZSqQFpHS-LCZFofRu7TLNc6N8SbXbkMFWRijh61L-8jO5FVL0XShVCOqW3bKkliKXT6D9nE-8Na9nWYPdfzRHRbllCmwgbfBY5qeL6CgbWRqu1pHqGPsT49edn4cNUXObhs5JDekJFdBUmmp3ecYlhx4fJfZJ7UYdEQC8IAXmwK2RbHOEShmx6_QVB4zXhunT8GILcsS1avj-YfnHJU55ktjEWCUoH-ioRgcHaenl4vb9EOaAnfkwQX3p--iFb0NYas5Dnpq8");'></div>
+<div class="absolute bottom-0 right-0 size-3.5 border-2 border-white bg-[#07883f] rounded-full"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-0.5">
+<p class="text-[#0f111a] font-medium truncate">David Chen</p>
+<span class="text-xs text-[#9ca3af]">Tue</span>
+</div>
+<p class="text-[#545d92]/80 text-sm truncate">Thanks for the update!</p>
+</div>
+</div>
+<!-- Chat Item -->
+<div class="group flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 cursor-pointer transition-colors">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-12 w-12" data-alt="Headshot of Emily Davis" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDezxscupO1CmQAwg97oIZVzQbmKeTVzg9Ea0HjTRdCwrG3HwIRF26jKzRB9b9HK2GCY59OmdrUsLjHnfSatuHFDhF4BQos58F_kLPuPcotAX0DnnO16_PLDzECIzDEuyNkghKp3850b1aqN5yhyXuRcKx22JjF4Jw_wCDXGo-50Kvo8LHg8t_vGuWOIllsXgmgvYaG3JnZsOiQiUVlITlE3ZCDxfqjODecA6O4tkWUZPRCAQMMWZdSzgdb02Iezs-C03izxCZJNWE");'></div>
+<div class="absolute bottom-0 right-0 size-3.5 border-2 border-white bg-gray-400 rounded-full"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-0.5">
+<p class="text-[#0f111a] font-medium truncate">Emily Davis</p>
+<span class="text-xs text-[#9ca3af]">Mon</span>
+</div>
+<p class="text-[#545d92]/80 text-sm truncate">Let me know if the position opens up again.</p>
+</div>
+</div>
+<!-- Chat Item -->
+<div class="group flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 cursor-pointer transition-colors">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-12 w-12" data-alt="Headshot of Mark Johnson" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDfGnOJ7sofT2lT3V3_QW_TtCsgh4lJJjhcbjEEYHAJAXj4_LNzgdBUrmWEcsTa7wGmP7hzMblMgsGpZ2_IuFZgJlqV_P1Fh9GrVhvfMqLDXhg4bbQkhwtKkmRAaHtBdDQzgpRXDGbQxmvJWxEGB3vxJ2c11dr4gSnQ5Yq8uW0stHCBa7baE7esu-TKCs0VP4qKOZoPHEaR-2t6Jvm-SuEiBGk_qwnOI3a1uK638RmbvuexlTZjQDegs1-esDlZKNlrFimjZui-6hU");'></div>
+<div class="absolute bottom-0 right-0 size-3.5 border-2 border-white bg-gray-400 rounded-full"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-0.5">
+<p class="text-[#0f111a] font-medium truncate">Mark Johnson</p>
+<span class="text-xs text-[#9ca3af]">Mon</span>
+</div>
+<p class="text-[#545d92]/80 text-sm truncate">Sure thing.</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Chat Area -->
+<main class="hidden md:flex flex-1 flex-col glass-panel rounded-2xl shadow-sm border-white/40 overflow-hidden">
+<!-- Chat Top Bar -->
+<div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white/40 backdrop-blur-sm z-10">
+<div class="flex items-center gap-4">
+<div class="relative">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-12 w-12 shadow-sm" data-alt="High quality portrait of Sarah Recruiter" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDJQc479KTYPeextdv8uQJlML_IprUwljg5O42WRLSTTR9LxuEySb1HQNt48ABfbNLP9QeiVOeLUHzzZj6IuAJKChoH9MciMROP21ZBppuVvzsxrCdNN8JY1VJkbJizD2bNPmTMbrfBdz3ElY_AvgiorDO7YNtXwCz072t81njDTCi083ehVrA5Qw_AQGsvnzDl8vlH5VivA9b_PID6zLmCO7GWpIlExIGX-mL-QdsuBUxogz9RCutYRMCwZqDwTnPqeXIKAm4w7v0");'></div>
+<div class="absolute bottom-0 right-0 size-3 border-2 border-white bg-[#07883f] rounded-full"></div>
+</div>
+<div>
+<h3 class="text-[#0f111a] text-lg font-bold leading-tight">Sarah Recruiter</h3>
+<p class="text-[#545d92] text-sm font-medium">Senior Talent Acquisition @ Korra</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-white/80 text-[#545d92] transition-colors">
+<span class="material-symbols-outlined">call</span>
+</button>
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-white/80 text-[#545d92] transition-colors">
+<span class="material-symbols-outlined">info</span>
+</button>
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-white/80 text-[#545d92] transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Messages Area -->
+<div class="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col bg-white/20">
+<!-- Date Separator -->
+<div class="flex justify-center">
+<span class="px-3 py-1 bg-[#e8eaf2]/60 rounded-full text-xs font-medium text-[#545d92]">Today</span>
+</div>
+<!-- Received Message -->
+<div class="flex gap-3 max-w-[80%] animate-fade-in-up" style="animation-delay: 0.1s;">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-8 w-8 shrink-0 mt-1" data-alt="Small avatar of Sarah" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB_p32qu6osnSLmSMyMPWHQceR3FCAQGyPBs2FjSvlGh6TSKkhIXgfk6wmDXRQJ7j6DXjFvTTSdMboxP3LbEt0NiCKlSdqRl_27Kb476hXHaNN59la7ihn9ioxn6QQzE8XtDtykkagf97kyD2PYtMVB8B5obLL0OLltWl73aLqzZyJ9HhgNPCFG2O8_cCuPf8fyqs0Xct3I1UeeK0NkjtxYWq-P837RrOsjZTV9HRBZFBM95StqXasZUWkd3iUTBujCgHTu6y1Qw40");'></div>
+<div class="flex flex-col gap-1">
+<div class="p-4 rounded-xl rounded-tl-none bg-[#FDF8F2] shadow-sm text-[#0f111a] text-[15px] leading-relaxed border border-[#FDF8F2]">
+                            Hi there! I reviewed your application for the Senior Product Designer role. Your portfolio is impressive!
+                        </div>
+<span class="text-xs text-[#545d92] ml-1">10:30 AM</span>
+</div>
+</div>
+<!-- Sent Message -->
+<div class="flex gap-3 max-w-[80%] self-end flex-row-reverse animate-fade-in-up" style="animation-delay: 0.2s;">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-8 w-8 shrink-0 mt-1" data-alt="Small avatar of current user" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC1Ae6hTSv9IbZQTNVK1gfRIRWzo7iDHoW3Xy8mPq-9DHSsgcInqswK4TZOkRZFKbln1zd9iEFLerMBC9b_FSRhYTAY-oSRtP2ZfCPMfZFRAXFtvcpOYbWCTXsW57AE9eMuFI3wiMVJ9sEpBHfmgXGGRIQ1q-MfdIWedru1eN0vLllml_6a0kCEP6vy9VLkxRAbIRTg2YCljRD7snPopipjZVhYCPDRIcL-2zdaId5HkGGthzE2y4mcsssLnY63-uLig4AHZqipA3c");'></div>
+<div class="flex flex-col gap-1 items-end">
+<div class="p-4 rounded-xl rounded-tr-none bg-[#6b7de1] shadow-md text-white text-[15px] leading-relaxed">
+                            Thanks Sarah! I've been following Korra's roadmap and I'm really excited about what you're building.
+                        </div>
+<span class="text-xs text-[#545d92] mr-1">10:32 AM</span>
+</div>
+</div>
+<!-- Received Message -->
+<div class="flex gap-3 max-w-[80%] animate-fade-in-up" style="animation-delay: 0.3s;">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-8 w-8 shrink-0 mt-1" data-alt="Small avatar of Sarah" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA_Sh2-EigRNzcb1NwB74QDyOquae2qFKxPXGW_TUI8M8mNHEsypD_i40Z8fsIIk6tvF4fQIg3S_28sXlWGoNnzGnTXIV43BGZi9aDJ0tsVUGvGL_rZiii6I3t2lz1-JeZD6pIRpURK-EAO4WjP9dGkEAd28ow4oEblntbrZ2XCL2S1hukp102VQw2manBiw08EAkSSC2Yolc0XlPkpFGF_7YKUGsLhq2c-G9V71rIIbrCfJfrSD5eg90VnLmmyeBxZQIN5BYVuofw");'></div>
+<div class="flex flex-col gap-1">
+<div class="p-4 rounded-xl rounded-tl-none bg-[#FDF8F2] shadow-sm text-[#0f111a] text-[15px] leading-relaxed border border-[#FDF8F2]">
+                            That's great to hear. We're looking for someone who can jump straight into the messaging architecture improvements.
+                        </div>
+<div class="p-4 rounded-xl rounded-tl-none bg-[#FDF8F2] shadow-sm text-[#0f111a] text-[15px] leading-relaxed border border-[#FDF8F2]">
+                            Can we schedule a call for tomorrow to discuss this further? I have some slots open in the afternoon.
+                        </div>
+<span class="text-xs text-[#545d92] ml-1">10:35 AM</span>
+</div>
+</div>
+</div>
+<!-- Input Bar -->
+<div class="p-5 bg-white/60 backdrop-blur-md border-t border-gray-100">
+<div class="flex items-end gap-3 bg-white border border-gray-200 rounded-xl p-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all">
+<button class="p-2 text-[#545d92] hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center shrink-0" title="Attach file">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+<textarea class="flex-1 max-h-32 min-h-[44px] py-2.5 bg-transparent border-none resize-none focus:ring-0 text-[#0f111a] placeholder:text-[#9ca3af] text-[15px] leading-relaxed" placeholder="Type a message..." rows="1"></textarea>
+<div class="flex items-center gap-1 pb-1">
+<button class="p-2 text-[#545d92] hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center" title="Emoji">
+<span class="material-symbols-outlined">sentiment_satisfied</span>
+</button>
+<button class="p-2 text-[#545d92] hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center" title="Voice note">
+<span class="material-symbols-outlined">mic</span>
+</button>
+<button class="ml-1 h-10 w-10 bg-[#6b7de1] hover:bg-[#5a6bc7] text-white rounded-xl shadow-md flex items-center justify-center transition-all hover:scale-105 active:scale-95" title="Send message">
+<span class="material-symbols-outlined text-[20px]">send</span>
+</button>
+</div>
+</div>
+<div class="text-center mt-2">
+<p class="text-[10px] text-[#9ca3af]">Press Enter to send, Shift + Enter for new line</p>
+</div>
+</div>
+</main>
+</div>
+</body></html>

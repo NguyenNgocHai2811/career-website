@@ -10,6 +10,13 @@ import ResetPassword from './pages/ResetPassword/ResetPassword.jsx';
 import ResetSuccess from './pages/ResetSuccess/ResetSuccess.jsx';
 import Feed from './pages/Feed/Feed.jsx';
 import Profile from './pages/Profile/Profile.jsx';
+import JobSearch from './pages/JobSearch/JobSearch.jsx';
+import RecruiterDashboard from './pages/Recruiter/RecruiterDashboard.jsx';
+import Messaging from './pages/Messaging/Messaging.jsx';
+import CareerAI from './pages/CareerAI/CareerAI.jsx';
+
+import CompanyProfile from './pages/Company/CompanyProfile.jsx';
+import MyNetwork from './pages/Network/MyNetwork.jsx';
 
 function App() {
   return (
@@ -19,6 +26,14 @@ function App() {
         <Route path="/feed" element={<Feed />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:userId" element={<Profile />} />
+        <Route path="/profile/:userId/posts" element={<Profile tab="posts" />} />
+        <Route path="/profile/:userId/activity" element={<Profile tab="activity" />} />
+        <Route path="/company/:companyId" element={<CompanyProfile />} />
+        <Route path="/network" element={<MyNetwork />} />
+        <Route path="/jobs" element={<JobSearch />} />
+        <Route path="/recruiter/*" element={<RecruiterDashboard />} />
+        <Route path="/messages" element={<Messaging />} />
+        <Route path="/career-ai" element={<CareerAI />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />
@@ -28,6 +43,7 @@ function App() {
         <Route path="/reset-password/success" element={<ResetSuccess />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+
     </Router>
   );
 }

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Korra | Discover Your Next Role</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#ece7e2",
+                    "primary": "#4153b4",
+                    "background": "#fef9f3",
+                    "surface-container-low": "#f8f3ed",
+                    "primary-container": "#5b6dcf",
+                    "tertiary": "#7c429f",
+                    "on-primary-fixed": "#00105a",
+                    "primary-fixed": "#dee0ff",
+                    "inverse-on-surface": "#f5f0ea",
+                    "on-secondary-fixed-variant": "#1f496e",
+                    "inverse-primary": "#bac3ff",
+                    "error-container": "#ffdad6",
+                    "surface-container": "#f2ede7",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#642b88",
+                    "on-primary-fixed-variant": "#293d9d",
+                    "surface": "#fef9f3",
+                    "on-error": "#ffffff",
+                    "surface-bright": "#fef9f3",
+                    "outline": "#757684",
+                    "on-secondary-container": "#335b80",
+                    "tertiary-container": "#965bba",
+                    "error": "#ba1a1a",
+                    "on-primary-container": "#fffbff",
+                    "tertiary-fixed": "#f4d9ff",
+                    "surface-dim": "#ded9d4",
+                    "surface-tint": "#4456b6",
+                    "on-surface": "#1d1b18",
+                    "inverse-surface": "#32302c",
+                    "surface-container-highest": "#e6e2dc",
+                    "secondary-container": "#abd3fe",
+                    "on-background": "#1d1b18",
+                    "secondary-fixed": "#cfe5ff",
+                    "on-error-container": "#93000a",
+                    "tertiary-fixed-dim": "#e5b4ff",
+                    "on-tertiary-fixed": "#30004b",
+                    "on-surface-variant": "#454652",
+                    "on-secondary-fixed": "#001d34",
+                    "surface-variant": "#e6e2dc",
+                    "on-tertiary": "#ffffff",
+                    "outline-variant": "#c5c5d4",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary": "#3a6187",
+                    "on-tertiary-container": "#fffbff",
+                    "primary-fixed-dim": "#bac3ff",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed-dim": "#a3caf5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Noto Serif"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .font-serif { font-family: 'Noto Serif', serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Pastel Bubbles Background Effect */
+        .bubble-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background-color: #fef9f3;
+        }
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.4;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen selection:bg-primary-fixed">
+<!-- Pastel Background -->
+<div class="bubble-bg">
+<div class="bubble bg-secondary-container w-[500px] h-[500px] -top-48 -left-24"></div>
+<div class="bubble bg-tertiary-fixed w-[400px] h-[400px] top-1/2 -right-24"></div>
+<div class="bubble bg-primary-fixed w-[300px] h-[300px] bottom-10 left-1/3"></div>
+</div>
+<!-- TopNavBar -->
+<nav class="bg-[#FEF9F3] dark:bg-stone-950 docked full-width top-0 z-50">
+<div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+<div class="text-2xl font-serif font-bold text-[#4153B4] dark:text-[#6C7EE1]">Korra</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-[#4153B4] dark:text-[#6C7EE1] font-bold border-b-2 border-[#4153B4] pb-1 font-sans Labels (Manrope)" href="#">Jobs</a>
+<a class="text-stone-600 dark:text-stone-400 font-medium hover:text-[#4153B4] dark:hover:text-[#6C7EE1] transition-colors duration-300 font-sans Labels (Manrope)" href="#">Applications</a>
+<a class="text-stone-600 dark:text-stone-400 font-medium hover:text-[#4153B4] dark:hover:text-[#6C7EE1] transition-colors duration-300 font-sans Labels (Manrope)" href="#">Messages</a>
+<a class="text-stone-600 dark:text-stone-400 font-medium hover:text-[#4153B4] dark:hover:text-[#6C7EE1] transition-colors duration-300 font-sans Labels (Manrope)" href="#">Saved</a>
+</div>
+<div class="flex items-center gap-5">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-high border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-64" placeholder="Search roles..." type="text"/>
+</div>
+<button class="text-stone-600 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-stone-600 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<img alt="Recruiter profile avatar" class="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20" data-alt="professional portrait of a confident woman recruiter in a modern office setting with warm lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAatXGMWQruPL_Jz94ci7PPOvwMQBEGF5IeAiX2HwYSPTHvUQjKjetmb2GoHuofq10lu_b-a_A7rKwW17no4FnblfBX5P3LP0EWdyz8HTWucFtmowfIAkzJFjGuyBCXNIp2HJYygrjKY1ZRxCDt6DBe9cx2cHr2PuL9z0SQL25L0jqo34i4-Ff0x3pT2wuYxZGtC22W7H9MHvDgCOkc4OTf1P7-RoF7uNqerZOmuceVttRUTA8X-kRDy0HBSgOLCB2Q3a42bymSC4"/>
+</div>
+</div>
+</nav>
+<!-- Main Content Area: Split View -->
+<main class="max-w-screen-2xl mx-auto px-8 pt-6 pb-12 flex gap-8 h-[calc(100vh-88px)] overflow-hidden">
+<!-- Left Column: Job List (Scrollable) -->
+<div class="w-full md:w-[420px] flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
+<header class="flex flex-col gap-1">
+<h1 class="text-3xl font-serif text-on-surface">Curated Opportunities</h1>
+<p class="text-on-surface-variant font-body text-sm tracking-tight">Based on your expertise in Editorial &amp; UX</p>
+</header>
+<!-- Job Cards -->
+<div class="flex flex-col gap-4">
+<!-- Active Job Card -->
+<div class="group relative bg-surface-container-lowest rounded-xl p-5 cursor-pointer transition-all duration-300 hover:scale-[1.02] shadow-sm overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-tertiary-container"></div>
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center font-serif text-primary font-bold">V</div>
+<div>
+<h3 class="font-bold text-on-surface font-body">Senior Content Designer</h3>
+<p class="text-xs text-on-surface-variant font-label uppercase tracking-widest">Vogue Editorial</p>
+</div>
+</div>
+<div class="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-bold font-label uppercase tracking-wider">98% Match</div>
+</div>
+<p class="text-sm text-on-surface-variant line-clamp-2 font-body mb-4">Leading the narrative structure for our digital luxury portfolio. Focusing on tactile digital experiences.</p>
+<div class="flex gap-2">
+<span class="text-[10px] font-label px-2 py-1 bg-surface-container rounded-md text-stone-600">New York, NY</span>
+<span class="text-[10px] font-label px-2 py-1 bg-surface-container rounded-md text-stone-600">$140k - $180k</span>
+</div>
+</div>
+<!-- Regular Job Card -->
+<div class="group bg-surface-container-low/50 hover:bg-surface-container-lowest rounded-xl p-5 cursor-pointer transition-all duration-300 hover:shadow-sm border border-transparent hover:border-outline-variant/10">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center font-serif text-primary font-bold">M</div>
+<div>
+<h3 class="font-bold text-on-surface font-body">UX Curator</h3>
+<p class="text-xs text-on-surface-variant font-label uppercase tracking-widest">Medium Corp</p>
+</div>
+</div>
+<div class="bg-surface-container-highest text-on-surface-variant px-3 py-1 rounded-full text-[10px] font-bold font-label uppercase tracking-wider">85% Match</div>
+</div>
+<p class="text-sm text-on-surface-variant line-clamp-2 font-body mb-4">Developing new curation algorithms that prioritize high-quality journalism and reader engagement.</p>
+<div class="flex gap-2">
+<span class="text-[10px] font-label px-2 py-1 bg-surface-container rounded-md text-stone-600">Remote</span>
+<span class="text-[10px] font-label px-2 py-1 bg-surface-container rounded-md text-stone-600">$120k - $155k</span>
+</div>
+</div>
+<!-- Regular Job Card -->
+<div class="group bg-surface-container-low/50 hover:bg-surface-container-lowest rounded-xl p-5 cursor-pointer transition-all duration-300 hover:shadow-sm border border-transparent hover:border-outline-variant/10">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center font-serif text-primary font-bold">A</div>
+<div>
+<h3 class="font-bold text-on-surface font-body">Visual Storyteller</h3>
+<p class="text-xs text-on-surface-variant font-label uppercase tracking-widest">Architectural Digest</p>
+</div>
+</div>
+<div class="bg-surface-container-highest text-on-surface-variant px-3 py-1 rounded-full text-[10px] font-bold font-label uppercase tracking-wider">79% Match</div>
+</div>
+<p class="text-sm text-on-surface-variant line-clamp-2 font-body mb-4">Translating physical spaces into immersive digital narratives through innovative UI and motion.</p>
+<div class="flex gap-2">
+<span class="text-[10px] font-label px-2 py-1 bg-surface-container rounded-md text-stone-600">London, UK</span>
+<span class="text-[10px] font-label px-2 py-1 bg-surface-container rounded-md text-stone-600">£80k - £110k</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Detail View (Glassmorphism Expansion) -->
+<div class="flex-1 hidden md:flex flex-col bg-surface-container-lowest/80 backdrop-blur-2xl rounded-2xl overflow-y-auto shadow-2xl shadow-primary/5 border border-white/40">
+<!-- Hero Header -->
+<div class="relative h-64 w-full">
+<img alt="Office Interior" class="w-full h-full object-cover" data-alt="modern minimalist office with high ceilings, lush plants, and warm natural sunlight streaming through large windows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQ8PubQWvpnCn65RbERp-fvcKnYAPGw8HE0wYJtB8ma0-W2hyYlenuC-0muKBwZzQgWbRvmpnmKwBt8dlESFOaOrZ-97okoNNjPkMCiKeAghG7lzw2pTqkSNjX4HmO5qHgsB165EWsYrYByQ04bDr7hQePLFrtHpwRUjYAYWbXG4jl_t_CdL2ikyxszupvzrxWyab7_mf6yXkEihGyHoW4NAIlrtGYNajqfU3A0XARKebUIOUcMIjq-KVgoe0K84NWulqqrAry--E"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/20 to-transparent"></div>
+<div class="absolute bottom-6 left-10 flex items-end gap-6">
+<div class="w-24 h-24 rounded-2xl bg-white p-2 shadow-lg">
+<div class="w-full h-full rounded-xl bg-surface-container-low flex items-center justify-center font-serif text-3xl font-bold text-primary">V</div>
+</div>
+<div class="mb-2">
+<div class="flex items-center gap-3 mb-1">
+<h2 class="text-4xl font-serif font-bold text-on-surface">Senior Content Designer</h2>
+<span class="material-symbols-outlined text-primary" data-weight="fill" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<p class="text-lg text-secondary font-medium">Vogue Editorial • Manhattan, NY</p>
+</div>
+</div>
+<div class="absolute top-6 right-10 flex gap-3">
+<button class="w-12 h-12 rounded-full bg-white/90 backdrop-blur shadow-sm flex items-center justify-center text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined">bookmark</span>
+</button>
+<button class="w-12 h-12 rounded-full bg-white/90 backdrop-blur shadow-sm flex items-center justify-center text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined">share</span>
+</button>
+</div>
+</div>
+<!-- Detail Content Grid -->
+<div class="p-10 grid grid-cols-12 gap-10">
+<!-- Left Details -->
+<div class="col-span-8 space-y-10">
+<section>
+<h4 class="text-xs font-label font-bold uppercase tracking-[0.2em] text-stone-400 mb-4">The Role</h4>
+<p class="text-lg text-on-surface leading-relaxed font-body">
+                            At Vogue, we don't just report on culture; we define it. We are seeking a <span class="text-primary font-bold">Senior Content Designer</span> to lead the reimagining of our digital narrative architecture. You will work at the intersection of haute couture and high-technology, crafting digital reading experiences that feel as tactile and luxurious as our print archives.
+                        </p>
+</section>
+<section>
+<h4 class="text-xs font-label font-bold uppercase tracking-[0.2em] text-stone-400 mb-4">Key Responsibilities</h4>
+<ul class="space-y-4">
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-tertiary-container mt-0.5">auto_awesome</span>
+<span class="text-on-surface-variant font-body">Architecting complex content hierarchies for multi-platform digital features.</span>
+</li>
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-tertiary-container mt-0.5">edit_note</span>
+<span class="text-on-surface-variant font-body">Collaborating with world-class photographers and editors to create unified digital stories.</span>
+</li>
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-tertiary-container mt-0.5">design_services</span>
+<span class="text-on-surface-variant font-body">Establishing the "Vogue Voice" in interactive UI micro-copy and UX patterns.</span>
+</li>
+</ul>
+</section>
+<!-- Culture Highlights -->
+<section>
+<h4 class="text-xs font-label font-bold uppercase tracking-[0.2em] text-stone-400 mb-6">Company Culture</h4>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-5 rounded-xl bg-surface-container-low border-l-4 border-primary">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-primary text-sm">palette</span>
+<span class="font-bold text-sm font-body">Art-First Approach</span>
+</div>
+<p class="text-xs text-on-surface-variant font-body leading-relaxed">Design decisions are driven by aesthetic excellence and editorial integrity over pure metric hacking.</p>
+</div>
+<div class="p-5 rounded-xl bg-surface-container-low border-l-4 border-tertiary">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-tertiary text-sm">groups</span>
+<span class="font-bold text-sm font-body">Global Synergy</span>
+</div>
+<p class="text-xs text-on-surface-variant font-body leading-relaxed">Weekly roundtable discussions with our Paris, Milan, and Tokyo digital teams.</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Sidebar / Stats -->
+<div class="col-span-4 space-y-8">
+<!-- Match Score Visualization -->
+<div class="bg-surface-container-high rounded-2xl p-6 text-center">
+<h4 class="text-[10px] font-label font-extrabold uppercase tracking-widest text-on-surface-variant mb-6">Korra Match Score</h4>
+<div class="relative w-32 h-32 mx-auto mb-4">
+<!-- Circular Progress Simulation -->
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-highest" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-primary" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364" stroke-dashoffset="10" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-3xl font-serif font-bold text-on-surface">98</span>
+<span class="text-[10px] font-label font-bold text-primary">PERFECT</span>
+</div>
+</div>
+<div class="space-y-3 text-left">
+<div class="flex justify-between text-xs font-label">
+<span class="text-on-surface-variant">Editorial Skills</span>
+<span class="text-primary font-bold">Expert</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[95%]"></div>
+</div>
+<div class="flex justify-between text-xs font-label mt-2">
+<span class="text-on-surface-variant">Experience Fit</span>
+<span class="text-primary font-bold">100%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-full"></div>
+</div>
+</div>
+</div>
+<!-- Apply CTA -->
+<div class="sticky top-0">
+<button class="w-full py-4 bg-[#6C7EE1] hover:bg-primary text-white rounded-xl font-bold font-body shadow-lg shadow-primary/20 transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-2">
+                            Apply for this Role
+                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+<p class="text-center text-[10px] text-stone-400 mt-4 font-label uppercase tracking-widest">Typical response time: 2 days</p>
+</div>
+<!-- Key Perks -->
+<div class="p-6 bg-surface-container-low rounded-2xl space-y-4">
+<h4 class="text-xs font-label font-bold uppercase tracking-widest text-on-surface-variant">The Benefits</h4>
+<div class="space-y-3">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-lg">medical_services</span>
+<span class="text-sm font-body text-on-surface">Premium Health Package</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-lg">flight</span>
+<span class="text-sm font-body text-on-surface">Unlimited Sabbatical</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-lg">home_work</span>
+<span class="text-sm font-body text-on-surface">Hybrid Flexibility</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB for quick actions -->
+<div class="fixed bottom-8 right-8">
+<button class="w-14 h-14 bg-primary text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+</div>
+</body></html>
