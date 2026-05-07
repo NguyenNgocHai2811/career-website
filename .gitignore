@@ -1,0 +1,27 @@
+# Local environment files
+.env
+backend/.env
+client/.env
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files with potentially sensitive info
+test_prompt.js
+test_env_key.js
+test_api.js
+Trang_ho_so_active.html
+Profile_post.html
+
+# Logs
+logs/
+*.log
