@@ -56,14 +56,14 @@ const createPost = async (userId, postData) => {
 
 const POST_DETAILS_FRAGMENT = `
   OPTIONAL MATCH (p)<-[:COMMENTED_ON]-(c:Comment)
-  WITH p, u, count(DISTINCT c) as commentsCount
+  WITH *, count(DISTINCT c) as commentsCount
   
   OPTIONAL MATCH (p)<-[r:REACTED_TO]-(liker:User)
-  WITH p, u, commentsCount, r.type as rType, liker.userId as rUserId
-  WITH p, u, commentsCount, collect(CASE WHEN rType IS NULL THEN null ELSE {type: rType, userId: rUserId} END) as rawReacts
-  WITH p, u, commentsCount, [x IN rawReacts WHERE x IS NOT NULL] as reacts
+  WITH *, r.type as rType, liker.userId as rUserId
+  WITH *, collect(CASE WHEN rType IS NULL THEN null ELSE {type: rType, userId: rUserId} END) as rawReacts
+  WITH *, [x IN rawReacts WHERE x IS NOT NULL] as reacts
   
-  RETURN p, u, commentsCount, size(reacts) as reactionsCount,
+  RETURN p, u, comp, commentsCount, size(reacts) as reactionsCount,
          head([x IN reacts WHERE x.userId = $currentUserId | x.type]) as userReactionType,
          [x IN reacts | x.type] as allTypes
 `;
@@ -85,7 +85,7 @@ const getPosts = async (currentUserId, cursor, limit = 10) => {
       params.cursor = cursor;
     }
 
-    query += POST_DETAILS_FRAGMENT.replace('RETURN p, u,', 'RETURN p, u, comp,') + ` ORDER BY p.createdAt DESC LIMIT toInteger($limit)`;
+    query += POST_DETAILS_FRAGMENT + ` ORDER BY p.createdAt DESC LIMIT toInteger($limit)`;
 
     const result = await session.run(query, params);
     return result.records.map(record => {
@@ -129,6 +129,7 @@ const getPostById = async (postId, currentUserId = null) => {
   try {
     const query = `
       MATCH (u:User)-[:POSTED]->(p:Post {id: $postId})
+      OPTIONAL MATCH (u)-[:IS_RECRUITER_FOR]->(comp:Company)
       ${POST_DETAILS_FRAGMENT}
     `;
     const result = await session.run(query, { postId, currentUserId });
@@ -137,6 +138,7 @@ const getPostById = async (postId, currentUserId = null) => {
     const record = result.records[0];
     const post = record.get('p').properties;
     const author = record.get('u').properties;
+    const company = record.get('comp')?.properties;
     const reactionsCount = record.get('reactionsCount');
 
     return {
@@ -145,7 +147,17 @@ const getPostById = async (postId, currentUserId = null) => {
       reactionsCount: typeof reactionsCount?.toNumber === 'function' ? reactionsCount.toNumber() : (reactionsCount || 0),
       userReactionType: record.get('userReactionType') || null,
       allTypes: record.get('allTypes') || [],
-      author: { userId: author.userId, fullName: author.fullName, email: author.email }
+      author: company ? {
+        id: company.companyId,
+        fullName: company.name,
+        avatar: company.logoUrl,
+        type: 'COMPANY'
+      } : {
+        id: author.userId,
+        fullName: author.fullName,
+        avatar: author.avatarUrl,
+        type: 'USER'
+      }
     };
   } finally {
     await session.close();
@@ -162,6 +174,7 @@ const getUserPosts = async (userId, currentUserId = null) => {
       MATCH (u:User)
       WHERE u.userId = $userId OR u.id = $userId
       MATCH (u)-[:POSTED]->(p:Post)
+      OPTIONAL MATCH (u)-[:IS_RECRUITER_FOR]->(comp:Company)
       ${POST_DETAILS_FRAGMENT}
       ORDER BY p.createdAt DESC
     `;
@@ -172,6 +185,7 @@ const getUserPosts = async (userId, currentUserId = null) => {
       if (post.updatedAt) post.updatedAt = new Date(post.updatedAt.toString()).toISOString();
 
       const author = record.get('u').properties;
+      const company = record.get('comp')?.properties;
       const reactionsCount = record.get('reactionsCount');
 
       return {
@@ -180,7 +194,17 @@ const getUserPosts = async (userId, currentUserId = null) => {
         reactionsCount: typeof reactionsCount?.toNumber === 'function' ? reactionsCount.toNumber() : (reactionsCount || 0),
         userReactionType: record.get('userReactionType') || null,
         allTypes: record.get('allTypes') || [],
-        author: { userId: author.userId, fullName: author.fullName, email: author.email, headline: author.headline, avatarUrl: author.avatarUrl }
+        author: company ? {
+          id: company.companyId,
+          fullName: company.name,
+          avatar: company.logoUrl,
+          type: 'COMPANY'
+        } : {
+          userId: author.userId,
+          fullName: author.fullName,
+          avatar: author.avatarUrl,
+          type: 'USER'
+        }
       };
     });
   } finally {

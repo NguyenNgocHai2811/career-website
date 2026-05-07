@@ -1,4 +1,5 @@
-const API_URL = '/v1/jobs';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = `${BASE_URL}/v1/jobs`;
 
 export const getJobs = async (filters = {}) => {
   try {

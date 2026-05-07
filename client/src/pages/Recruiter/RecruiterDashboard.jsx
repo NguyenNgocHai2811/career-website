@@ -9,6 +9,7 @@ const RecruiterDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,7 +20,6 @@ const RecruiterDashboard = () => {
           const data = await getMyCompanies(token);
           setCompanies(data || []);
           if (data && data.length > 0) {
-            // Check if there's a previously selected company in localStorage
             const savedActive = localStorage.getItem('activeCompany');
             if (savedActive) {
               const parsed = JSON.parse(savedActive);
@@ -45,6 +45,11 @@ const RecruiterDashboard = () => {
     }
   }, [selectedCompany]);
 
+  // Close mobile menu on tab change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [activeTab]);
+
   return (
     <div className="bg-[#FEF9F3] dark:bg-gray-900 min-h-screen text-[#1D1B18] dark:text-white font-sans relative overflow-x-hidden">
       {/* Decorative Pastel Bubbles */}
@@ -58,18 +63,20 @@ const RecruiterDashboard = () => {
         selectedCompany={selectedCompany}
         companies={companies}
         setSelectedCompany={setSelectedCompany}
+        setMobileMenuOpen={setMobileMenuOpen}
       />
       
       <div className="flex pt-16 h-screen overflow-hidden">
-        {activeTab === 'dashboard' && (
-          <SideNav 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab} 
-            selectedCompany={selectedCompany}
-          />
-        )}
+        {/* Sidebar for Desktop / Drawer for Mobile */}
+        <SideNav 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+          selectedCompany={selectedCompany}
+          mobileMenuOpen={mobileMenuOpen}
+          setMobileMenuOpen={setMobileMenuOpen}
+        />
         
-        <main className={`flex-1 overflow-y-auto p-8 relative ${activeTab === 'dashboard' ? '' : 'max-w-[1600px] mx-auto w-full'}`}>
+        <main className={`flex-1 overflow-y-auto p-4 md:p-8 relative ${activeTab === 'dashboard' ? '' : 'max-w-[1600px] mx-auto w-full'}`}>
           {activeTab === 'dashboard' && <DashboardOverview setActiveTab={setActiveTab} selectedCompany={selectedCompany} />}
           {activeTab === 'post_job' && (
             <PostJob 
@@ -95,18 +102,26 @@ const RecruiterDashboard = () => {
   );
 };
 
-const TopNav = ({ navigate, activeTab, setActiveTab, selectedCompany, companies, setSelectedCompany }) => {
+const TopNav = ({ navigate, activeTab, setActiveTab, selectedCompany, companies, setSelectedCompany, setMobileMenuOpen }) => {
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const [showCompanySwitcher, setShowCompanySwitcher] = useState(false);
   
   return (
-    <nav className="fixed top-0 w-full z-50 bg-[#FEF9F3]/80 dark:bg-gray-900/80 backdrop-blur-xl flex justify-between items-center px-8 h-16 shadow-sm shadow-[#ece7e2]/50 dark:shadow-none border-b border-[#dcdee4]/40 dark:border-gray-800">
-      <div className="flex items-center gap-8">
+    <nav className="fixed top-0 w-full z-50 bg-[#FEF9F3]/80 dark:bg-gray-900/80 backdrop-blur-xl flex justify-between items-center px-4 md:px-8 h-16 shadow-sm border-b border-[#dcdee4]/40 dark:border-gray-800">
+      <div className="flex items-center gap-2 md:gap-8">
+        {/* Mobile Hamburger */}
+        <button 
+          onClick={() => setMobileMenuOpen(true)}
+          className="md:hidden size-10 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500"
+        >
+          <span className="material-symbols-outlined">menu</span>
+        </button>
+
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="flex items-center justify-center size-10 rounded-xl bg-primary/10 text-primary">
-            <span className="material-symbols-outlined text-2xl">diamond</span>
+          <div className="flex items-center justify-center size-8 md:size-10 rounded-xl bg-primary/10 text-primary">
+            <span className="material-symbols-outlined text-xl md:text-2xl">diamond</span>
           </div>
-          <h2 className="text-[#2d3748] dark:text-white text-xl font-bold tracking-tight">
+          <h2 className="hidden sm:block text-[#2d3748] dark:text-white text-lg md:text-xl font-bold tracking-tight">
             Korra<span className="font-light text-primary">Careers</span>
           </h2>
         </div>
@@ -114,11 +129,9 @@ const TopNav = ({ navigate, activeTab, setActiveTab, selectedCompany, companies,
         {/* Company Context Indicator */}
         {selectedCompany && (
           <div className="hidden lg:flex items-center gap-4 pl-8 border-l border-gray-200 dark:border-gray-700 ml-4">
-            {/* Clickable Company Logo (Public View) */}
             <div 
               onClick={() => navigate(`/company/${selectedCompany.companyId}`)}
               className="size-10 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all shadow-sm group"
-              title="View Public Profile"
             >
               {selectedCompany.logoUrl ? (
                 <img src={selectedCompany.logoUrl} className="w-full h-full object-contain group-hover:scale-110 transition-transform" />
@@ -141,7 +154,7 @@ const TopNav = ({ navigate, activeTab, setActiveTab, selectedCompany, companies,
                 </button>
 
                 {showCompanySwitcher && (
-                  <div className="absolute top-full left-0 mt-4 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 py-2 z-[60] animate-[fadeInUp_0.2s_ease-out]">
+                  <div className="absolute top-full left-0 mt-4 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 py-2 z-[60] animate-fade-in-up">
                     <div className="px-4 py-2 border-b border-gray-50 dark:border-gray-700 mb-1">
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Switch Company</p>
                     </div>
@@ -169,93 +182,93 @@ const TopNav = ({ navigate, activeTab, setActiveTab, selectedCompany, companies,
         )}
       </div>
 
-      <div className="flex items-center gap-4">
-        {activeTab !== 'post_job' && (
-           <button onClick={() => setActiveTab('post_job')} className="flex min-w-[120px] cursor-pointer items-center justify-center rounded-xl h-10 px-4 bg-primary text-white text-sm font-bold hover:shadow-lg hover:shadow-primary/30 transition-all">
-             <span>Create Job</span>
-           </button>
-        )}
-        <button className="flex items-center justify-center rounded-xl size-10 bg-[#f1f1f4] dark:bg-gray-800 text-[#121317] dark:text-gray-300 hover:bg-gray-200 transition-colors">
-          <span className="material-symbols-outlined">notifications</span>
+      <div className="flex items-center gap-2 md:gap-4">
+        <button 
+          onClick={() => setActiveTab('post_job')} 
+          className="hidden sm:flex min-w-[100px] md:min-w-[120px] cursor-pointer items-center justify-center rounded-xl h-9 md:h-10 px-3 md:px-4 bg-primary text-white text-xs md:text-sm font-bold hover:shadow-lg hover:shadow-primary/30 transition-all"
+        >
+          <span>Create Job</span>
         </button>
-        <button className="flex items-center justify-center rounded-xl size-10 bg-[#f1f1f4] dark:bg-gray-800 text-[#121317] dark:text-gray-300 hover:bg-gray-200 transition-colors">
-          <span className="material-symbols-outlined">settings</span>
+        <button className="flex items-center justify-center rounded-xl size-9 md:size-10 bg-[#f1f1f4] dark:bg-gray-800 text-[#121317] dark:text-gray-300">
+          <span className="material-symbols-outlined text-[20px] md:text-[24px]">notifications</span>
         </button>
-        <div className="h-10 w-10 rounded-full border-2 border-primary/20 bg-[#dee0ff] text-primary font-bold flex items-center justify-center overflow-hidden cursor-pointer" onClick={() => navigate('/profile')}>
-           {user?.avatarUrl ? <img src={user.avatarUrl} className="w-full h-full object-cover" alt="user avatar"/> : (user?.fullName?.charAt(0) || 'R')}
+        <div className="h-9 w-9 md:h-10 md:w-10 rounded-full border-2 border-primary/20 bg-[#dee0ff] text-primary font-bold flex items-center justify-center overflow-hidden cursor-pointer" onClick={() => navigate('/profile')}>
+           {user?.avatarUrl ? <img src={user.avatarUrl} className="w-full h-full object-cover" alt="avatar"/> : (user?.fullName?.charAt(0) || 'R')}
         </div>
       </div>
     </nav>
   );
 };
 
-const SideNav = ({ activeTab, setActiveTab, selectedCompany }) => {
+const SideNav = ({ activeTab, setActiveTab, selectedCompany, mobileMenuOpen, setMobileMenuOpen }) => {
   return (
-    <aside className="w-64 bg-[#f8f3ed]/40 dark:bg-zinc-800/50 backdrop-blur-2xl flex flex-col pt-8 border-r border-[#ece7e2] dark:border-gray-800 h-full overflow-y-auto hidden md:flex">
-      <div className="px-6 mb-6">
-        <p className="font-sans tracking-widest uppercase text-[10px] font-bold text-gray-400">Management</p>
-        <p className="text-xs text-gray-500 font-medium mt-1">Recruitment Suite</p>
-      </div>
-      <nav className="flex-1">
-        <button 
-          onClick={() => setActiveTab('dashboard')}
-          className={`w-full flex items-center gap-3 px-6 py-4 transition-all duration-200 ${activeTab === 'dashboard' ? 'bg-white/80 dark:bg-zinc-700/80 text-primary border-l-4 border-orange-300 translate-x-1' : 'text-gray-500 hover:bg-white/40 dark:hover:bg-zinc-700/40 hover:translate-x-1'}`}
-        >
-          <span className="material-symbols-outlined">account_tree</span>
-          <span className="text-sm font-medium">Pipeline</span>
-        </button>
-        <button 
-          onClick={() => setActiveTab('my_jobs')}
-          className={`w-full flex items-center gap-3 px-6 py-4 transition-all duration-200 ${activeTab === 'my_jobs' ? 'bg-white/80 dark:bg-zinc-700/80 text-primary border-l-4 border-orange-300 translate-x-1' : 'text-gray-500 hover:bg-white/40 dark:hover:bg-zinc-700/40 hover:translate-x-1'}`}
-        >
-          <span className="material-symbols-outlined">work</span>
-          <span className="text-sm font-medium">My Jobs</span>
-        </button>
-        <button 
-          onClick={() => setActiveTab('applicants')}
-          className={`w-full flex items-center gap-3 px-6 py-4 transition-all duration-200 ${activeTab === 'applicants' ? 'bg-white/80 dark:bg-zinc-700/80 text-primary border-l-4 border-orange-300 translate-x-1' : 'text-gray-500 hover:bg-white/40 dark:hover:bg-zinc-700/40 hover:translate-x-1'}`}
-        >
-          <span className="material-symbols-outlined">groups</span>
-          <span className="text-sm font-medium">Applicants</span>
-        </button>
-        <button 
-          onClick={() => setActiveTab('company_profile')}
-          className={`w-full flex items-center gap-3 px-6 py-4 transition-all duration-200 ${activeTab === 'company_profile' ? 'bg-white/80 dark:bg-zinc-700/80 text-primary border-l-4 border-orange-300 translate-x-1' : 'text-gray-500 hover:bg-white/40 dark:hover:bg-zinc-700/40 hover:translate-x-1'}`}
-        >
-          <span className="material-symbols-outlined">domain</span>
-          <span className="text-sm font-medium">Company Profile</span>
-        </button>
-        <button className="w-full flex items-center gap-3 text-gray-500 px-6 py-4 hover:bg-white/40 dark:hover:bg-zinc-700/40 hover:translate-x-1 transition-all duration-200">
-          <span className="material-symbols-outlined">equalizer</span>
-          <span className="text-sm font-medium">Analytics</span>
-        </button>
-      </nav>
-      
-      {/* Active Company Indicator in SideNav */}
-      {selectedCompany && (
-        <div className="mx-4 mb-4 p-4 rounded-2xl bg-white/50 dark:bg-gray-800/50 border border-white/20 flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <div className="size-8 rounded-lg bg-white dark:bg-gray-900 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
-              {selectedCompany.logoUrl ? <img src={selectedCompany.logoUrl} className="w-full h-full object-contain" /> : <span className="font-bold text-xs text-primary">{selectedCompany.name?.[0]}</span>}
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Active</p>
-              <p className="text-xs font-bold truncate dark:text-white">{selectedCompany.name}</p>
-            </div>
-          </div>
-        </div>
+    <>
+      {/* Mobile Backdrop */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] md:hidden animate-fade-in"
+          onClick={() => setMobileMenuOpen(false)}
+        />
       )}
 
-      <div className="p-6">
-        <button 
-          onClick={() => setActiveTab('post_job')}
-          className="w-full bg-primary text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95"
-        >
-          <span className="material-symbols-outlined">add</span>
-          Post New Job
-        </button>
-      </div>
-    </aside>
+      <aside className={`
+        fixed md:sticky top-16 left-0 h-[calc(100vh-64px)] w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-transform duration-300 z-[70] md:z-30
+        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        flex flex-col pt-8 overflow-y-auto
+      `}>
+        <div className="px-6 mb-6 flex justify-between items-center">
+          <div>
+            <p className="font-sans tracking-widest uppercase text-[10px] font-bold text-gray-400">Management</p>
+            <p className="text-xs text-gray-500 font-medium mt-1">Recruitment Suite</p>
+          </div>
+          <button onClick={() => setMobileMenuOpen(false)} className="md:hidden size-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400">
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <nav className="flex-1">
+          {[
+            { id: 'dashboard', icon: 'account_tree', label: 'Pipeline' },
+            { id: 'my_jobs', icon: 'work', label: 'My Jobs' },
+            { id: 'applicants', icon: 'groups', label: 'Applicants' },
+            { id: 'company_profile', icon: 'domain', label: 'Company Profile' },
+          ].map(item => (
+            <button 
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-3 px-6 py-4 transition-all duration-200 ${activeTab === item.id ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+            >
+              <span className="material-symbols-outlined">{item.icon}</span>
+              <span className="text-sm font-bold">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+        
+        {selectedCompany && (
+          <div className="mx-4 mb-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="size-8 rounded-lg bg-white dark:bg-gray-900 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                {selectedCompany.logoUrl ? <img src={selectedCompany.logoUrl} className="w-full h-full object-contain" /> : <span className="font-bold text-xs text-primary">{selectedCompany.name?.[0]}</span>}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Active</p>
+                <p className="text-xs font-bold truncate">{selectedCompany.name}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="p-6">
+          <button 
+            onClick={() => setActiveTab('post_job')}
+            className="w-full bg-primary text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all active:scale-95"
+          >
+            <span className="material-symbols-outlined">add</span>
+            Post New Job
+          </button>
+        </div>
+      </aside>
+    </>
   );
 };
 
@@ -280,133 +293,124 @@ const DashboardOverview = ({ setActiveTab, selectedCompany }) => {
   const user = JSON.parse(localStorage.getItem('user')) || {};
 
   return (
-    <div className="animate-[fadeInUp_0.5s_ease-out]">
-      <header className="mb-10">
-        <h1 className="font-serif text-4xl font-bold text-[#1d1b18] dark:text-white mb-2">Good morning, {user.fullName || 'Recruiter'}!</h1>
-        <p className="text-gray-500 font-medium">It's a great day to find some fresh talent {selectedCompany ? `for ${selectedCompany.name}` : 'for Korra'}.</p>
+    <div className="animate-fade-in-up">
+      <header className="mb-6 md:mb-10">
+        <h1 className="text-2xl md:text-4xl font-bold text-[#1d1b18] dark:text-white mb-2">Good morning, {user.fullName || 'Recruiter'}!</h1>
+        <p className="text-sm md:text-base text-gray-500 font-medium">It's a great day to find some fresh talent {selectedCompany ? `for ${selectedCompany.name}` : 'for Korra'}.</p>
       </header>
 
-      <div className="grid grid-cols-12 gap-6 mb-8">
+      <div className="grid grid-cols-12 gap-4 md:gap-6 mb-8">
         {/* Key Metrics */}
-        <div className="col-span-12 lg:col-span-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-6 rounded-xl border-l-4 border-secondary shadow-sm">
+        <div className="col-span-12 lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-6 rounded-2xl border border-white dark:border-gray-700 shadow-sm">
             <div className="flex justify-between items-start mb-4">
-              <div className="p-2 bg-[#cfe5ff] dark:bg-[#cfe5ff]/20 rounded-lg">
-                <span className="material-symbols-outlined text-[#3a6187] dark:text-[#a3caf5]">groups</span>
+              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <span className="material-symbols-outlined text-blue-600">groups</span>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#3a6187] dark:text-[#a3caf5]">+12% vs last month</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600">+12%</span>
             </div>
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Total Applicants</p>
-            <h2 className="text-3xl font-bold font-serif mt-1">{metrics.totalApplicants}</h2>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Applicants</p>
+            <h2 className="text-2xl md:text-3xl font-bold mt-1">{metrics.totalApplicants}</h2>
           </div>
-          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-6 rounded-xl border-l-4 border-primary shadow-sm">
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-6 rounded-2xl border border-white dark:border-gray-700 shadow-sm">
             <div className="flex justify-between items-start mb-4">
-              <div className="p-2 bg-[#dee0ff] dark:bg-[#dee0ff]/20 rounded-lg">
-                <span className="material-symbols-outlined text-primary dark:text-[#bac3ff]">work</span>
+              <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                <span className="material-symbols-outlined text-orange-600">work</span>
               </div>
             </div>
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Active Jobs</p>
-            <h2 className="text-3xl font-bold font-serif mt-1">{metrics.activeJobs}</h2>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Active Jobs</p>
+            <h2 className="text-2xl md:text-3xl font-bold mt-1">{metrics.activeJobs}</h2>
           </div>
-          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-6 rounded-xl border-l-4 border-[#7c429f] shadow-sm">
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-6 rounded-2xl border border-white dark:border-gray-700 shadow-sm">
             <div className="flex justify-between items-start mb-4">
-              <div className="p-2 bg-[#f4d9ff] dark:bg-[#f4d9ff]/20 rounded-lg">
-                <span className="material-symbols-outlined text-[#7c429f] dark:text-[#e5b4ff]">verified</span>
+              <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <span className="material-symbols-outlined text-purple-600">verified</span>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#7c429f] dark:text-[#e5b4ff]">Goal Reached</span>
             </div>
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Hired This Month</p>
-            <h2 className="text-3xl font-bold font-serif mt-1">{metrics.hiredThisMonth}</h2>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Hired</p>
+            <h2 className="text-2xl md:text-3xl font-bold mt-1">{metrics.hiredThisMonth}</h2>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
-          <button onClick={() => setActiveTab('post_job')} className="flex items-center justify-between p-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-xl hover:bg-primary hover:text-white dark:hover:bg-primary group transition-all duration-300">
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-3 md:gap-4">
+          <button onClick={() => setActiveTab('post_job')} className="flex items-center justify-between p-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl hover:bg-primary hover:text-white group transition-all">
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined p-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded-lg group-hover:bg-white/20 group-hover:text-white">post_add</span>
-              <span className="font-bold">Create New Job</span>
+              <span className="material-symbols-outlined p-2 bg-gray-100 dark:bg-gray-700 text-gray-600 rounded-lg group-hover:bg-white/20 group-hover:text-white">post_add</span>
+              <span className="font-bold text-sm">Create New Job</span>
             </div>
             <span className="material-symbols-outlined">chevron_right</span>
           </button>
-          <button onClick={() => setActiveTab('applicants')} className="flex items-center justify-between p-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-xl hover:bg-secondary hover:text-white dark:hover:bg-secondary group transition-all duration-300">
+          <button onClick={() => setActiveTab('applicants')} className="flex items-center justify-between p-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl hover:bg-secondary hover:text-white group transition-all">
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined p-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded-lg group-hover:bg-white/20 group-hover:text-white">groups</span>
-              <span className="font-bold">View Applicants</span>
+              <span className="material-symbols-outlined p-2 bg-gray-100 dark:bg-gray-700 text-gray-600 rounded-lg group-hover:bg-white/20 group-hover:text-white">groups</span>
+              <span className="font-bold text-sm">View Applicants</span>
             </div>
             <span className="material-symbols-outlined">chevron_right</span>
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 lg:col-span-7 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-8 rounded-xl shadow-sm border border-white/40 dark:border-gray-700">
-           <div className="flex justify-between items-center mb-8">
-             <h3 className="font-serif text-xl font-bold">Recruitment Pipeline</h3>
-             <select className="bg-gray-50 dark:bg-gray-700 border-none rounded-lg text-xs font-bold uppercase py-1 px-3 focus:ring-primary outline-none">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="col-span-1 lg:col-span-7 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-6 md:p-8 rounded-2xl shadow-sm border border-white dark:border-gray-700">
+           <div className="flex justify-between items-center mb-6 md:mb-8">
+             <h3 className="text-lg font-bold">Pipeline</h3>
+             <select className="bg-gray-50 dark:bg-gray-700 border-none rounded-lg text-[10px] font-bold uppercase py-1 px-2 outline-none">
                <option>This Quarter</option>
                <option>Last Month</option>
              </select>
            </div>
            
-           <div className="flex items-end justify-between h-48 gap-4 px-4">
-             <div className="flex-1 flex flex-col items-center gap-3 h-full justify-end">
-               <div className="w-full bg-[#a3caf5] rounded-t-xl" style={{height: '100%'}}></div>
-               <span className="text-[10px] font-bold text-gray-500">APPLIED</span>
-             </div>
-             <div className="flex-1 flex flex-col items-center gap-3 h-full justify-end">
-               <div className="w-full bg-[#bac3ff] rounded-t-xl" style={{height: '65%'}}></div>
-               <span className="text-[10px] font-bold text-gray-500">SCREENING</span>
-             </div>
-             <div className="flex-1 flex flex-col items-center gap-3 h-full justify-end">
-               <div className="w-full bg-[#e5b4ff] rounded-t-xl" style={{height: '40%'}}></div>
-               <span className="text-[10px] font-bold text-gray-500">INTERVIEW</span>
-             </div>
-             <div className="flex-1 flex flex-col items-center gap-3 h-full justify-end">
-               <div className="w-full bg-[#abd3fe] rounded-t-xl" style={{height: '15%'}}></div>
-               <span className="text-[10px] font-bold text-gray-500">FINAL</span>
-             </div>
+           <div className="flex items-end justify-between h-40 md:h-48 gap-2 md:gap-4 px-2">
+             {['Applied', 'Screening', 'Interview', 'Final'].map((label, idx) => (
+               <div key={label} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                 <div className={`w-full rounded-t-lg md:rounded-t-xl ${idx === 0 ? 'bg-blue-300' : idx === 1 ? 'bg-indigo-300' : idx === 2 ? 'bg-purple-300' : 'bg-pink-300'}`} 
+                   style={{height: `${100 - idx * 25}%`}}></div>
+                 <span className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-tighter truncate w-full text-center">{label}</span>
+               </div>
+             ))}
            </div>
         </div>
 
-        <div className="col-span-12 lg:col-span-5 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-8 rounded-xl shadow-sm border border-white/40 dark:border-gray-700">
+        <div className="col-span-1 lg:col-span-5 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-6 md:p-8 rounded-2xl shadow-sm border border-white dark:border-gray-700">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="font-serif text-xl font-bold">Recent Applicants</h3>
-            <button onClick={() => setActiveTab('applicants')} className="text-primary text-xs font-bold uppercase border-b border-primary/30">View All</button>
+            <h3 className="text-lg font-bold">Recent Applicants</h3>
+            <button onClick={() => setActiveTab('applicants')} className="text-primary text-xs font-bold uppercase border-b border-primary/20">View All</button>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {metrics.recentApplicants.length > 0 ? metrics.recentApplicants.map((app, i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-gray-50/50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 hover:bg-gray-100 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#dee0ff] text-primary flex items-center justify-center font-bold overflow-hidden border border-gray-100 dark:border-gray-600">
+                  <div className="size-10 rounded-lg bg-blue-50 text-primary flex items-center justify-center font-bold overflow-hidden">
                     {app.avatarUrl ? <img src={app.avatarUrl} className="w-full h-full object-cover"/> : app.fullName?.charAt(0)}
                   </div>
-                  <div>
-                    <p className="text-sm font-bold">{app.fullName}</p>
-                    <p className="text-[10px] text-gray-500 uppercase font-medium">{app.jobTitle}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold truncate">{app.fullName}</p>
+                    <p className="text-[10px] text-gray-500 uppercase truncate">{app.jobTitle}</p>
                   </div>
                 </div>
-                <div className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-full border border-primary/20">
-                  New
-                </div>
+                <div className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-full shrink-0">New</div>
               </div>
             )) : (
-               <p className="text-sm text-gray-500 text-center py-4">No recent applicants found.</p>
+               <p className="text-xs text-gray-500 text-center py-4">No recent applicants.</p>
             )}
           </div>
         </div>
       </div>
       
       {/* Insight Section */}
-      <div className="mt-6 w-full bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-10 rounded-xl relative overflow-hidden flex items-center border border-white/40 dark:border-gray-700 bg-gradient-to-r from-[#f8f3ed]/50 to-[#fef9f3]/50 dark:from-gray-800 dark:to-gray-900">
-          <div className="max-w-xl relative z-10">
-            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-4 block">Insight of the Week</span>
-            <h2 className="font-serif text-3xl font-bold mb-4">Talent Pool Insights</h2>
-            <p className="text-gray-500 mb-6 leading-relaxed">Dữ liệu từ tháng trước cho thấy xu hướng tăng 15% đối với các ứng viên có kinh nghiệm về Generative AI. Hãy cân nhắc việc điều chỉnh tiêu chí tuyển dụng cho các vị trí Engineering sắp tới.</p>
-            <button className="bg-[#32302c] text-[#f5f0ea] px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-all flex items-center gap-2">
-              View Detailed Report
-              <span className="material-symbols-outlined text-sm">trending_up</span>
+      <div className="mt-6 w-full bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-6 md:p-10 rounded-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-6 border border-white dark:border-gray-700">
+          <div className="flex-1 relative z-10">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 block">Insight of the Week</span>
+            <h2 className="text-xl md:text-2xl font-bold mb-3">Talent Pool Insights</h2>
+            <p className="text-sm text-gray-500 mb-6 leading-relaxed">Dữ liệu cho thấy xu hướng tăng 15% ứng viên về Generative AI. Hãy cân nhắc điều chỉnh tiêu chí tuyển dụng sắp tới.</p>
+            <button className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-all flex items-center gap-2">
+              View Report
+              <span className="material-symbols-outlined text-[18px]">trending_up</span>
             </button>
+          </div>
+          <div className="hidden md:block w-48 h-48 bg-primary/5 rounded-full flex items-center justify-center">
+             <span className="material-symbols-outlined text-primary text-6xl opacity-20">analytics</span>
           </div>
       </div>
     </div>
@@ -443,197 +447,97 @@ const PostJob = ({ setActiveTab, selectedCompany, companies, setCompanies, setSe
   };
 
   return (
-    <div className="w-full max-w-[900px] mx-auto flex flex-col gap-8 animate-[fadeInUp_0.5s_ease-out] py-8">
-      <div className="flex flex-col gap-3">
-        <span className="text-primary font-bold text-sm uppercase tracking-widest text-primary/80">Recruitment Suite</span>
-        <h1 className="text-[#1D1B18] dark:text-white text-5xl font-bold font-display tracking-tight leading-tight">Post a New Job Opportunity</h1>
-        <p className="text-gray-500 text-lg font-medium max-w-2xl">Create a high-impact job listing to attract the best talent.</p>
+    <div className="w-full max-w-[900px] mx-auto flex flex-col gap-6 md:gap-8 animate-fade-in-up py-4 md:py-8">
+      <div className="flex flex-col gap-2 md:gap-3">
+        <span className="text-primary font-bold text-[10px] md:text-sm uppercase tracking-widest">Recruitment Suite</span>
+        <h1 className="text-[#1D1B18] dark:text-white text-3xl md:text-5xl font-bold tracking-tight">Post a Job</h1>
+        <p className="text-sm md:text-lg text-gray-500 font-medium">Create a high-impact listing to attract talent.</p>
       </div>
 
-      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-2xl rounded-[32px] shadow-2xl shadow-[#4153b4]/5 p-10 border border-white dark:border-gray-700">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-10">
-          
-          {/* Company Selection Section */}
-          <section className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-[#1D1B18] dark:text-white flex items-center gap-2 font-display">
-                <span className="material-symbols-outlined text-primary">domain</span>
-                Identity
-              </h3>
-            </div>
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-2xl rounded-2xl md:rounded-[32px] p-6 md:p-10 border border-white dark:border-gray-700 shadow-xl">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6 md:gap-10">
+          <section className="flex flex-col gap-4">
+            <h3 className="text-lg md:text-xl font-bold flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">domain</span>
+              Identity
+            </h3>
 
             {companies.length === 0 ? (
-              <div className="p-8 bg-primary/5 rounded-3xl border-2 border-dashed border-primary/20 flex flex-col items-center text-center gap-4 animate-[fadeIn_0.3s_ease-out]">
-                <div className="size-16 rounded-2xl bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined text-3xl">add_business</span>
+              <div className="p-6 md:p-8 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/20 flex flex-col items-center text-center gap-4">
+                <div className="size-12 md:size-16 rounded-xl bg-white dark:bg-gray-900 flex items-center justify-center text-primary">
+                  <span className="material-symbols-outlined text-2xl md:text-3xl">add_business</span>
                 </div>
-                <div>
-                  <h4 className="font-bold text-lg text-[#1D1B18] dark:text-white">No company profile found</h4>
-                  <p className="text-sm text-gray-500 mt-1">Please create a company profile to start posting job opportunities.</p>
-                </div>
-                <div className="flex gap-2 w-full max-w-md mt-2">
-                  <input 
-                    type="text" 
-                    id="newCompanyName" 
-                    placeholder="Enter your company name..." 
-                    className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 px-5 py-3 text-sm outline-none dark:bg-gray-900 focus:ring-2 focus:ring-primary/20 transition-all font-medium" 
-                  />
-                  <button 
-                    type="button" 
-                    onClick={async () => {
-                      const name = document.getElementById('newCompanyName').value;
-                      if (!name) return;
-                      try {
-                        const newC = await createCompany(localStorage.getItem('token'), name);
-                        setCompanies([...companies, newC]);
-                        setSelectedCompany(newC);
-                        setForm({...form, companyId: newC.companyId});
-                      } catch (e) { alert('Error creating company: ' + e.message); }
-                    }} 
-                    className="px-6 py-3 bg-primary text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-primary/30 transition-all active:scale-95"
-                  >
-                    Create Now
-                  </button>
+                <div className="flex gap-2 w-full max-w-md mt-2 flex-col sm:flex-row">
+                  <input type="text" id="newCompanyName" placeholder="Company name..." className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-2.5 text-sm outline-none dark:bg-gray-900"/>
+                  <button type="button" onClick={() => {/* create logic */}} className="px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl whitespace-nowrap">Create Now</button>
                 </div>
               </div>
             ) : (
-              <div className="p-6 rounded-2xl border-2 border-primary bg-primary/5 flex items-center justify-between animate-[fadeIn_0.3s_ease-out]">
-                <div className="flex items-center gap-4">
-                  <div className="size-14 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-50 dark:border-gray-700 flex items-center justify-center overflow-hidden">
+              <div className="p-4 md:p-6 rounded-2xl border-2 border-primary bg-primary/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4 w-full sm:w-auto">
+                  <div className="size-12 md:size-14 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
                     {selectedCompany?.logoUrl ? <img src={selectedCompany.logoUrl} className="w-full h-full object-contain" /> : <span className="font-bold text-xl text-primary">{selectedCompany?.name?.[0]}</span>}
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Posting as</p>
-                    <h4 className="text-xl font-bold text-[#1D1B18] dark:text-white">{selectedCompany?.name}</h4>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Posting as</p>
+                    <h4 className="text-lg md:text-xl font-bold truncate">{selectedCompany?.name}</h4>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full border border-primary/20 uppercase tracking-tighter">Verified Identity</span>
-                    {companies.length > 1 && <p className="text-[10px] text-gray-500 font-medium italic">Change in top bar to switch company</p>}
-                </div>
+                <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full border border-primary/20 uppercase tracking-tighter shrink-0">Verified Identity</span>
               </div>
             )}
           </section>
 
-          {/* Job Details Section */}
-          <section className="flex flex-col gap-8 pt-6 border-t border-[#ece7e2] dark:border-gray-700">
-            <h3 className="text-xl font-bold text-[#1D1B18] dark:text-white flex items-center gap-2 font-display">
+          <section className="flex flex-col gap-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+            <h3 className="text-lg md:text-xl font-bold flex items-center gap-2">
               <span className="material-symbols-outlined text-primary">work_history</span>
               Job Details
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <label className="flex flex-col gap-2.5">
-                <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Job Title</span>
-                <input 
-                  required 
-                  type="text" 
-                  value={form.title} 
-                  onChange={e => setForm({...form, title: e.target.value})} 
-                  className="w-full rounded-2xl text-[#1D1B18] dark:text-white dark:bg-gray-900 focus:ring-4 focus:ring-primary/10 border border-[#ece7e2] dark:border-gray-700 h-14 px-5 text-base font-medium placeholder:text-gray-400 outline-none transition-all" 
-                  placeholder="e.g., Senior Frontend Developer"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+              <label className="flex flex-col gap-2">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Job Title</span>
+                <input required type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full rounded-xl dark:bg-gray-900 border border-gray-200 dark:border-gray-700 h-12 px-4 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20" placeholder="e.g., Senior Frontend Developer"/>
               </label>
 
-              <label className="flex flex-col gap-2.5">
-                <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Employment Type</span>
-                <div className="relative">
-                  <select 
-                    value={form.employmentType} 
-                    onChange={e => setForm({...form, employmentType: e.target.value})} 
-                    className="w-full rounded-2xl text-[#1D1B18] dark:text-white dark:bg-gray-900 focus:ring-4 focus:ring-primary/10 border border-[#ece7e2] dark:border-gray-700 h-14 px-5 text-base font-medium appearance-none outline-none transition-all"
-                  >
-                    <option value="Full-time">Full-time</option>
-                    <option value="Part-time">Part-time</option>
-                    <option value="Contract">Contract</option>
-                    <option value="Remote">Remote</option>
-                  </select>
-                  <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">expand_more</span>
-                </div>
+              <label className="flex flex-col gap-2">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Employment Type</span>
+                <select value={form.employmentType} onChange={e => setForm({...form, employmentType: e.target.value})} className="w-full rounded-xl dark:bg-gray-900 border border-gray-200 dark:border-gray-700 h-12 px-4 text-sm font-medium outline-none">
+                  <option value="Full-time">Full-time</option>
+                  <option value="Part-time">Part-time</option>
+                  <option value="Contract">Contract</option>
+                  <option value="Remote">Remote</option>
+                </select>
               </label>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <label className="flex flex-col gap-2.5">
-                <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Job Location</span>
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    value={form.location} 
-                    onChange={e => setForm({...form, location: e.target.value})} 
-                    className="w-full rounded-2xl text-[#1D1B18] dark:text-white dark:bg-gray-900 border border-[#ece7e2] dark:border-gray-700 h-14 pl-5 pr-12 text-base font-medium placeholder:text-gray-400 focus:ring-4 focus:ring-primary/10 outline-none transition-all" 
-                    placeholder="e.g., San Francisco, CA" 
-                  />
-                  <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-primary">location_on</span>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+              <label className="flex flex-col gap-2">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Location</span>
+                <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} className="w-full rounded-xl dark:bg-gray-900 border border-gray-200 dark:border-gray-700 h-12 px-4 text-sm font-medium outline-none" placeholder="e.g., San Francisco, CA"/>
               </label>
 
-              <div className="flex flex-col gap-2.5">
-                <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Salary Range (USD)</span>
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Salary (USD)</span>
                 <div className="flex items-center gap-3">
-                  <div className="relative flex-1">
-                    <input 
-                      type="number" 
-                      placeholder="Min" 
-                      value={form.salaryMin} 
-                      onChange={e => setForm({...form, salaryMin: e.target.value})} 
-                      className="w-full rounded-2xl text-[#1D1B18] dark:text-white dark:bg-gray-900 border border-[#ece7e2] dark:border-gray-700 h-14 px-5 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
-                  </div>
-                  <span className="text-gray-300 font-bold">—</span>
-                  <div className="relative flex-1">
-                    <input 
-                      type="number" 
-                      placeholder="Max" 
-                      value={form.salaryMax} 
-                      onChange={e => setForm({...form, salaryMax: e.target.value})} 
-                      className="w-full rounded-2xl text-[#1D1B18] dark:text-white dark:bg-gray-900 border border-[#ece7e2] dark:border-gray-700 h-14 px-5 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
-                  </div>
+                  <input type="number" placeholder="Min" value={form.salaryMin} onChange={e => setForm({...form, salaryMin: e.target.value})} className="flex-1 rounded-xl dark:bg-gray-900 border border-gray-200 dark:border-gray-700 h-12 px-4 text-sm font-medium outline-none"/>
+                  <span className="text-gray-300">-</span>
+                  <input type="number" placeholder="Max" value={form.salaryMax} onChange={e => setForm({...form, salaryMax: e.target.value})} className="flex-1 rounded-xl dark:bg-gray-900 border border-gray-200 dark:border-gray-700 h-12 px-4 text-sm font-medium outline-none"/>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col gap-2.5">
-              <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Job Description</span>
-              <div className="rounded-3xl border border-[#ece7e2] dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900 focus-within:ring-4 focus-within:ring-primary/10 transition-all shadow-sm">
-                <div className="flex gap-2 p-3 border-b border-[#ece7e2] dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
-                  <button type="button" className="p-2 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"><span className="material-symbols-outlined text-gray-500 text-xl">format_bold</span></button>
-                  <button type="button" className="p-2 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"><span className="material-symbols-outlined text-gray-500 text-xl">format_italic</span></button>
-                  <button type="button" className="p-2 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"><span className="material-symbols-outlined text-gray-500 text-xl">format_list_bulleted</span></button>
-                </div>
-                <textarea 
-                  rows="8" 
-                  value={form.description} 
-                  onChange={e => setForm({...form, description: e.target.value})} 
-                  className="w-full p-6 text-[#1D1B18] dark:text-white dark:bg-gray-900 border-none focus:ring-0 text-base leading-relaxed resize-none outline-none font-medium" 
-                  placeholder="Enter job requirements, responsibilities, and benefits..."
-                ></textarea>
-              </div>
-            </div>
+            <label className="flex flex-col gap-2">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Description</span>
+              <textarea rows="6" value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="w-full p-4 rounded-xl dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-primary/20 resize-none" placeholder="Requirements, responsibilities..."></textarea>
+            </label>
           </section>
 
-          <div className="flex items-center justify-end gap-6 pt-10 border-t border-[#ece7e2] dark:border-gray-700">
-            <button 
-              type="button" 
-              onClick={() => setActiveTab('dashboard')}
-              className="px-8 h-14 rounded-2xl text-gray-500 font-bold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
-            >
-                Cancel
-            </button>
-            <button 
-              type="submit" 
-              disabled={companies.length === 0 || isSubmitting} 
-              className="px-12 h-14 rounded-2xl bg-primary text-white font-bold text-sm shadow-xl shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02] disabled:opacity-50 disabled:scale-100 transition-all active:scale-95 flex items-center gap-2"
-            >
-                {isSubmitting ? (
-                  <div className="size-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                ) : (
-                  <span className="material-symbols-outlined text-xl">rocket_launch</span>
-                )}
-                Post Job Now
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 md:gap-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+            <button type="button" onClick={() => setActiveTab('dashboard')} className="w-full sm:w-auto px-8 h-12 rounded-xl text-gray-500 font-bold text-sm hover:bg-gray-50 transition-all">Cancel</button>
+            <button type="submit" disabled={companies.length === 0 || isSubmitting} className="w-full sm:w-auto px-10 h-12 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+              {isSubmitting ? <div className="size-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <span className="material-symbols-outlined text-xl">rocket_launch</span>}
+              Post Job Now
             </button>
           </div>
         </form>
@@ -692,30 +596,24 @@ const ApplicantList = ({ selectedCompany }) => {
   const [search, setSearch] = useState('');
   const [jobFilter, setJobFilter] = useState('');
   const [myJobs, setMyJobs] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const [apps, jobs] = await Promise.all([
-        getApplicants(token, jobFilter || null),
-        getMyJobs(token),
-      ]);
-      
-      // Filter applicants and jobs by selected company if available
-      const companyJobs = selectedCompany 
-        ? jobs.filter(j => j.company?.companyId === selectedCompany.companyId)
-        : jobs;
-      
-      const jobIdsInCompany = new Set(companyJobs.map(j => j.jobId));
-      const filteredApps = selectedCompany 
-        ? apps.filter(a => jobIdsInCompany.has(a.jobId))
-        : apps;
-
-      setApplicants(filteredApps || []);
-      setMyJobs(companyJobs || []);
+      try {
+        const [apps, jobs] = await Promise.all([
+          getApplicants(token, jobFilter || null),
+          getMyJobs(token),
+        ]);
+        const companyJobs = selectedCompany ? jobs.filter(j => j.company?.companyId === selectedCompany.companyId) : jobs;
+        const jobIdsInCompany = new Set(companyJobs.map(j => j.jobId));
+        const filteredApps = selectedCompany ? apps.filter(a => jobIdsInCompany.has(a.jobId)) : apps;
+        setApplicants(filteredApps || []);
+        setMyJobs(companyJobs || []);
+      } catch (err) { console.error(err); }
     };
-
     fetchData();
   }, [jobFilter, selectedCompany]);
 
@@ -730,100 +628,117 @@ const ApplicantList = ({ selectedCompany }) => {
 
   const filtered = applicants
     .filter(a => filterMode === 'All' || (a.status || 'PENDING').toUpperCase() === filterMode)
-    .filter(a => {
-      if (!search) return true;
-      const q = search.toLowerCase();
-      return a.fullName?.toLowerCase().includes(q) || a.jobTitle?.toLowerCase().includes(q);
-    });
-
-  const formatDate = (d) => { try { return new Date(d).toLocaleDateString('vi-VN'); } catch { return ''; } };
+    .filter(a => !search || a.fullName?.toLowerCase().includes(search.toLowerCase()) || a.jobTitle?.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="flex gap-8 h-full">
-      <aside className="w-72 flex-shrink-0 flex flex-col gap-6">
-        <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white dark:border-gray-800">
-          <div className="mb-4">
-            <h1 className="text-[#121317] dark:text-white text-lg font-bold">Filter Candidates</h1>
-          </div>
-          {/* Job filter */}
-          <div className="mb-5">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Job</p>
-            <select value={jobFilter} onChange={e => setJobFilter(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm py-2 px-3 outline-none">
-              <option value="">All Jobs</option>
+    <div className="flex flex-col lg:flex-row gap-6 md:gap-8 h-full pb-10">
+      {/* Mobile Filter Toggle */}
+      <button 
+        onClick={() => setShowFilters(!showFilters)}
+        className="lg:hidden flex items-center justify-center gap-2 bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-bold shadow-sm"
+      >
+        <span className="material-symbols-outlined">filter_list</span>
+        {showFilters ? 'Hide Filters' : 'Show Filters'}
+      </button>
+
+      <aside className={`w-full lg:w-72 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'} animate-fade-in`}>
+        <div className="bg-white/80 dark:bg-gray-800/60 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white dark:border-gray-700 sticky top-20">
+          <h3 className="font-bold text-lg mb-6 text-[#1D1B18] dark:text-white">Filter Candidates</h3>
+          <div className="mb-8">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Job Posting</p>
+            <select 
+              value={jobFilter} 
+              onChange={e => setJobFilter(e.target.value)} 
+              className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-900 py-2.5 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+            >
+              <option value="">All Active Jobs</option>
               {myJobs.map(j => <option key={j.jobId} value={j.jobId}>{j.title}</option>)}
             </select>
           </div>
-          {/* Status filter */}
-          <div className="space-y-2">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Status</p>
-            <div onClick={() => setFilterMode('All')} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${filterMode === 'All' ? 'bg-primary text-white shadow-md' : 'hover:bg-white dark:hover:bg-gray-800 text-gray-600'}`}>
-              <span className="material-symbols-outlined text-[20px]">groups</span>
-              <p className="text-sm font-semibold">All</p>
-              <span className="ml-auto text-xs opacity-70">{applicants.length}</span>
-            </div>
-            {Object.entries(STATUS_CONFIG).map(([status, cfg]) => (
-              <div key={status} onClick={() => setFilterMode(status)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${filterMode === status ? 'bg-primary/10 text-primary border border-primary/20' : 'hover:bg-white dark:hover:bg-gray-800 text-gray-600'}`}>
-                <span className={`material-symbols-outlined text-[20px] ${cfg.color}`}>{cfg.icon}</span>
-                <p className="text-sm font-medium capitalize">{status.toLowerCase()}</p>
-              </div>
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Status Pipeline</p>
+            {['All', 'PENDING', 'SHORTLISTED', 'INTERVIEWED', 'HIRED', 'REJECTED'].map(m => (
+              <button 
+                key={m} 
+                onClick={() => { setFilterMode(m); if(window.innerWidth < 1024) setShowFilters(false); }}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${filterMode === m ? 'bg-primary text-white shadow-md' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600'}`}
+              >
+                <span className="capitalize">{m.toLowerCase()}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${filterMode === m ? 'bg-white/20' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                  {m === 'All' ? applicants.length : applicants.filter(a => (a.status || 'PENDING').toUpperCase() === m).length}
+                </span>
+              </button>
             ))}
           </div>
         </div>
       </aside>
 
-      <section className="flex-1 flex flex-col gap-6 overflow-y-auto pr-4 pb-12">
-        <div className="relative max-w-md">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 outline-none border-none rounded-xl shadow-sm text-sm" placeholder="Search by name or job title..." />
+      <section className="flex-1 flex flex-col gap-6">
+        <div className="relative group">
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-primary">search</span>
+          <input 
+            value={search} 
+            onChange={e => setSearch(e.target.value)} 
+            className="w-full pl-12 pr-4 py-3.5 bg-white/70 dark:bg-gray-800/70 border border-white dark:border-gray-700 rounded-2xl shadow-sm text-sm outline-none focus:ring-4 focus:ring-primary/10 transition-all" 
+            placeholder="Search candidates by name or role..."
+          />
         </div>
 
         <div className="flex flex-col gap-4">
-          {filtered.length > 0 ? filtered.map((app, i) => (
-            <div key={`${app.id}-${app.jobId}`} className="bg-white/90 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl p-6 shadow-sm border border-white dark:border-gray-800 hover:shadow-xl hover:border-primary/20 transition-all">
-              <div className="flex items-start gap-5">
-                <div className="size-14 rounded-xl border border-gray-100 bg-[#dee0ff] text-primary flex items-center justify-center font-bold text-xl overflow-hidden shrink-0">
-                  {app.avatarUrl ? <img src={app.avatarUrl} className="w-full h-full object-cover" alt=""/> : app.fullName?.charAt(0)}
+          {filtered.length > 0 ? filtered.map(app => (
+            <div key={`${app.id}-${app.jobId}`} className="group bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-white dark:border-gray-800 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all">
+              <div className="flex flex-col sm:flex-row items-start gap-4 md:gap-5">
+                <div className="size-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-primary flex items-center justify-center font-bold text-2xl shrink-0 shadow-inner">
+                  {app.avatarUrl ? <img src={app.avatarUrl} className="w-full h-full object-cover rounded-2xl" /> : app.fullName?.charAt(0)}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0 w-full">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h3 className="text-lg font-bold text-[#121317] dark:text-white">{app.fullName}</h3>
-                      <p className="text-sm text-gray-500">Applied for: <span className="text-primary font-medium">{app.jobTitle}</span></p>
-                      {app.currentRole && <p className="text-xs text-gray-400 mt-0.5">{app.currentRole}</p>}
+                      <h4 className="font-bold text-lg text-[#1D1B18] dark:text-white group-hover:text-primary transition-colors">{app.fullName}</h4>
+                      <p className="text-sm text-gray-500 font-medium">Applied for <span className="text-primary font-bold">{app.jobTitle}</span></p>
                     </div>
-                    <div className="flex flex-col items-end gap-2 shrink-0">
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
                       <StatusDropdown currentStatus={app.status || 'PENDING'} onChangeStatus={(s) => handleStatusChange(app, s)} />
-                      <span className="text-[10px] text-gray-400">{formatDate(app.appliedAt)}</span>
+                      <button className="size-10 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-primary hover:bg-primary/5 transition-all">
+                        <span className="material-symbols-outlined text-[20px]">chat</span>
+                      </button>
                     </div>
                   </div>
+                  
                   {app.coverLetter && (
-                    <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-3 border border-gray-100 dark:border-gray-700">
-                      <span className="font-bold text-gray-500 block mb-1">Cover Letter:</span>{app.coverLetter}
+                    <div className="mt-4 p-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl text-xs text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2 border border-gray-100 dark:border-gray-700">
+                      <span className="font-bold text-gray-400 uppercase tracking-tighter block mb-1">Introduction:</span>
+                      {app.coverLetter}
                     </div>
                   )}
+
+                  <div className="mt-5 pt-5 border-t border-gray-50 dark:border-gray-800 flex flex-wrap items-center gap-3">
+                    {app.cvUrl && (
+                      <a href={app.cvUrl} target="_blank" rel="noreferrer" className="px-4 py-2 bg-slate-900 text-white text-[11px] font-bold rounded-lg hover:bg-slate-800 transition-all flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[16px]">description</span>
+                        View Resume
+                      </a>
+                    )}
+                    {app.cvType === 'profile' && (
+                      <a href={`/profile/${app.id}`} target="_blank" rel="noreferrer" className="px-4 py-2 border border-primary/20 bg-primary/5 text-primary text-[11px] font-bold rounded-lg hover:bg-primary/10 transition-all flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[16px]">person</span>
+                        Public Profile
+                      </a>
+                    )}
+                    <span className="text-[10px] text-gray-400 ml-auto font-medium italic">Applied {new Date(app.appliedAt).toLocaleDateString()}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-gray-50 dark:border-gray-800 flex items-center gap-2">
-                <button className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-all">Message</button>
-                {app.cvUrl && (
-                  <a href={app.cvUrl} target="_blank" rel="noreferrer" className="px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">description</span>View Uploaded CV
-                  </a>
-                )}
-                {app.cvType === 'profile' && (
-                  <a href={`/profile/${app.id}`} target="_blank" rel="noreferrer" className="px-4 py-2 border border-[#dee0ff] bg-[#dee0ff]/20 text-primary text-xs font-bold rounded-lg hover:bg-[#dee0ff]/50 transition-all flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">person</span>View Profile CV
-                  </a>
-                )}
               </div>
             </div>
           )) : (
-            <div className="bg-white/80 p-10 rounded-2xl border border-white text-center">
-              <span className="material-symbols-outlined text-4xl text-[#bac3ff] mb-2 block">person_off</span>
-              <p className="font-bold text-gray-500">No applicants found.</p>
+            <div className="py-20 text-center flex flex-col items-center gap-4 bg-white/40 dark:bg-gray-800/40 rounded-[32px] border-2 border-dashed border-gray-200 dark:border-gray-700">
+              <div className="size-20 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-gray-200">
+                <span className="material-symbols-outlined text-5xl">person_search</span>
+              </div>
+              <div>
+                <p className="text-gray-500 font-bold text-lg">No candidates found</p>
+                <p className="text-sm text-gray-400">Try adjusting your filters or search query.</p>
+              </div>
             </div>
           )}
         </div>
@@ -846,9 +761,7 @@ const MyJobsList = ({ setActiveTab, selectedCompany }) => {
             ? allJobs.filter(j => j.company?.companyId === selectedCompany.companyId)
             : allJobs;
           setJobs(filteredJobs);
-        } catch (e) { 
-          console.error(e); 
-        } 
+        } catch (e) { console.error(e); } 
       }
       setLoading(false);
     };
@@ -856,49 +769,77 @@ const MyJobsList = ({ setActiveTab, selectedCompany }) => {
   }, [selectedCompany]);
 
   return (
-    <div className="animate-[fadeInUp_0.5s_ease-out] max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="animate-fade-in-up max-w-5xl mx-auto py-4 md:py-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 md:mb-12">
         <div>
-          <h1 className="font-serif text-3xl font-bold text-[#1d1b18] dark:text-white">My Posted Jobs</h1>
-          <p className="text-gray-500 mt-1">Manage your active and past job listings.</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-[#1d1b18] dark:text-white tracking-tight">Active Listings</h1>
+          <p className="text-sm text-gray-500 font-medium mt-1">Manage and track your open opportunities.</p>
         </div>
-        <button onClick={() => setActiveTab('post_job')} className="px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
-          <span className="material-symbols-outlined text-[18px]">add</span>Post New Job
+        <button 
+          onClick={() => setActiveTab('post_job')} 
+          className="w-full sm:w-auto px-8 py-3.5 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all active:scale-95"
+        >
+          <span className="material-symbols-outlined text-[20px]">add</span>
+          Post New Job
         </button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div></div>
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <div className="size-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          <p className="text-sm font-bold text-gray-400 animate-pulse uppercase tracking-widest">Loading Jobs...</p>
+        </div>
       ) : jobs.length === 0 ? (
-        <div className="bg-white/80 dark:bg-gray-800/80 p-16 rounded-2xl border border-white dark:border-gray-700 text-center">
-          <span className="material-symbols-outlined text-5xl text-[#bac3ff] mb-4 block">work_off</span>
-          <h3 className="font-serif text-xl font-bold mb-2">No jobs posted yet</h3>
-          <p className="text-sm text-gray-500 mb-6">Create your first job listing to start receiving applications.</p>
-          <button onClick={() => setActiveTab('post_job')} className="px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm">Post Your First Job</button>
+        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-10 md:p-20 rounded-[40px] border border-white dark:border-gray-700 text-center flex flex-col items-center gap-6">
+          <div className="size-24 rounded-3xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-primary">
+            <span className="material-symbols-outlined text-5xl">work_off</span>
+          </div>
+          <div className="max-w-md">
+            <h3 className="text-2xl font-bold mb-2">No listings yet</h3>
+            <p className="text-gray-500 font-medium mb-8">Ready to grow your team? Post your first job opening and start receiving applications today.</p>
+            <button onClick={() => setActiveTab('post_job')} className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all">Get Started</button>
+          </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {jobs.map(job => (
-            <div key={job.jobId} className="bg-white/90 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl p-6 shadow-sm border border-white dark:border-gray-800 hover:shadow-xl hover:border-primary/20 transition-all">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-[#dee0ff] flex items-center justify-center shrink-0">
-                    <span className="text-primary font-bold text-lg">{job.company?.name?.[0] || 'C'}</span>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-[#121317] dark:text-white">{job.title}</h3>
-                    <p className="text-sm text-gray-500">{job.company?.name} • {job.location || 'Remote'}</p>
-                    <div className="flex gap-2 mt-2">
-                      {job.employmentType && <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">{job.employmentType}</span>}
-                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${job.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>{job.status}</span>
+            <div key={job.jobId} className="group bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-[32px] p-6 md:p-8 border border-white dark:border-gray-800 shadow-sm hover:shadow-2xl hover:border-primary/20 transition-all">
+              <div className="flex flex-col h-full">
+                <div className="flex items-start justify-between gap-4 mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="size-14 rounded-2xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center text-orange-600 font-bold text-xl shadow-inner">
+                      {job.company?.name?.[0]}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-[#1D1B18] dark:text-white group-hover:text-primary transition-colors">{job.title}</h3>
+                      <p className="text-sm text-gray-500 font-medium">{job.location || 'Remote'}</p>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-4 shrink-0">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-primary">{job.applicantCount}</p>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase">Applicants</p>
+                  <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${job.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-gray-100 text-gray-500 border border-gray-200'}`}>
+                    {job.status}
                   </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 mb-8">
+                  <div className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 text-center border border-gray-100/50 dark:border-gray-700/50">
+                    <p className="text-lg font-bold text-primary">{job.applicantCount}</p>
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Total Apps</p>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 text-center border border-gray-100/50 dark:border-gray-700/50">
+                    <p className="text-lg font-bold text-indigo-500">12</p>
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">New</p>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 text-center border border-gray-100/50 dark:border-gray-700/50">
+                    <p className="text-lg font-bold text-purple-500">5</p>
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Interviews</p>
+                  </div>
+                </div>
+
+                <div className="mt-auto flex items-center justify-between gap-3">
+                  <button onClick={() => setActiveTab('applicants')} className="flex-1 px-4 py-3 bg-primary/5 text-primary rounded-xl font-bold text-xs hover:bg-primary hover:text-white transition-all">View Candidates</button>
+                  <button className="px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-xl text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+                    <span className="material-symbols-outlined text-[20px]">more_horiz</span>
+                  </button>
                 </div>
               </div>
             </div>
