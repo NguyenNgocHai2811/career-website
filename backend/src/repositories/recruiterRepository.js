@@ -85,6 +85,9 @@ const postJob = async (userId, jobData) => {
         location: $location,
         salaryMin: $salaryMin,
         salaryMax: $salaryMax,
+        category: $category,
+        experience: $experience,
+        level: $level,
         status: 'ACTIVE',
         postedAt: datetime()
       })
@@ -103,7 +106,10 @@ const postJob = async (userId, jobData) => {
       employmentType: jobData.employmentType || '',
       location: jobData.location || '',
       salaryMin: jobData.salaryMin ? parseInt(jobData.salaryMin) : null,
-      salaryMax: jobData.salaryMax ? parseInt(jobData.salaryMax) : null
+      salaryMax: jobData.salaryMax ? parseInt(jobData.salaryMax) : null,
+      category: jobData.category || 'Khác',
+      experience: jobData.experience || 'Không yêu cầu',
+      level: jobData.level || 'Nhân viên',
     });
 
     if (result.records.length === 0) return null;
@@ -203,6 +209,7 @@ const createCompany = async (userId, companyData) => {
         name: $name,
         industry: $industry,
         size: $size,
+        logoUrl: $logoUrl,
         createdAt: datetime()
       })
       CREATE (u)-[:IS_RECRUITER_FOR]->(c)
@@ -213,7 +220,28 @@ const createCompany = async (userId, companyData) => {
       companyId,
       name: companyData.name || 'My Company',
       industry: companyData.industry || 'Technology',
-      size: companyData.size || '1-10'
+      size: companyData.size || '1-10',
+      logoUrl: companyData.logoUrl || ''
+    });
+    if (result.records.length === 0) return null;
+    return result.records[0].get('c').properties;
+  } finally {
+    await session.close();
+  }
+};
+
+const updateCompany = async (userId, companyId, companyData) => {
+  const session = driver.session();
+  try {
+    const query = `
+      MATCH (u:User {userId: $userId})-[:IS_RECRUITER_FOR]->(c:Company {companyId: $companyId})
+      SET c += $data
+      RETURN c
+    `;
+    const result = await session.run(query, {
+      userId,
+      companyId,
+      data: companyData
     });
     if (result.records.length === 0) return null;
     return result.records[0].get('c').properties;
@@ -230,4 +258,5 @@ module.exports = {
   getMyJobs,
   updateApplicationStatus,
   createCompany,
+  updateCompany,
 };

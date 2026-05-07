@@ -32,6 +32,36 @@ export const createCompany = async (token, companyName) => {
   return result.data;
 };
 
+export const updateCompany = async (token, companyId, data) => {
+  const response = await fetch(`${API_URL}/companies/${companyId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  });
+  if (!response.ok) throw new Error('Failed to update company');
+  const result = await response.json();
+  return result.data;
+};
+
+export const uploadCompanyLogo = async (token, companyId, file) => {
+  const formData = new FormData();
+  formData.append('logo', file);
+
+  const response = await fetch(`${API_URL}/companies/${companyId}/logo`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: formData
+  });
+  if (!response.ok) throw new Error('Failed to upload logo');
+  const result = await response.json();
+  return result.data;
+};
+
 export const postJob = async (token, jobData) => {
   const response = await fetch(`${API_URL}/jobs`, {
     method: 'POST',

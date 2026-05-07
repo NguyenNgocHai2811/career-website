@@ -9,6 +9,7 @@ const createPost = async (userId, postData) => {
     const result = await session.run(
       `
       MATCH (u:User {userId: $userId})
+      OPTIONAL MATCH (u)-[:IS_RECRUITER_FOR]->(c:Company)
       CREATE (p:Post {
         id: randomUUID(),
         content: $content,
@@ -19,7 +20,7 @@ const createPost = async (userId, postData) => {
         updatedAt: datetime()
       })
       CREATE (u)-[:POSTED]->(p)
-      RETURN p, u
+      RETURN p, u, c
       `,
       {
         userId,
@@ -32,7 +33,22 @@ const createPost = async (userId, postData) => {
     if (result.records.length === 0) return null;
     const post = result.records[0].get('p').properties;
     const user = result.records[0].get('u').properties;
-    return { ...post, author: { userId: user.userId, fullName: user.fullName, email: user.email } };
+    const company = result.records[0].get('c')?.properties;
+
+    return { 
+      ...post, 
+      author: company ? {
+        id: company.companyId,
+        fullName: company.name,
+        avatar: company.logoUrl,
+        type: 'COMPANY'
+      } : { 
+        userId: user.userId, 
+        fullName: user.fullName, 
+        avatar: user.avatarUrl,
+        type: 'USER'
+      } 
+    };
   } finally {
     await session.close();
   }
@@ -58,7 +74,10 @@ const POST_DETAILS_FRAGMENT = `
 const getPosts = async (currentUserId, cursor, limit = 10) => {
   const session = driver.session();
   try {
-    let query = `MATCH (u:User)-[:POSTED]->(p:Post)`;
+    let query = `
+      MATCH (u:User)-[:POSTED]->(p:Post)
+      OPTIONAL MATCH (u)-[:IS_RECRUITER_FOR]->(comp:Company)
+    `;
     const params = { limit: parseInt(limit, 10) || 10, currentUserId };
 
     if (cursor) {
@@ -66,7 +85,7 @@ const getPosts = async (currentUserId, cursor, limit = 10) => {
       params.cursor = cursor;
     }
 
-    query += POST_DETAILS_FRAGMENT + ` ORDER BY p.createdAt DESC LIMIT toInteger($limit)`;
+    query += POST_DETAILS_FRAGMENT.replace('RETURN p, u,', 'RETURN p, u, comp,') + ` ORDER BY p.createdAt DESC LIMIT toInteger($limit)`;
 
     const result = await session.run(query, params);
     return result.records.map(record => {
@@ -75,6 +94,7 @@ const getPosts = async (currentUserId, cursor, limit = 10) => {
       if (post.updatedAt) post.updatedAt = new Date(post.updatedAt.toString()).toISOString();
 
       const author = record.get('u').properties;
+      const company = record.get('comp')?.properties;
       const reactionsCount = record.get('reactionsCount');
 
       return {
@@ -83,7 +103,17 @@ const getPosts = async (currentUserId, cursor, limit = 10) => {
         reactionsCount: typeof reactionsCount?.toNumber === 'function' ? reactionsCount.toNumber() : (reactionsCount || 0),
         userReactionType: record.get('userReactionType') || null,
         allTypes: record.get('allTypes') || [],
-        author: { userId: author.userId, fullName: author.fullName, email: author.email }
+        author: company ? {
+          id: company.companyId,
+          fullName: company.name,
+          avatar: company.logoUrl,
+          type: 'COMPANY'
+        } : {
+          userId: author.userId,
+          fullName: author.fullName,
+          avatar: author.avatarUrl,
+          type: 'USER'
+        }
       };
     });
   } finally {

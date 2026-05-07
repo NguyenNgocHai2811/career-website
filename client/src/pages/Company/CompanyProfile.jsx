@@ -32,7 +32,7 @@ const CompanyProfile = () => {
   if (!company) return <div className="p-10 text-center font-bold">Không tìm thấy công ty</div>;
 
   return (
-    <div className="bg-[#FEF9F3] min-h-screen text-[#1D1B18] font-sans pb-20">
+    <div className="bg-[#FEF9F3] min-h-screen text-[#1D1B18] font-body pb-20">
       <AppHeader />
       <div className="max-w-[1200px] mx-auto pt-20 px-4 md:px-8">
         
@@ -49,7 +49,7 @@ const CompanyProfile = () => {
                 </div>
               </div>
               <div className="flex-1">
-                <h1 className="text-3xl font-black font-serif">{company.name}</h1>
+                <h1 className="text-3xl font-black font-display">{company.name}</h1>
                 <p className="text-gray-500 text-sm mt-1">{company.industry || 'Technology'} • {company.location || 'Remote'} • {company.employees?.length || 0} employees</p>
               </div>
               <div className="flex gap-3">
@@ -83,7 +83,7 @@ const CompanyProfile = () => {
           <div className="col-span-1 md:col-span-2">
             {activeTab === 'about' && (
               <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#ece7e2] animate-[fadeInUp_0.5s_ease-out]">
-                <h3 className="text-xl font-bold font-serif mb-4">About the Company</h3>
+                <h3 className="text-xl font-bold font-display mb-4">About the Company</h3>
                 <p className="text-gray-600 leading-relaxed whitespace-pre-line">
                   {company.description || 'Welcome to our company profile! We are dedicated to building great products and providing an excellent environment for our team members.'}
                 </p>

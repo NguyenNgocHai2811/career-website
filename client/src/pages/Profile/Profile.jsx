@@ -87,7 +87,7 @@ const BasicInfoModal = ({ data, token, onSave, onClose }) => {
 };
 
 // Experience Modal
-const ExperienceModal = ({ exp, token, userId, onSave, onClose }) => {
+const ExperienceModal = ({ exp, token, onSave, onClose }) => {
   const isEdit = !!exp?.expId;
   const [form, setForm] = useState({ title: exp?.title || '', company: exp?.company || '', type: exp?.type || 'Full-time', startDate: exp?.startDate || '', endDate: exp?.endDate || '', isCurrent: exp?.isCurrent || false, location: exp?.location || '', description: exp?.description || '' });
   const [loading, setLoading] = useState(false);
@@ -114,7 +114,7 @@ const ExperienceModal = ({ exp, token, userId, onSave, onClose }) => {
         <div>
           <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Employment Type</label>
           <select name="type" value={form.type} onChange={handleChange} className="w-full mt-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary">
-            {['Full-time','Part-time','Self-employed','Freelance','Contract','Internship','Apprenticeship'].map(t => <option key={t}>{t}</option>)}
+            {['Full-time', 'Part-time', 'Self-employed', 'Freelance', 'Contract', 'Internship', 'Apprenticeship'].map(t => <option key={t}>{t}</option>)}
           </select>
         </div>
         <Field label="Location" name="location" value={form.location} onChange={handleChange} />
@@ -324,32 +324,269 @@ const Profile = ({ tab = 'profile' }) => {
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExportPDF = async () => {
+    const pdfStyleHits = [];
+    const pushPdfStyleHit = (el, prop, val, pseudo) => {
+      if (pdfStyleHits.length >= 80) return;
+      pdfStyleHits.push({
+        tag: el?.tagName || '',
+        id: el?.id || '',
+        className: typeof el?.className === 'string' ? el.className : '',
+        prop: prop || '',
+        value: val || '',
+        pseudo: pseudo || ''
+      });
+    };
+    const clamp01 = (x) => Math.min(1, Math.max(0, x));
+    const toByte = (x) => Math.round(clamp01(x) * 255);
+    const srgbFromLinear = (x) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+    const parseAlpha = (a) => {
+      if (!a) return 1;
+      const s = String(a).trim();
+      if (!s) return 1;
+      if (s.endsWith('%')) return clamp01(parseFloat(s) / 100);
+      const n = parseFloat(s);
+      return Number.isFinite(n) ? clamp01(n) : 1;
+    };
+    const oklchToRgba = (l, c, hDeg, alpha = 1) => {
+      const h = (Number(hDeg) * Math.PI) / 180;
+      const a = Number(c) * Math.cos(h);
+      const b = Number(c) * Math.sin(h);
+      const L = Number(l);
+      const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+      const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+      const s_ = L - 0.0894841775 * a - 1.291485548 * b;
+      const l3 = l_ * l_ * l_;
+      const m3 = m_ * m_ * m_;
+      const s3 = s_ * s_ * s_;
+      const rLin = 4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3;
+      const gLin = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+      const bLin = -0.0041960863 * l3 - 0.7034186147 * m3 + 1.707614701 * s3;
+      const r = srgbFromLinear(rLin);
+      const g = srgbFromLinear(gLin);
+      const bl = srgbFromLinear(bLin);
+      return `rgba(${toByte(r)}, ${toByte(g)}, ${toByte(bl)}, ${clamp01(alpha)})`;
+    };
+    const parseOklchInner = (inner) => {
+      if (!inner || typeof inner !== 'string') return null;
+      const parts = inner.split('/');
+      const main = (parts[0] || '').trim();
+      const alpha = parseAlpha(parts[1]);
+      const nums = main.split(/\s+/).filter(Boolean);
+      if (nums.length < 3) return null;
+      const lRaw = nums[0];
+      const cRaw = nums[1];
+      const hRaw = nums[2];
+      const l = lRaw.endsWith('%') ? parseFloat(lRaw) / 100 : parseFloat(lRaw);
+      const c = parseFloat(cRaw);
+      const h = parseFloat(String(hRaw).replace(/deg$/i, ''));
+      if (![l, c, h].every(Number.isFinite)) return null;
+      return oklchToRgba(l, c, h, alpha);
+    };
+    const replaceOklchInString = (val) => {
+      if (!val || typeof val !== 'string' || !/oklch\s*\(/i.test(val)) return val;
+      return val.replace(/oklch\s*\(\s*([^\)]*?)\s*\)/gi, (full, inner) => {
+        const rgba = parseOklchInner(inner);
+        return rgba || 'rgba(0,0,0,0)';
+      });
+    };
+    const oklabToRgba = (l, a, b, alpha = 1) => {
+      const L = Number(l);
+      const A = Number(a);
+      const B = Number(b);
+      const l_ = L + 0.3963377774 * A + 0.2158037573 * B;
+      const m_ = L - 0.1055613458 * A - 0.0638541728 * B;
+      const s_ = L - 0.0894841775 * A - 1.291485548 * B;
+      const l3 = l_ * l_ * l_;
+      const m3 = m_ * m_ * m_;
+      const s3 = s_ * s_ * s_;
+      const rLin = 4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3;
+      const gLin = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+      const bLin = -0.0041960863 * l3 - 0.7034186147 * m3 + 1.707614701 * s3;
+      const r = srgbFromLinear(rLin);
+      const g = srgbFromLinear(gLin);
+      const bl = srgbFromLinear(bLin);
+      return `rgba(${toByte(r)}, ${toByte(g)}, ${toByte(bl)}, ${clamp01(alpha)})`;
+    };
+    const parseOklabInner = (inner) => {
+      if (!inner || typeof inner !== 'string') return null;
+      const parts = inner.split('/');
+      const main = (parts[0] || '').trim();
+      const alpha = parseAlpha(parts[1]);
+      const nums = main.split(/\s+/).filter(Boolean);
+      if (nums.length < 3) return null;
+      const lRaw = nums[0];
+      const aRaw = nums[1];
+      const bRaw = nums[2];
+      const l = lRaw.endsWith('%') ? parseFloat(lRaw) / 100 : parseFloat(lRaw);
+      const a = parseFloat(aRaw);
+      const b = parseFloat(bRaw);
+      if (![l, a, b].every(Number.isFinite)) return null;
+      return oklabToRgba(l, a, b, alpha);
+    };
+    const replaceOklabInString = (val) => {
+      if (!val || typeof val !== 'string' || !/oklab\s*\(/i.test(val)) return val;
+      return val.replace(/oklab\s*\(\s*([^\)]*?)\s*\)/gi, (full, inner) => {
+        const rgba = parseOklabInner(inner);
+        return rgba || 'rgba(0,0,0,0)';
+      });
+    };
+    const normalizeCssValue = (val, propName) => {
+      if (!val || typeof val !== 'string') return val;
+      let out = val;
+      if (/oklch\s*\(/i.test(out)) out = replaceOklchInString(out);
+      if (/oklab\s*\(/i.test(out)) out = replaceOklabInString(out);
+      if (out.includes('color-mix')) {
+        const p = String(propName || '').toLowerCase();
+        if (p.includes('background-image') || p === 'background') return 'none';
+        if (p.includes('background')) return '#ffffff';
+        if (p.includes('color') || p.includes('fill') || p.includes('stroke')) return '#0f172a';
+        if (p.includes('border') || p.includes('outline')) return '#cbd5e1';
+        if (p.includes('shadow')) return 'none';
+        return 'none';
+      }
+      if (/okl(?:ab|ch)\s*\(/i.test(out)) {
+        const p = String(propName || '').toLowerCase();
+        if (p.includes('background')) return '#ffffff';
+        if (p.includes('color') || p.includes('fill') || p.includes('stroke')) return '#0f172a';
+        if (p.includes('border') || p.includes('outline')) return '#cbd5e1';
+        if (p.includes('shadow')) return 'none';
+        return 'none';
+      }
+      return out;
+    };
+    const createComputedStyleProxy = (computed, el, pseudo) => new Proxy(computed, {
+      get(target, prop) {
+        if (prop === 'getPropertyValue') {
+          return function (p) {
+            const val = target.getPropertyValue(p);
+            const norm = normalizeCssValue(val, p);
+            if (val !== norm && (/okl(?:ab|ch)\s*\(/i.test(val) || val.includes('color-mix'))) pushPdfStyleHit(el, p, val, pseudo);
+            return norm;
+          };
+        }
+        const val = target[prop];
+        if (val && typeof val === 'string' && (/okl(?:ab|ch)\s*\(/i.test(val) || val.includes('color-mix'))) {
+          pushPdfStyleHit(el, typeof prop === 'string' ? prop : '', val, pseudo);
+          return normalizeCssValue(val, typeof prop === 'string' ? prop : '');
+        }
+        return typeof val === 'function' ? val.bind(target) : val;
+      }
+    });
+    const patchGetComputedStyle = (targetWindow) => {
+      const orig = targetWindow.getComputedStyle;
+      targetWindow.getComputedStyle = function (el, pseudo) {
+        const computed = orig.call(targetWindow, el, pseudo);
+        return createComputedStyleProxy(computed, el, pseudo);
+      };
+      return () => { targetWindow.getComputedStyle = orig; };
+    };
+    let exportContainer = null;
+    let restoreGetComputedStyle = null;
     try {
       setIsExporting(true);
       // Cần một khoảng trễ nhỏ để React kịp render ẩn các nút bấm trước khi chụp màn hình
       await new Promise(resolve => setTimeout(resolve, 300));
 
       const element = profileRef.current;
+      if (!element) throw new Error('Profile element not found');
+
+      // Render from an off-screen clone and strip cross-origin images to avoid canvas taint/CORS failures.
+      const clonedElement = element.cloneNode(true);
+      const images = clonedElement.querySelectorAll('img');
+      images.forEach((img) => {
+        img.setAttribute('crossorigin', 'anonymous');
+        img.setAttribute('referrerpolicy', 'no-referrer');
+      });
+
+      exportContainer = document.createElement('div');
+      exportContainer.id = 'pdf-export-container';
+      exportContainer.style.position = 'fixed';
+      exportContainer.style.left = '-100000px';
+      exportContainer.style.top = '0';
+      const exportWidth = 900;
+      exportContainer.style.width = `${exportWidth}px`;
+      exportContainer.style.background = '#ffffff';
+
+      const safeStyle = document.createElement('style');
+      safeStyle.textContent = `
+        #pdf-export-root {
+          background-color: #ffffff !important;
+          padding: 24px !important;
+          box-sizing: border-box !important;
+        }
+        #pdf-export-root, #pdf-export-root * {
+          box-sizing: border-box !important;
+        }
+        #pdf-export-root > main {
+          width: 100% !important;
+          max-width: 900px !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        #pdf-export-root .md\\:px-4 { padding-left: 1rem !important; padding-right: 1rem !important; }
+        #pdf-export-root .md\\:px-8 { padding-left: 2rem !important; padding-right: 2rem !important; }
+        #pdf-export-root .md\\:rounded-xl { border-radius: 0.75rem !important; }
+        #pdf-export-root .md\\:h-60 { height: 15rem !important; }
+        #pdf-export-root .md\\:flex-row { flex-direction: row !important; }
+        #pdf-export-root .md\\:-mt-20 { margin-top: -5rem !important; }
+        #pdf-export-root .md\\:size-36 { width: 9rem !important; height: 9rem !important; }
+        #pdf-export-root .md\\:flex { display: flex !important; }
+        #pdf-export-root .md\\:text-3xl { font-size: 1.875rem !important; line-height: 2.25rem !important; }
+        #pdf-export-root .md\\:hidden { display: none !important; }
+        #pdf-export-root .md\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+      `;
+      const captureRoot = document.createElement('div');
+      captureRoot.id = 'pdf-export-root';
+      captureRoot.appendChild(safeStyle);
+      captureRoot.appendChild(clonedElement);
+      exportContainer.appendChild(captureRoot);
+      document.body.appendChild(exportContainer);
+
       const opt = {
         margin: [0.3, 0.3, 0.3, 0.3],
         filename: `${profileData?.fullName?.replace(/\s+/g, '_') || 'Profile'}_Resume.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true, 
-          allowTaint: true,
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          width: exportWidth,
+          windowWidth: exportWidth,
+          windowHeight: Math.max(element.scrollHeight || 0, element.clientHeight || 0, window.innerHeight || 0),
+          // Avoid tainted canvas when profile has remote images without permissive CORS headers.
+          allowTaint: false,
           letterRendering: false,
           scrollY: 0,
-          scrollX: 0
+          scrollX: 0,
+          imageTimeout: 15000,
+          onclone: (clonedDoc) => {
+            patchGetComputedStyle(clonedDoc.defaultView);
+          }
         },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
 
-      await html2pdf().set(opt).from(element).save();
+      restoreGetComputedStyle = patchGetComputedStyle(window);
+      await html2pdf().set(opt).from(captureRoot).save();
     } catch (err) {
       console.error('PDF Export Error:', err);
-      alert('Không thể tạo file PDF. Vui lòng kiểm tra lại kết nối hoặc thử lại sau.');
+      if (pdfStyleHits.length) {
+        console.groupCollapsed('PDF Export: Unsupported color hits');
+        console.table(pdfStyleHits);
+        console.groupEnd();
+      } else {
+        console.warn('PDF Export: No style hits captured');
+      }
+      console.error('Error name:', err.name);
+      console.error('Error message:', err.message);
+      console.error('Error stack:', err.stack);
+      alert(`Lỗi: ${err.name} - ${err.message}`);
     } finally {
+      if (restoreGetComputedStyle) restoreGetComputedStyle();
+      if (exportContainer?.parentNode) {
+        exportContainer.parentNode.removeChild(exportContainer);
+      }
       setIsExporting(false);
     }
   };
@@ -463,7 +700,7 @@ const Profile = ({ tab = 'profile' }) => {
 
       {/* Modals */}
       {modal?.type === 'basicInfo' && <BasicInfoModal data={profileData} token={token} onSave={fetchProfile} onClose={closeModal} />}
-      {modal?.type === 'experience' && <ExperienceModal exp={modal.data} token={token} userId={profileData.userId} onSave={fetchProfile} onClose={closeModal} />}
+      {modal?.type === 'experience' && <ExperienceModal exp={modal.data} token={token} onSave={fetchProfile} onClose={closeModal} />}
       {modal?.type === 'education' && <EducationModal edu={modal.data} token={token} onSave={fetchProfile} onClose={closeModal} />}
       {modal?.type === 'project' && <ProjectModal proj={modal.data} token={token} onSave={fetchProfile} onClose={closeModal} />}
       {modal?.type === 'certification' && <CertificationModal cert={modal.data} token={token} onSave={fetchProfile} onClose={closeModal} />}
@@ -535,10 +772,6 @@ const Profile = ({ tab = 'profile' }) => {
                     </>
                   ) : (
                     <>
-                      <button onClick={handleExportPDF} disabled={isExporting} className="px-5 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2">
-                        {isExporting ? <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span> : <span className="material-symbols-outlined text-[18px]">download</span>}
-                        Tải PDF
-                      </button>
                       {connStatus === 'NONE' && (
                         <button onClick={handleConnect} disabled={connLoading} className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 flex items-center gap-2 text-sm disabled:opacity-60">
                           <span className="material-symbols-outlined text-[18px]">person_add</span>
@@ -622,15 +855,17 @@ const Profile = ({ tab = 'profile' }) => {
               {/* Mobile action buttons */}
               {!isExporting && (
                 <div className="flex md:hidden flex-wrap items-center gap-3 mt-4 w-full">
-                  <button onClick={handleExportPDF} disabled={isExporting} className="w-full py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-lg text-sm flex items-center justify-center gap-2">
-                    {isExporting ? <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span> : <span className="material-symbols-outlined text-[18px]">download</span>}
-                    Tải PDF
-                  </button>
                   {isOwner ? (
-                    <button onClick={() => openModal('basicInfo')} className="w-full py-2.5 bg-primary text-white font-semibold rounded-lg text-sm flex items-center justify-center gap-2">
-                      <span className="material-symbols-outlined text-[18px]">edit</span>
-                      Edit Profile
-                    </button>
+                    <>
+                      <button onClick={handleExportPDF} disabled={isExporting} className="w-full py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-lg text-sm flex items-center justify-center gap-2">
+                        {isExporting ? <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span> : <span className="material-symbols-outlined text-[18px]">download</span>}
+                        Tải PDF
+                      </button>
+                      <button onClick={() => openModal('basicInfo')} className="w-full py-2.5 bg-primary text-white font-semibold rounded-lg text-sm flex items-center justify-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">edit</span>
+                        Edit Profile
+                      </button>
+                    </>
                   ) : (
                     <>
                       {connStatus === 'NONE' && (
@@ -658,7 +893,7 @@ const Profile = ({ tab = 'profile' }) => {
               )}
             </div>
           </div>
-          
+
           {/* Tabs */}
           <div data-html2canvas-ignore="true" className="flex items-center gap-8 px-6 md:px-8 border-t border-slate-100 dark:border-slate-700 pt-1 overflow-x-auto no-scrollbar">
             <button onClick={() => navigate(userId ? `/profile/${userId}` : '/profile')} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${tab === 'profile' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Profile</button>
@@ -786,150 +1021,150 @@ const Profile = ({ tab = 'profile' }) => {
             {tab === 'profile' && (
               <>
 
-            {/* Experience */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 group hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-primary">Experience</h2>
-                {isOwner && (
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openModal('experience')} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-primary transition">
-                      <span className="material-symbols-outlined text-[20px]">add</span>
-                    </button>
+                {/* Experience */}
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 group hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold text-primary">Experience</h2>
+                    {isOwner && (
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => openModal('experience')} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-primary transition">
+                          <span className="material-symbols-outlined text-[20px]">add</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              {profileData.experiences?.length > 0 ? (
-                <div className="space-y-6">
-                  {profileData.experiences.map(exp => (
-                    <div key={exp.expId} className="flex gap-4">
-                      <div className="size-12 rounded-lg bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center shrink-0">
-                        {exp.logoUrl ? <img alt={exp.company} className="size-8 object-contain" src={exp.logoUrl} /> : <span className="material-symbols-outlined text-slate-400">domain</span>}
-                      </div>
-                      <div className="flex-1 pb-6 border-b border-slate-100 dark:border-slate-700 last:border-0 last:pb-0">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-base font-bold text-slate-900 dark:text-white">{exp.title}</h3>
-                            <p className="text-sm text-slate-600 dark:text-slate-300">{exp.company} · {exp.type}</p>
-                            <p className="text-xs text-slate-500 mt-0.5">{exp.startDate}{exp.isCurrent ? ' – Present' : exp.endDate ? ` – ${exp.endDate}` : ''}</p>
-                            {exp.location && <p className="text-xs text-slate-500">{exp.location}</p>}
+                  {profileData.experiences?.length > 0 ? (
+                    <div className="space-y-6">
+                      {profileData.experiences.map(exp => (
+                        <div key={exp.expId} className="flex gap-4">
+                          <div className="size-12 rounded-lg bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center shrink-0">
+                            {exp.logoUrl ? <img alt={exp.company} className="size-8 object-contain" src={exp.logoUrl} crossOrigin="anonymous" /> : <span className="material-symbols-outlined text-slate-400">domain</span>}
                           </div>
-                          {isOwner && (
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                              <button onClick={() => openModal('experience', exp)} className="text-primary hover:text-primary/80">
-                                <span className="material-symbols-outlined text-[16px]">edit</span>
-                              </button>
-                              <button onClick={() => handleDeleteItem(`experience/${exp.expId}`)} className="text-red-400 hover:text-red-600">
-                                <span className="material-symbols-outlined text-[16px]">delete</span>
-                              </button>
+                          <div className="flex-1 pb-6 border-b border-slate-100 dark:border-slate-700 last:border-0 last:pb-0">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="text-base font-bold text-slate-900 dark:text-white">{exp.title}</h3>
+                                <p className="text-sm text-slate-600 dark:text-slate-300">{exp.company} · {exp.type}</p>
+                                <p className="text-xs text-slate-500 mt-0.5">{exp.startDate}{exp.isCurrent ? ' – Present' : exp.endDate ? ` – ${exp.endDate}` : ''}</p>
+                                {exp.location && <p className="text-xs text-slate-500">{exp.location}</p>}
+                              </div>
+                              {isOwner && (
+                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                                  <button onClick={() => openModal('experience', exp)} className="text-primary hover:text-primary/80">
+                                    <span className="material-symbols-outlined text-[16px]">edit</span>
+                                  </button>
+                                  <button onClick={() => handleDeleteItem(`experience/${exp.expId}`)} className="text-red-400 hover:text-red-600">
+                                    <span className="material-symbols-outlined text-[16px]">delete</span>
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        {exp.description && <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{exp.description}</p>}
-                        {exp.skills?.length > 0 && (
-                          <div className="flex gap-2 mt-2 flex-wrap">
-                            {exp.skills.map((s, i) => <span key={i} className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-100 text-[11px] font-semibold text-slate-600 dark:text-slate-300">{s}</span>)}
+                            {exp.description && <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{exp.description}</p>}
+                            {exp.skills?.length > 0 && (
+                              <div className="flex gap-2 mt-2 flex-wrap">
+                                {exp.skills.map((s, i) => <span key={i} className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-100 text-[11px] font-semibold text-slate-600 dark:text-slate-300">{s}</span>)}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">{isOwner ? 'Add your work experience.' : 'No experience added yet.'}</p>
+                  )}
                 </div>
-              ) : (
-                <p className="text-sm text-slate-400 italic">{isOwner ? 'Add your work experience.' : 'No experience added yet.'}</p>
-              )}
-            </div>
 
-            {/* Projects */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 group hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-primary">Projects</h2>
-                {isOwner && (
-                  <button onClick={() => openModal('project')} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-primary transition opacity-0 group-hover:opacity-100">
-                    <span className="material-symbols-outlined text-[20px]">add</span>
-                  </button>
-                )}
-              </div>
-              {profileData.projects?.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {profileData.projects.map(proj => (
-                    <div key={proj.projId} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:shadow-md hover:border-primary/30 transition-all group/card bg-white dark:bg-slate-800 flex flex-col">
-                      <div className="h-28 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-4xl text-blue-300">rocket_launch</span>
-                      </div>
-                      <div className="p-4 flex flex-col flex-1">
-                        <div className="flex justify-between items-start">
-                          <h3 className="font-bold text-slate-900 dark:text-white text-sm group-hover/card:text-primary transition-colors">{proj.name}</h3>
-                          {isOwner && (
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                              <button onClick={() => openModal('project', proj)} className="text-primary"><span className="material-symbols-outlined text-[14px]">edit</span></button>
-                              <button onClick={() => handleDeleteItem(`projects/${proj.projId}`)} className="text-red-400"><span className="material-symbols-outlined text-[14px]">delete</span></button>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{proj.description}</p>
-                        <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center">
-                          <span className="text-[11px] text-slate-400 font-medium">{proj.year}{proj.category ? ` · ${proj.category}` : ''}</span>
-                          {proj.link && proj.link !== '#' && (
-                            <a href={proj.link} target="_blank" rel="noreferrer" className="text-primary"><span className="material-symbols-outlined text-[16px]">open_in_new</span></a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-400 italic">{isOwner ? 'Showcase your projects here.' : 'No projects added yet.'}</p>
-              )}
-            </div>
-
-            {/* Certifications */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 group hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-primary">Licenses & Certifications</h2>
-                {isOwner && (
-                  <button onClick={() => openModal('certification')} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-primary transition opacity-0 group-hover:opacity-100">
-                    <span className="material-symbols-outlined text-[20px]">add</span>
-                  </button>
-                )}
-              </div>
-              {profileData.certifications?.length > 0 ? (
-                <div className="space-y-4">
-                  {profileData.certifications.map(cert => (
-                    <div key={cert.certId} className="flex gap-4 items-start pb-4 border-b border-slate-100 dark:border-slate-700 last:border-0 last:pb-0">
-                      <div className="size-12 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-lg flex items-center justify-center shrink-0 shadow-sm p-1.5">
-                        {cert.logoUrl ? <img alt={cert.organization} className="w-full h-full object-contain" src={cert.logoUrl} /> : <span className="text-sm font-bold text-blue-600">{cert.organization?.substring(0, 3).toUpperCase()}</span>}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between">
-                          <div>
-                            <h4 className="text-sm font-bold text-slate-900 dark:text-white">{cert.name}</h4>
-                            <p className="text-xs text-slate-600 dark:text-slate-300">{cert.organization}</p>
-                            <p className="text-xs text-slate-500 mt-0.5">{cert.issueDate}{cert.expiryDate ? ` · Expires ${cert.expiryDate}` : ''}</p>
+                {/* Projects */}
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 group hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold text-primary">Projects</h2>
+                    {isOwner && (
+                      <button onClick={() => openModal('project')} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-primary transition opacity-0 group-hover:opacity-100">
+                        <span className="material-symbols-outlined text-[20px]">add</span>
+                      </button>
+                    )}
+                  </div>
+                  {profileData.projects?.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {profileData.projects.map(proj => (
+                        <div key={proj.projId} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:shadow-md hover:border-primary/30 transition-all group/card bg-white dark:bg-slate-800 flex flex-col">
+                          <div className="h-28 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-4xl text-blue-300">rocket_launch</span>
                           </div>
-                          {isOwner && (
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                              <button onClick={() => openModal('certification', cert)} className="text-primary"><span className="material-symbols-outlined text-[16px]">edit</span></button>
-                              <button onClick={() => handleDeleteItem(`certifications/${cert.certId}`)} className="text-red-400"><span className="material-symbols-outlined text-[16px]">delete</span></button>
+                          <div className="p-4 flex flex-col flex-1">
+                            <div className="flex justify-between items-start">
+                              <h3 className="font-bold text-slate-900 dark:text-white text-sm group-hover/card:text-primary transition-colors">{proj.name}</h3>
+                              {isOwner && (
+                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                                  <button onClick={() => openModal('project', proj)} className="text-primary"><span className="material-symbols-outlined text-[14px]">edit</span></button>
+                                  <button onClick={() => handleDeleteItem(`projects/${proj.projId}`)} className="text-red-400"><span className="material-symbols-outlined text-[14px]">delete</span></button>
+                                </div>
+                              )}
                             </div>
-                          )}
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{proj.description}</p>
+                            <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                              <span className="text-[11px] text-slate-400 font-medium">{proj.year}{proj.category ? ` · ${proj.category}` : ''}</span>
+                              {proj.link && proj.link !== '#' && (
+                                <a href={proj.link} target="_blank" rel="noreferrer" className="text-primary"><span className="material-symbols-outlined text-[16px]">open_in_new</span></a>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        {cert.credentialUrl && (
-                          <a href={cert.credentialUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition no-underline">
-                            <span className="material-symbols-outlined text-[14px]">open_in_new</span>
-                            Show Credential
-                          </a>
-                        )}
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">{isOwner ? 'Showcase your projects here.' : 'No projects added yet.'}</p>
+                  )}
                 </div>
-              ) : (
-                <p className="text-sm text-slate-400 italic">{isOwner ? 'Add your certifications and licenses.' : 'No certifications yet.'}</p>
-              )}
-            </div>
+
+                {/* Certifications */}
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 group hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold text-primary">Licenses & Certifications</h2>
+                    {isOwner && (
+                      <button onClick={() => openModal('certification')} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-primary transition opacity-0 group-hover:opacity-100">
+                        <span className="material-symbols-outlined text-[20px]">add</span>
+                      </button>
+                    )}
+                  </div>
+                  {profileData.certifications?.length > 0 ? (
+                    <div className="space-y-4">
+                      {profileData.certifications.map(cert => (
+                        <div key={cert.certId} className="flex gap-4 items-start pb-4 border-b border-slate-100 dark:border-slate-700 last:border-0 last:pb-0">
+                          <div className="size-12 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-lg flex items-center justify-center shrink-0 shadow-sm p-1.5">
+                            {cert.logoUrl ? <img alt={cert.organization} className="w-full h-full object-contain" src={cert.logoUrl} crossOrigin="anonymous" /> : <span className="text-sm font-bold text-blue-600">{cert.organization?.substring(0, 3).toUpperCase()}</span>}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between">
+                              <div>
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-white">{cert.name}</h4>
+                                <p className="text-xs text-slate-600 dark:text-slate-300">{cert.organization}</p>
+                                <p className="text-xs text-slate-500 mt-0.5">{cert.issueDate}{cert.expiryDate ? ` · Expires ${cert.expiryDate}` : ''}</p>
+                              </div>
+                              {isOwner && (
+                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                                  <button onClick={() => openModal('certification', cert)} className="text-primary"><span className="material-symbols-outlined text-[16px]">edit</span></button>
+                                  <button onClick={() => handleDeleteItem(`certifications/${cert.certId}`)} className="text-red-400"><span className="material-symbols-outlined text-[16px]">delete</span></button>
+                                </div>
+                              )}
+                            </div>
+                            {cert.credentialUrl && (
+                              <a href={cert.credentialUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition no-underline">
+                                <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                                Show Credential
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">{isOwner ? 'Add your certifications and licenses.' : 'No certifications yet.'}</p>
+                  )}
+                </div>
               </>
             )}
-            
+
             {tab === 'posts' && <ProfilePosts userId={userId === 'me' ? profileData?.userId : userId} token={token} isOwner={isOwner} profileData={profileData} />}
             {tab === 'activity' && <ProfileActivity userId={userId === 'me' ? profileData?.userId : userId} token={token} isOwner={isOwner} profileData={profileData} />}
 

@@ -43,18 +43,29 @@ const PostItem = ({ post, onToggleLike, getAuthToken, user }) => {
       <div className="p-5 pb-2 border-b-none">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Link to={`/profile/${post.author?.id || post.author?.userId || ''}`} className="no-underline">
+            <Link 
+              to={post.author?.type === 'COMPANY' ? `/company/${post.author?.id}` : `/profile/${post.author?.id || post.author?.userId || ''}`} 
+              className="no-underline"
+            >
               <div className="size-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary transition-all">
                 {post.author?.avatar ? (
                   <img alt={`${post.author.fullName} Avatar`} className="w-full h-full object-cover" src={post.author.avatar} />
                 ) : (
-                  <span className="material-symbols-outlined text-gray-500">person</span>
+                  <span className="material-symbols-outlined text-gray-500">{post.author?.type === 'COMPANY' ? 'domain' : 'person'}</span>
                 )}
               </div>
             </Link>
             <div>
-              <Link to={`/profile/${post.author?.id || post.author?.userId || ''}`} className="no-underline">
-                <h4 className="font-bold text-text-main dark:text-white text-base font-extrabold hover:text-primary transition-colors">{post.author?.fullName || 'Unknown User'}</h4>
+              <Link 
+                to={post.author?.type === 'COMPANY' ? `/company/${post.author?.id}` : `/profile/${post.author?.id || post.author?.userId || ''}`} 
+                className="no-underline"
+              >
+                <h4 className="font-bold text-text-main dark:text-white text-base font-extrabold hover:text-primary transition-colors">
+                  {post.author?.fullName || 'Unknown'}
+                  {post.author?.type === 'COMPANY' && (
+                    <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">COMPANY</span>
+                  )}
+                </h4>
               </Link>
               <p className="text-xs text-text-secondary dark:text-gray-400">
                 {post.createdAt ? formatDate(post.createdAt) : ''}

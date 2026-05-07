@@ -23,7 +23,7 @@ const saveMessage = async (senderId, receiverId, content) => {
       
       RETURN m, s.userId AS senderId, r.userId AS receiverId
     `;
-    const result = await session.run(query, { senderId, receiverId, content });
+    const result = await session.run(query, { senderId, receiverId, content, msgId });
     if (result.records.length === 0) return null;
     
     const msgData = result.records[0].get('m').properties;

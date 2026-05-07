@@ -1,9 +1,42 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
+import { getJobs } from '../../services/jobService';
 
 function Homepage() {
+  const navigate = useNavigate();
   const [featuredRef, isFeaturedVisible, hasFeaturedIntersected] = useIntersectionObserver();
+  const isLoggedIn = !!localStorage.getItem('token');
+  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+  const [featuredJobs, setFeaturedJobs] = useState([]);
+  const [loadingJobs, setLoadingJobs] = useState(true);
+
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        const data = await getJobs();
+        setFeaturedJobs(data.slice(0, 3));
+      } catch (err) {
+        console.error('Error fetching featured jobs:', err);
+      } finally {
+        setLoadingJobs(false);
+      }
+    };
+    fetchFeatured();
+  }, []);
+
+  // Search states
+  const [searchTitle, setSearchTitle] = useState('');
+  const [searchLocation, setSearchLocation] = useState('');
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (searchTitle) params.append('title', searchTitle);
+    if (searchLocation) params.append('location', searchLocation);
+    navigate(`/jobs?${params.toString()}`);
+  };
 
   return (
     <div className="font-display antialiased selection:bg-primary/20 selection:text-primary-dark">
@@ -25,18 +58,26 @@ function Homepage() {
               </h2>
             </div>
             <nav className="hidden md:flex items-center gap-8">
-              <a className="text-[#4a5568] hover:text-primary text-sm font-medium transition-colors" href="#">Find Jobs</a>
+              <Link className="text-[#4a5568] hover:text-primary text-sm font-medium transition-colors no-underline" to="/jobs">Find Jobs</Link>
               <a className="text-[#4a5568] hover:text-primary text-sm font-medium transition-colors" href="#">Companies</a>
               <a className="text-[#4a5568] hover:text-primary text-sm font-medium transition-colors" href="#">Salaries</a>
               <a className="text-[#4a5568] hover:text-primary text-sm font-medium transition-colors" href="#">Advice</a>
             </nav>
             <div className="flex gap-3">
-              <Link to="/login" className="hidden sm:flex items-center justify-center rounded-xl h-10 px-6 bg-transparent border border-gray-200 hover:border-primary text-[#2d3748] text-sm font-semibold transition-all hover:bg-white hover:text-primary">
-                Sign In
-              </Link>
-              <Link to="/register" className="flex items-center justify-center rounded-xl h-10 px-6 bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 text-sm font-bold transition-all transform hover:scale-[1.05] hover:shadow-primary/40">
-                Join Now
-              </Link>
+              {isLoggedIn ? (
+                <Link to={storedUser.role === 'RECRUITER' ? '/recruiter' : '/feed'} className="flex items-center justify-center rounded-xl h-10 px-6 bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 text-sm font-bold transition-all transform hover:scale-[1.05]">
+                  {storedUser.role === 'RECRUITER' ? 'Dashboard' : 'Go to Feed'}
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login" className="hidden sm:flex items-center justify-center rounded-xl h-10 px-6 bg-transparent border border-gray-200 hover:border-primary text-[#2d3748] text-sm font-semibold transition-all hover:bg-white hover:text-primary no-underline">
+                    Sign In
+                  </Link>
+                  <Link to="/register" className="flex items-center justify-center rounded-xl h-10 px-6 bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 text-sm font-bold transition-all transform hover:scale-[1.05] hover:shadow-primary/40 no-underline">
+                    Join Now
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </header>
@@ -55,17 +96,29 @@ function Homepage() {
                   Connect with premium employers in a space designed for professionals who value culture, growth, and vibrancy.
                 </p>
                 <div className="w-full p-2 bg-white/80 rounded-2xl shadow-card border border-white relative z-20 backdrop-blur-md transition-all hover:shadow-soft load-fade-in-up delay-300">
-                  <form className="flex flex-col sm:flex-row items-center gap-2">
+                  <form onSubmit={handleSearch} className="flex flex-col sm:flex-row items-center gap-2">
                     <div className="flex-1 flex items-center px-4 w-full h-12 sm:h-14">
                       <span className="material-symbols-outlined text-primary mr-3">search</span>
-                      <input className="w-full bg-transparent border-none focus:ring-0 p-0 text-[#2d3748] placeholder-gray-400 font-medium outline-none" placeholder="Job title, keywords..." type="text" />
+                      <input 
+                        className="w-full bg-transparent border-none focus:ring-0 p-0 text-[#2d3748] placeholder-gray-400 font-medium outline-none" 
+                        placeholder="Job title, keywords..." 
+                        type="text" 
+                        value={searchTitle}
+                        onChange={(e) => setSearchTitle(e.target.value)}
+                      />
                     </div>
                     <div className="hidden sm:block w-px h-8 bg-gray-200"></div>
                     <div className="flex-1 flex items-center px-4 w-full h-12 sm:h-14 border-t sm:border-t-0 border-gray-100">
                       <span className="material-symbols-outlined text-primary mr-3">location_on</span>
-                      <input className="w-full bg-transparent border-none focus:ring-0 p-0 text-[#2d3748] placeholder-gray-400 font-medium outline-none" placeholder="City, state..." type="text" />
+                      <input 
+                        className="w-full bg-transparent border-none focus:ring-0 p-0 text-[#2d3748] placeholder-gray-400 font-medium outline-none" 
+                        placeholder="City, state..." 
+                        type="text" 
+                        value={searchLocation}
+                        onChange={(e) => setSearchLocation(e.target.value)}
+                      />
                     </div>
-                    <button className="w-full sm:w-auto min-w-[120px] h-12 sm:h-14 bg-[#2d3748] hover:bg-primary text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/30" type="button">
+                    <button className="w-full sm:w-auto min-w-[120px] h-12 sm:h-14 bg-[#2d3748] hover:bg-primary text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/30" type="submit">
                       <span>Search</span>
                     </button>
                   </form>
@@ -198,79 +251,53 @@ function Homepage() {
                 </a>
               </div>
               <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-700 ${hasFeaturedIntersected ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '0.4s' }}>
-                {/* Job Card 1 */}
-                <div className={`card-reveal group relative bg-white rounded-3xl overflow-hidden border border-secondary/20 shadow-sm card-hover-effect transition-all duration-700 ${hasFeaturedIntersected ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '0.6s' }}>
-                  <div className="h-40 bg-cover bg-center relative" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80")' }}>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur rounded-lg px-3 py-1 text-xs font-bold text-[#2d3748]">Full-time</div>
-                  </div>
-                  <div className="p-8 pt-10 relative">
-                    <div className="absolute -top-10 left-8 size-20 rounded-2xl bg-white shadow-lg p-1.5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <div className="size-full rounded-xl bg-pastel-lavender/10 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-4xl text-primary">design_services</span>
+                {loadingJobs ? (
+                  Array(3).fill(0).map((_, i) => (
+                    <div key={i} className="h-96 bg-white/50 rounded-3xl animate-pulse"></div>
+                  ))
+                ) : featuredJobs.map((job, idx) => (
+                  <Link 
+                    key={job.jobId}
+                    to={`/jobs?jobId=${job.jobId}`}
+                    className={`card-reveal group relative bg-white rounded-3xl overflow-hidden border border-secondary/20 shadow-sm card-hover-effect transition-all duration-700 no-underline ${hasFeaturedIntersected ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} 
+                    style={{ transitionDelay: `${0.6 + (idx * 0.2)}s` }}
+                  >
+                    <div className="h-40 bg-cover bg-center relative" style={{ 
+                      backgroundImage: `url("https://images.unsplash.com/photo-${['1497215728101-856f4ea42174', '1522071823991-b51c1707eadb', '1552664730-d307ca884978'][idx % 3]}?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80")` 
+                    }}>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur rounded-lg px-3 py-1 text-xs font-bold text-[#2d3748] uppercase">
+                        {job.employmentType || 'Full-time'}
                       </div>
                     </div>
-                    <h3 className="text-2xl font-bold text-[#2d3748] mb-1 group-hover:text-primary transition-colors">Senior UX Designer</h3>
-                    <p className="text-[#718096] text-sm font-medium mb-5">Creative Studio • Remote</p>
-                    <div className="flex flex-wrap gap-2 mb-8 scroll-reveal-late">
-                      <span className="px-3 py-1.5 rounded-lg bg-pastel-lavender/10 text-primary-dark text-xs font-bold">Design</span>
-                      <span className="px-3 py-1.5 rounded-lg bg-pastel-lavender/10 text-primary-dark text-xs font-bold">Senior</span>
-                    </div>
-                    <div className="flex items-center justify-between border-t border-gray-100 pt-5 scroll-reveal-late">
-                      <span className="text-[#2d3748] font-bold text-base">$120k - $150k</span>
-                      <span className="text-[#a0aec0] text-xs font-medium">Posted 2d ago</span>
-                    </div>
-                  </div>
-                </div>
-                {/* Job Card 2 */}
-                <div className={`card-reveal group relative bg-white rounded-3xl overflow-hidden border border-secondary/20 shadow-sm card-hover-effect lg:translate-y-12 transition-all duration-700 ${hasFeaturedIntersected ? 'opacity-100 translate-y-12' : 'opacity-0 translate-y-20'}`} style={{ transitionDelay: '0.8s' }}>
-                  <div className="h-40 bg-cover bg-center relative" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80")' }}>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur rounded-lg px-3 py-1 text-xs font-bold text-[#2d3748]">Hybrid</div>
-                  </div>
-                  <div className="p-8 pt-10 relative">
-                    <div className="absolute -top-10 left-8 size-20 rounded-2xl bg-white shadow-lg p-1.5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <div className="size-full rounded-xl bg-pastel-pink/10 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-4xl text-primary">storefront</span>
+                    <div className="p-8 pt-10 relative">
+                      <div className="absolute -top-10 left-8 size-20 rounded-2xl bg-white shadow-lg p-1.5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <div className="size-full rounded-xl bg-pastel-lavender/10 flex items-center justify-center overflow-hidden">
+                          {job.company?.logoUrl ? (
+                            <img src={job.company.logoUrl} className="w-full h-full object-contain" alt="logo" />
+                          ) : (
+                            <span className="text-2xl font-bold text-primary">{job.company?.name?.[0]}</span>
+                          )}
+                        </div>
+                      </div>
+                      <h3 className="text-2xl font-bold text-[#2d3748] mb-1 group-hover:text-primary transition-colors line-clamp-1">{job.title}</h3>
+                      <p className="text-[#718096] text-sm font-medium mb-5">{job.company?.name} • {job.location}</p>
+                      <div className="flex flex-wrap gap-2 mb-8">
+                        <span className="px-3 py-1.5 rounded-lg bg-pastel-lavender/10 text-primary-dark text-[0.65rem] font-bold uppercase tracking-wider">{job.category}</span>
+                        <span className="px-3 py-1.5 rounded-lg bg-pastel-lavender/10 text-primary-dark text-[0.65rem] font-bold uppercase tracking-wider">{job.level}</span>
+                      </div>
+                      <div className="flex items-center justify-between border-t border-gray-100 pt-5">
+                        <span className="text-[#2d3748] font-bold text-base">
+                          {job.salaryMin ? `$${job.salaryMin/1000}k` : 'Negotiable'}
+                          {job.salaryMin && job.salaryMax ? ` - $${job.salaryMax/1000}k` : ''}
+                        </span>
+                        <span className="text-[#a0aec0] text-[0.65rem] font-bold uppercase tracking-widest">New</span>
                       </div>
                     </div>
-                    <h3 className="text-2xl font-bold text-[#2d3748] mb-1 group-hover:text-primary transition-colors">Marketing Manager</h3>
-                    <p className="text-[#718096] text-sm font-medium mb-5">TechFlow Inc. • New York, NY</p>
-                    <div className="flex flex-wrap gap-2 mb-8 scroll-reveal-late">
-                      <span className="px-3 py-1.5 rounded-lg bg-pastel-pink/10 text-primary-dark text-xs font-bold">Marketing</span>
-                      <span className="px-3 py-1.5 rounded-lg bg-pastel-pink/10 text-primary-dark text-xs font-bold">Mid-Level</span>
-                    </div>
-                    <div className="flex items-center justify-between border-t border-gray-100 pt-5 scroll-reveal-late">
-                      <span className="text-[#2d3748] font-bold text-base">$90k - $120k</span>
-                      <span className="text-[#a0aec0] text-xs font-medium">Posted 5h ago</span>
-                    </div>
-                  </div>
-                </div>
-                {/* Job Card 3 */}
-                <div className={`card-reveal group relative bg-white rounded-3xl overflow-hidden border border-secondary/20 shadow-sm card-hover-effect transition-all duration-700 ${hasFeaturedIntersected ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '1.0s' }}>
-                  <div className="h-40 bg-cover bg-center relative" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80")' }}>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur rounded-lg px-3 py-1 text-xs font-bold text-[#2d3748]">Contract</div>
-                  </div>
-                  <div className="p-8 pt-10 relative">
-                    <div className="absolute -top-10 left-8 size-20 rounded-2xl bg-white shadow-lg p-1.5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <div className="size-full rounded-xl bg-secondary/10 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-4xl text-primary">terminal</span>
-                      </div>
-                    </div>
-                    <h3 className="text-2xl font-bold text-[#2d3748] mb-1 group-hover:text-primary transition-colors">Frontend Developer</h3>
-                    <p className="text-[#718096] text-sm font-medium mb-5">WebSolutions • London, UK</p>
-                    <div className="flex flex-wrap gap-2 mb-8 scroll-reveal-late">
-                      <span className="px-3 py-1.5 rounded-lg bg-secondary/10 text-primary-dark text-xs font-bold">Engineering</span>
-                      <span className="px-3 py-1.5 rounded-lg bg-secondary/10 text-primary-dark text-xs font-bold">React</span>
-                    </div>
-                    <div className="flex items-center justify-between border-t border-gray-100 pt-5 scroll-reveal-late">
-                      <span className="text-[#2d3748] font-bold text-base">£60k - £80k</span>
-                      <span className="text-[#a0aec0] text-xs font-medium">Posted 1d ago</span>
-                    </div>
-                  </div>
-                </div>
+                  </Link>
+                ))}
               </div>
+
             </div>
           </section>
           <section className="py-24 px-6 mt-12">

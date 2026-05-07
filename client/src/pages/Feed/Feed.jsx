@@ -44,10 +44,26 @@ const Feed = () => {
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        setUser({
-          ...parsedUser,
-          avatar: parsedUser.avatar || null
-        });
+        
+        // If recruiter, attempt to load active company identity
+        if (parsedUser.role?.toUpperCase() === 'RECRUITER') {
+          const activeCompany = localStorage.getItem('activeCompany');
+          if (activeCompany) {
+            const companyData = JSON.parse(activeCompany);
+            setUser({
+              ...parsedUser,
+              fullName: companyData.name,
+              avatar: companyData.logoUrl,
+              industry: companyData.industry,
+              companyId: companyData.companyId,
+              isCompanyIdentity: true
+            });
+          } else {
+            setUser({ ...parsedUser, avatar: parsedUser.avatar || null });
+          }
+        } else {
+          setUser({ ...parsedUser, avatar: parsedUser.avatar || null });
+        }
       } catch (e) {
         console.error('Failed to parse user from local storage');
       }
@@ -248,18 +264,18 @@ const Feed = () => {
                     <span className="material-symbols-outlined text-4xl text-gray-500">person</span>
                   )}
                 </div>
-                <div className="absolute bottom-0 right-1 size-5 bg-green-500 rounded-full border-2 border-white dark:border-card-dark" title="Online"></div>
+                <div className="absolute bottom-0 right-1 size-5 bg-green-500 rounded-full border-2 border-white dark:border-card-dark" title="Online Status"></div>
               </div>
               <h3 className="text-lg font-bold text-text-main dark:text-white font-black">{user.fullName}</h3>
               <p className="text-sm text-text-secondary dark:text-gray-400 mt-1 mb-4">
-                <span className="font-bold text-text-main dark:text-gray-200">{user.role}</span><br />
-                <span className="text-xs font-medium">{user.email}</span>
+                <span className="font-bold text-text-main dark:text-gray-200">{user.isCompanyIdentity ? user.industry : user.role}</span><br />
+                {!user.isCompanyIdentity && <span className="text-xs font-medium">{user.email}</span>}
               </p>
               <Link
-                to={`/profile/${user.userId}`}
+                to={user.isCompanyIdentity ? `/company/${user.companyId}` : `/profile/${user.userId}`}
                 className="w-full py-2 px-4 rounded-lg border border-gray-200 dark:border-gray-600 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-text-main dark:text-white block text-center no-underline"
               >
-                View Profile
+                {user.isCompanyIdentity ? 'View Brand Page' : 'View Profile'}
               </Link>
             </div>
 

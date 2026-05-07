@@ -39,6 +39,7 @@ class AuthService {
         phone: userData.phone || null,
         dateOfBirth: userData.dateOfBirth || null,
         address: userData.address || null,
+        companyName: userData.companyName || null
       };
 
       // 4. Lưu vào Database thông qua Repository layer

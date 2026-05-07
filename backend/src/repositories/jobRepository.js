@@ -6,11 +6,92 @@ const getAllJobs = async (filters = {}) => {
     let query = `
       MATCH (j:Job)-[:BELONGS_TO]->(c:Company)
       WHERE j.status = 'ACTIVE'
+    `;
+
+    const params = {};
+
+    // 1. Keyword / Title
+    if (filters.title) {
+      query += ` AND j.title =~ $titleRegex`;
+      params.titleRegex = `(?i).*${filters.title}.*`;
+    }
+
+    // 2. Location
+    if (filters.location) {
+      query += ` AND (j.location =~ $locationRegex OR c.address =~ $locationRegex)`;
+      params.locationRegex = `(?i).*${filters.location}.*`;
+    }
+
+    // 3. Employment Type (comma-separated)
+    if (filters.employmentType) {
+      const types = filters.employmentType.split(',').map(t => t.trim());
+      query += ` AND j.employmentType IN $types`;
+      params.types = types;
+    }
+
+    // 4. Category (comma-separated)
+    if (filters.category) {
+      const categories = filters.category.split(',').map(t => t.trim());
+      query += ` AND j.category IN $categories`;
+      params.categories = categories;
+    }
+
+    // 5. Experience (comma-separated)
+    if (filters.experience) {
+      const expList = filters.experience.split(',').map(t => t.trim());
+      query += ` AND j.experience IN $expList`;
+      params.expList = expList;
+    }
+
+    // 6. Level (comma-separated)
+    if (filters.level) {
+      const levelList = filters.level.split(',').map(t => t.trim());
+      query += ` AND j.level IN $levelList`;
+      params.levelList = levelList;
+    }
+
+    // 7. Salary Range
+    if (filters.salaryRange) {
+      switch (filters.salaryRange) {
+        case '<5':
+          query += ` AND j.salaryMax <= 5000000`;
+          break;
+        case '5-10':
+          query += ` AND j.salaryMin >= 5000000 AND j.salaryMax <= 10000000`;
+          break;
+        case '10-15':
+          query += ` AND j.salaryMin >= 10000000 AND j.salaryMax <= 15000000`;
+          break;
+        case '15-20':
+          query += ` AND j.salaryMin >= 15000000 AND j.salaryMax <= 20000000`;
+          break;
+        case '>20':
+          query += ` AND j.salaryMin >= 20000000`;
+          break;
+        case 'negotiable':
+          query += ` AND (j.salaryMin IS NULL OR j.salaryMin = 0)`;
+          break;
+      }
+    }
+
+    // 8. Posting Date (24h, 3d, 7d)
+    if (filters.dateRange) {
+      if (filters.dateRange === '24h') {
+        query += ` AND j.postedAt >= datetime() - duration({days: 1})`;
+      } else if (filters.dateRange === '3d') {
+        query += ` AND j.postedAt >= datetime() - duration({days: 3})`;
+      } else if (filters.dateRange === '7d') {
+        query += ` AND j.postedAt >= datetime() - duration({days: 7})`;
+      }
+    }
+
+    query += `
       RETURN j, c
       ORDER BY j.postedAt DESC
       LIMIT 100
     `;
-    const result = await session.run(query);
+
+    const result = await session.run(query, params);
     return result.records.map(record => ({
       ...record.get('j').properties,
       company: record.get('c').properties

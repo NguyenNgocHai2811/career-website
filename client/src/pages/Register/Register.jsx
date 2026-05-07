@@ -11,6 +11,7 @@ function Register() {
   const [phone, setPhone] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [address, setAddress] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -44,6 +45,7 @@ function Register() {
           phone,
           dateOfBirth,
           address,
+          companyName,
         }),
       });
 
@@ -144,6 +146,28 @@ function Register() {
                   />
                 </div>
               </section>
+
+              {role === 'recruiter' && (
+                <section className="animate-[fadeInUp_0.5s_ease-out]">
+                  <h2 className="text-[#0f111a] dark:text-white text-lg font-bold leading-tight pb-4">Business Identity</h2>
+                  <div className="bg-primary/5 border border-primary/20 p-6 rounded-2xl flex items-center gap-6">
+                    <div className="size-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-3xl">domain</span>
+                    </div>
+                    <div className="flex-1">
+                      <FormInput
+                        label="Company Name"
+                        placeholder="e.g. Korra Careers Inc."
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        required
+                        icon="business"
+                      />
+                      <p className="text-[10px] text-gray-500 mt-2 font-medium uppercase tracking-wider">This name will be your primary identity on the platform.</p>
+                    </div>
+                  </div>
+                </section>
+              )}
               <section>
                 <h2 className="text-[#0f111a] dark:text-white text-lg font-bold leading-tight pb-4">Contact &amp; Personal</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

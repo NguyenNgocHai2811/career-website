@@ -99,6 +99,40 @@ const createCompany = async (req, res, next) => {
   }
 };
 
+const updateCompany = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { companyId } = req.params;
+    const company = await recruiterRepository.updateCompany(userId, companyId, req.body);
+    if (!company) {
+      return res.status(404).json({ success: false, message: 'Company not found or unauthorized' });
+    }
+    res.status(200).json({ success: true, data: company, message: 'Company updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const uploadCompanyLogo = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+    const userId = req.user.userId;
+    const { companyId } = req.params;
+    const logoUrl = req.file.path;
+    
+    const company = await recruiterRepository.updateCompany(userId, companyId, { logoUrl });
+    if (!company) {
+      return res.status(404).json({ success: false, message: 'Company not found or unauthorized' });
+    }
+    
+    res.status(200).json({ success: true, data: { logoUrl }, message: 'Logo uploaded successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getDashboardMetrics,
   getMyCompanies,
@@ -107,4 +141,6 @@ module.exports = {
   getMyJobs,
   updateApplicationStatus,
   createCompany,
+  updateCompany,
+  uploadCompanyLogo,
 };

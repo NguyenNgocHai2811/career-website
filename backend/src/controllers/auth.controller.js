@@ -18,7 +18,8 @@ class AuthController {
         confirmPassword,
         phone,
         dateOfBirth,
-        address
+        address,
+        companyName
       } = req.body;
 
       // 2. Validate dữ liệu đầu vào (cơ bản)
@@ -26,6 +27,13 @@ class AuthController {
         return res.status(400).json({
           status: 'error',
           message: 'Các trường Full Name, Email, Password và Role là bắt buộc.',
+        });
+      }
+
+      if (role === 'RECRUITER' && !companyName) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Tên công ty là bắt buộc đối với tài khoản Nhà tuyển dụng.',
         });
       }
 
@@ -62,7 +70,8 @@ class AuthController {
         password,
         phone,
         dateOfBirth,
-        address
+        address,
+        companyName
       });
 
       // 4. Trả về kết quả thành công cho Client

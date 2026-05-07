@@ -26,6 +26,19 @@ class AuthRepository {
           isOnboarded: false,
           createdAt: datetime()
         })
+        WITH u
+        CALL {
+          WITH u
+          WITH u WHERE u.role = 'RECRUITER' AND $companyName IS NOT NULL
+          CREATE (c:Company {
+            companyId: randomUUID(),
+            name: $companyName,
+            createdAt: datetime(),
+            updatedAt: datetime()
+          })
+          CREATE (u)-[:IS_RECRUITER_FOR {role: 'OWNER'}]->(c)
+          RETURN c
+        }
         RETURN u {
           .userId,
           .role,
@@ -36,7 +49,7 @@ class AuthRepository {
           .address,
           .isOnboarded,
           .createdAt
-        } AS user
+        } AS user, c { .companyId, .name } AS company
       `;
 
       const result = await session.executeWrite(tx => tx.run(query, userData));
@@ -45,7 +58,10 @@ class AuthRepository {
         return null;
       }
 
-      return result.records[0].get('user');
+      return {
+        ...result.records[0].get('user'),
+        activeCompany: result.records[0].get('company')
+      };
     } finally {
       await session.close();
     }

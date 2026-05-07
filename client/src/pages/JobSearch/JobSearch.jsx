@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { getJobs, applyToJob } from '../../services/jobService';
 import AppHeader from '../../components/AppHeader/AppHeader';
 
@@ -227,54 +228,73 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
 // JOB CARD COMPONENT
 // ============================
 const JobCard = ({ job, onClick }) => {
+  // Deterministic random image index based on jobId string
+  const imgIdx = job.jobId ? job.jobId.charCodeAt(job.jobId.length - 1) % 5 : 0;
+  const bannerImg = `https://images.unsplash.com/photo-${[
+    '1497215728101-856f4ea42174', 
+    '1522071823991-b51c1707eadb', 
+    '1552664730-d307ca884978',
+    '1517245386807-bb43f82c33c4',
+    '1556761175-b413da4baf72'
+  ][imgIdx]}?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`;
+
   return (
     <div 
       onClick={() => onClick(job)}
-      className="group relative bg-white rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-[#4153b4]/5 cursor-pointer flex flex-col justify-between h-[280px]"
+      className="card-reveal group relative bg-white rounded-3xl overflow-hidden border border-[#ece7e2] shadow-sm card-hover-effect cursor-pointer flex flex-col transition-all duration-300"
     >
-      <div className="flex justify-between items-start">
-        <div className="w-14 h-14 bg-[#fef9f3] rounded-xl flex items-center justify-center p-2">
-          {job.company?.logoUrl ? (
-            <img src={job.company.logoUrl} alt={job.company.name} className="w-full h-full object-contain" />
-          ) : (
-            <span className="text-[#4153b4] font-bold text-xl">{job.company?.name?.[0] || 'C'}</span>
-          )}
+      {/* Banner Image */}
+      <div className="h-32 bg-cover bg-center relative" style={{ backgroundImage: `url("${bannerImg}")` }}>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-40"></div>
+        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-lg px-2 py-1 text-[0.6rem] font-bold text-[#1d1b18] uppercase tracking-wider">
+          {job.employmentType}
         </div>
-        <button 
-          className="text-[#757684] hover:text-[#7c429f] transition-colors"
-          onClick={(e) => e.stopPropagation()}
-        >
-           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-           </svg>
-        </button>
       </div>
 
-      <div className="mt-4">
-        <h3 className="font-bold text-xl text-[#1d1b18] group-hover:text-[#4153b4] transition-colors line-clamp-2">
-          {job.title}
-        </h3>
-        <p className="text-sm text-[#454652] mt-1">{job.company?.name || 'Unknown Company'}</p>
-      </div>
+      <div className="p-6 pt-10 relative flex-1 flex flex-col">
+        {/* Floating Logo */}
+        <div className="absolute -top-8 left-6 size-16 rounded-2xl bg-white shadow-md p-1 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-gray-50">
+          <div className="size-full rounded-xl bg-[#fef9f3] flex items-center justify-center overflow-hidden">
+            {job.company?.logoUrl ? (
+              <img src={job.company.logoUrl} alt="logo" className="w-full h-full object-contain" />
+            ) : (
+              <span className="text-[#4153b4] font-bold text-lg">{job.company?.name?.[0]}</span>
+            )}
+          </div>
+        </div>
 
-      <div className="flex flex-wrap gap-2 mt-4">
-        {job.location && (
-          <span className="px-3 py-1 bg-[#f2ede7] rounded-full text-[0.65rem] font-bold uppercase tracking-wider text-[#335b80]">
-            {job.location}
+        <div className="mb-4">
+          <h3 className="font-bold text-lg text-[#1d1b18] group-hover:text-[#4153b4] transition-colors line-clamp-1">
+            {job.title}
+          </h3>
+          <p className="text-xs text-[#454652] mt-1">
+            <Link 
+              to={`/company/${job.company?.companyId}`} 
+              onClick={(e) => e.stopPropagation()}
+              className="hover:text-[#4153b4] transition-colors font-medium"
+            >
+              {job.company?.name}
+            </Link>
+            &nbsp;• {job.location}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-6">
+          <span className="px-2 py-1 bg-[#4153b4]/5 text-[#4153b4] rounded-lg text-[0.6rem] font-bold uppercase tracking-wider">
+            {job.level}
           </span>
-        )}
-        {(job.salaryMin || job.salaryMax) && (
-          <span className="px-3 py-1 bg-[#f2ede7] rounded-full text-[0.65rem] font-bold uppercase tracking-wider text-[#335b80]">
-            {job.salaryMin ? `$${job.salaryMin/1000}k` : ''} 
-            {job.salaryMin && job.salaryMax ? ' - ' : ''} 
-            {job.salaryMax ? `$${job.salaryMax/1000}k` : ''}
+          <span className="px-2 py-1 bg-[#4153b4]/5 text-[#4153b4] rounded-lg text-[0.6rem] font-bold uppercase tracking-wider">
+            {job.category}
           </span>
-        )}
-        {job.employmentType && (
-          <span className="px-3 py-1 bg-[#4153b4]/10 rounded-full text-[0.65rem] font-bold uppercase tracking-wider text-[#4153b4]">
-            {job.employmentType}
+        </div>
+
+        <div className="mt-auto flex items-center justify-between border-t border-gray-50 pt-4">
+          <span className="text-[#1d1b18] font-bold text-sm">
+            {job.salaryMin ? `$${job.salaryMin/1000}k` : 'Negotiable'}
+            {job.salaryMin && job.salaryMax ? ` - $${job.salaryMax/1000}k` : ''}
           </span>
-        )}
+          <span className="text-[#a0aec0] text-[0.6rem] font-bold uppercase tracking-widest">New</span>
+        </div>
       </div>
     </div>
   );
@@ -284,30 +304,99 @@ const JobCard = ({ job, onClick }) => {
 // JOB SEARCH PAGE COMPONENT
 // ============================
 const JobSearch = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
 
+  // Search & Filter States
+  const [keyword, setKeyword] = useState(searchParams.get('title') || '');
+  const [location, setLocation] = useState(searchParams.get('location') || '');
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  
+  // Advanced Filter States
+  const [category, setCategory] = useState('');
+  const [salaryRange, setSalaryRange] = useState('');
+  const [selectedExperience, setSelectedExperience] = useState([]);
+  const [selectedLevels, setSelectedLevels] = useState([]);
+  const [dateRange, setDateRange] = useState('');
+
+  // Sync URL params with state
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const data = await getJobs();
-        setJobs(data || []);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
+    const title = searchParams.get('title');
+    const loc = searchParams.get('location');
+    if (title !== null) setKeyword(title);
+    if (loc !== null) setLocation(loc);
+  }, [searchParams]);
+
+  const fetchJobs = async () => {
+    setLoading(true);
+    try {
+      const filters = {};
+      if (keyword) filters.title = keyword;
+      if (location) filters.location = location;
+      if (selectedTypes.length > 0) filters.employmentType = selectedTypes.join(',');
+      
+      // Advanced Filters
+      if (category) filters.category = category;
+      if (salaryRange) filters.salaryRange = salaryRange;
+      if (selectedExperience.length > 0) filters.experience = selectedExperience.join(',');
+      if (selectedLevels.length > 0) filters.level = selectedLevels.join(',');
+      if (dateRange) filters.dateRange = dateRange;
+
+      const data = await getJobs(filters);
+      setJobs(data || []);
+
+      // Auto-select job if jobId is in URL
+      const urlJobId = searchParams.get('jobId');
+      if (urlJobId && data) {
+        const found = data.find(j => j.jobId === urlJobId);
+        if (found) setSelectedJob(found);
       }
-    };
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchJobs();
-  }, []);
+    // We refetch when any sidebar filter or search keyword changes
+  }, [keyword, location, selectedTypes, category, salaryRange, selectedExperience, selectedLevels, dateRange]);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    fetchJobs();
+  };
+
+  const toggleArrayItem = (setter) => (item) => {
+    setter(prev => prev.includes(item) ? prev.filter(t => t !== item) : [...prev, item]);
+  };
+  
+  const toggleType = toggleArrayItem(setSelectedTypes);
+  const toggleExp = toggleArrayItem(setSelectedExperience);
+  const toggleLevel = toggleArrayItem(setSelectedLevels);
+
+  const clearFilters = () => {
+    setKeyword('');
+    setLocation('');
+    setSelectedTypes([]);
+    setCategory('');
+    setSalaryRange('');
+    setSelectedExperience([]);
+    setSelectedLevels([]);
+    setDateRange('');
+  };
 
   const handleApplyClick = (e) => {
     e?.stopPropagation?.();
     const token = localStorage.getItem('token');
     if (!token) {
-      alert('Vui lòng đăng nhập trước khi nộp đơn ứng tuyển.');
+      alert('Vui lòng đăng nhập để nộp đơn ứng tuyển.');
+      navigate('/login');
       return;
     }
     setShowApplyModal(true);
@@ -350,19 +439,22 @@ const JobSearch = () => {
                 <div 
                   key={job.jobId} 
                   onClick={() => setSelectedJob(job)}
-                  className={`p-4 rounded-xl cursor-pointer border transition-all duration-200 ${selectedJob.jobId === job.jobId ? 'border-[#4153b4] bg-[#f8f3ed] shadow-sm' : 'border-transparent bg-white hover:border-[#ece7e2]'}`}
+                  className={`p-4 rounded-2xl cursor-pointer border transition-all duration-300 flex items-center gap-4 ${selectedJob.jobId === job.jobId ? 'border-[#4153b4] bg-white shadow-md scale-[1.02] z-10' : 'border-transparent bg-white/50 hover:bg-white hover:border-[#ece7e2]'}`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#fef9f3] flex items-center justify-center flex-shrink-0">
-                      {job.company?.logoUrl ? (
-                        <img src={job.company.logoUrl} alt="" className="w-7 h-7 object-contain" />
-                      ) : (
-                        <span className="text-[#4153b4] font-bold text-sm">{job.company?.name?.[0] || 'C'}</span>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-[#1d1b18] text-sm truncate">{job.title}</h4>
-                      <p className="text-xs text-[#454652] truncate">{job.company?.name}</p>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${selectedJob.jobId === job.jobId ? 'bg-[#4153b4]/10' : 'bg-white shadow-sm'}`}>
+                    {job.company?.logoUrl ? (
+                      <img src={job.company.logoUrl} alt="" className="w-8 h-8 object-contain" />
+                    ) : (
+                      <span className="text-[#4153b4] font-bold text-base">{job.company?.name?.[0]}</span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className={`font-bold text-sm truncate transition-colors ${selectedJob.jobId === job.jobId ? 'text-[#4153b4]' : 'text-[#1d1b18]'}`}>{job.title}</h4>
+                    <p className="text-[0.7rem] text-[#454652] truncate mt-0.5">{job.company?.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[0.6rem] font-bold text-[#a0aec0] uppercase tracking-tighter">{job.employmentType}</span>
+                      <span className="text-[0.6rem] text-[#a0aec0]">•</span>
+                      <span className="text-[0.6rem] font-bold text-[#a0aec0] uppercase tracking-tighter">{job.location}</span>
                     </div>
                   </div>
                 </div>
@@ -381,7 +473,15 @@ const JobSearch = () => {
                 </div>
                 <div className="min-w-0 flex-1">
                   <h1 className="text-3xl font-bold text-[#1d1b18] leading-snug">{selectedJob.title}</h1>
-                  <p className="text-[#454652] mt-1">{selectedJob.company?.name} &bull; {selectedJob.location || 'Remote'}</p>
+                  <p className="text-[#454652] mt-1">
+                    <Link 
+                      to={`/company/${selectedJob.company?.companyId}`}
+                      className="font-bold text-[#4153b4] hover:underline"
+                    >
+                      {selectedJob.company?.name}
+                    </Link>
+                    &nbsp;&bull; {selectedJob.location || 'Remote'}
+                  </p>
                   <div className="flex flex-wrap gap-2 mt-3">
                     {selectedJob.employmentType && (
                       <span className="px-3 py-1 bg-[#dee0ff] rounded-full text-[0.65rem] font-bold uppercase tracking-wider text-[#293d9d]">
@@ -444,25 +544,170 @@ const JobSearch = () => {
         ) : (
           /* Default Grid View */
           <>
-            <section className="mb-16">
+            <section className="mb-12">
               <h1 className="text-5xl font-bold text-[#1d1b18] mb-4 leading-tight">
                 Khám phá cơ hội<br/><span className="text-[#4153b4] italic font-light">nghề nghiệp</span> mới.
               </h1>
-              <p className="text-[#454652] max-w-xl text-lg">
+              <p className="text-[#454652] max-w-xl text-lg mb-10">
                 Tìm kiếm các vị trí tuyển dụng phù hợp với kỹ năng và đam mê của bạn.
               </p>
+
+              {/* Advanced Search Bar */}
+              <form onSubmit={handleSearchSubmit} className="max-w-4xl bg-white rounded-3xl p-3 shadow-xl shadow-[#4153b4]/10 border border-[#ece7e2] flex flex-col md:flex-row items-center gap-3">
+                <div className="flex-1 w-full flex items-center gap-3 px-4 py-2 border-b md:border-b-0 md:border-r border-[#ece7e2]">
+                  <span className="material-symbols-outlined text-[#4153b4]">search</span>
+                  <input 
+                    type="text" 
+                    placeholder="Tên công việc, từ khóa..." 
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    className="w-full bg-transparent outline-none text-[#1d1b18] placeholder:text-[#757684] text-sm"
+                  />
+                </div>
+                <div className="flex-1 w-full flex items-center gap-3 px-4 py-2">
+                  <span className="material-symbols-outlined text-[#4153b4]">location_on</span>
+                  <input 
+                    type="text" 
+                    placeholder="Địa điểm (Thành phố, Quốc gia...)" 
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-full bg-transparent outline-none text-[#1d1b18] placeholder:text-[#757684] text-sm"
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  className="w-full md:w-auto px-10 py-4 bg-[#4153b4] text-white rounded-2xl font-bold text-sm hover:bg-[#293d9d] transition-all shadow-lg shadow-[#4153b4]/20"
+                >
+                  Tìm kiếm
+                </button>
+              </form>
             </section>
             
             <div className="flex flex-col lg:flex-row gap-12">
               <aside className="lg:w-64 flex-shrink-0">
-                <div className="sticky top-24 space-y-8">
-                  <div>
-                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-4 block">Lọc tìm kiếm</span>
+                <div className="sticky top-24 space-y-2 h-[80vh] overflow-y-auto hide-scrollbar pr-4 pb-12">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-bold text-[#1d1b18] text-lg">Lọc tìm kiếm</h3>
+                    <button onClick={clearFilters} className="text-xs font-bold text-[#4153b4] hover:underline">Xóa tất cả</button>
+                  </div>
+
+                  {/* Category */}
+                  <div className="mb-6">
+                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Ngành nghề</span>
+                    <select 
+                      value={category} 
+                      onChange={e => setCategory(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#ece7e2] text-sm text-[#454652] focus:ring-[#4153b4] focus:border-[#4153b4] bg-white outline-none cursor-pointer"
+                    >
+                      <option value="">Tất cả ngành nghề</option>
+                      {['IT', 'Kế toán', 'Bán hàng', 'Marketing', 'Nhân sự', 'Sản xuất', 'Thiết kế'].map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Posting Date */}
+                  <div className="mb-6">
+                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Ngày đăng</span>
                     <div className="space-y-1">
-                      {['Full-time', 'Part-time', 'Remote'].map(type => (
-                        <label key={type} className="flex items-center justify-between p-3 rounded-xl hover:bg-[#f8f3ed] cursor-pointer transition-colors group">
-                          <span className="text-sm text-[#454652] group-hover:text-[#4153b4]">{type}</span>
-                          <input type="checkbox" className="rounded border-gray-300 text-[#4153b4]" />
+                      {[
+                        { label: 'Mọi lúc', value: '' },
+                        { label: '24 giờ qua', value: '24h' },
+                        { label: '3 ngày qua', value: '3d' },
+                        { label: '7 ngày qua', value: '7d' },
+                      ].map(dr => (
+                        <label key={dr.value} className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#f8f3ed] cursor-pointer group">
+                          <input 
+                            type="radio" 
+                            name="dateRange"
+                            value={dr.value}
+                            checked={dateRange === dr.value}
+                            onChange={() => setDateRange(dr.value)}
+                            className="text-[#4153b4] focus:ring-[#4153b4]"
+                          />
+                          <span className={`text-sm ${dateRange === dr.value ? 'text-[#4153b4] font-bold' : 'text-[#454652] group-hover:text-[#4153b4]'}`}>{dr.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Salary Range */}
+                  <div className="mb-6">
+                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Mức lương</span>
+                    <div className="space-y-1">
+                      {[
+                        { label: 'Tất cả mức lương', value: '' },
+                        { label: 'Dưới 5 triệu', value: '<5' },
+                        { label: '5 - 10 triệu', value: '5-10' },
+                        { label: '10 - 15 triệu', value: '10-15' },
+                        { label: '15 - 20 triệu', value: '15-20' },
+                        { label: 'Trên 20 triệu', value: '>20' },
+                        { label: 'Thỏa thuận', value: 'negotiable' },
+                      ].map(sal => (
+                        <label key={sal.value} className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#f8f3ed] cursor-pointer group">
+                          <input 
+                            type="radio" 
+                            name="salaryRange"
+                            value={sal.value}
+                            checked={salaryRange === sal.value}
+                            onChange={() => setSalaryRange(sal.value)}
+                            className="text-[#4153b4] focus:ring-[#4153b4]"
+                          />
+                          <span className={`text-sm ${salaryRange === sal.value ? 'text-[#4153b4] font-bold' : 'text-[#454652] group-hover:text-[#4153b4]'}`}>{sal.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Experience */}
+                  <div className="mb-6">
+                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Kinh nghiệm</span>
+                    <div className="space-y-1">
+                      {['Không yêu cầu', 'Dưới 1 năm', '1-3 năm', '3-5 năm', 'Trên 5 năm'].map(exp => (
+                        <label key={exp} className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f8f3ed] cursor-pointer group">
+                          <span className={`text-sm ${selectedExperience.includes(exp) ? 'text-[#4153b4] font-bold' : 'text-[#454652] group-hover:text-[#4153b4]'}`}>{exp}</span>
+                          <input 
+                            type="checkbox" 
+                            checked={selectedExperience.includes(exp)}
+                            onChange={() => toggleExp(exp)}
+                            className="rounded border-gray-300 text-[#4153b4] focus:ring-[#4153b4]" 
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Level */}
+                  <div className="mb-6">
+                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Cấp bậc</span>
+                    <div className="space-y-1">
+                      {['Thực tập sinh', 'Nhân viên', 'Trưởng nhóm', 'Quản lý', 'Giám đốc'].map(lvl => (
+                        <label key={lvl} className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f8f3ed] cursor-pointer group">
+                          <span className={`text-sm ${selectedLevels.includes(lvl) ? 'text-[#4153b4] font-bold' : 'text-[#454652] group-hover:text-[#4153b4]'}`}>{lvl}</span>
+                          <input 
+                            type="checkbox" 
+                            checked={selectedLevels.includes(lvl)}
+                            onChange={() => toggleLevel(lvl)}
+                            className="rounded border-gray-300 text-[#4153b4] focus:ring-[#4153b4]" 
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Employment Type */}
+                  <div className="mb-6">
+                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Hình thức làm việc</span>
+                    <div className="space-y-1">
+                      {['Full-time', 'Part-time', 'Remote', 'Contract', 'Internship'].map(type => (
+                        <label key={type} className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f8f3ed] cursor-pointer group">
+                          <span className={`text-sm ${selectedTypes.includes(type) ? 'text-[#4153b4] font-bold' : 'text-[#454652] group-hover:text-[#4153b4]'}`}>{type}</span>
+                          <input 
+                            type="checkbox" 
+                            checked={selectedTypes.includes(type)}
+                            onChange={() => toggleType(type)}
+                            className="rounded border-gray-300 text-[#4153b4] focus:ring-[#4153b4]" 
+                          />
                         </label>
                       ))}
                     </div>
@@ -479,7 +724,11 @@ const JobSearch = () => {
 
               <div className="flex-grow">
                 <div className="flex items-center justify-between mb-8">
-                  <span className="text-sm text-[#454652]"><span className="font-bold text-[#1d1b18]">{jobs.length}</span> Vị trí tuyển dụng</span>
+                  <span className="text-sm text-[#454652]">
+                    {loading ? 'Đang tìm kiếm...' : (
+                      <>Tìm thấy <span className="font-bold text-[#1d1b18]">{jobs.length}</span> vị trí phù hợp</>
+                    )}
+                  </span>
                 </div>
                 
                 {loading ? (
@@ -493,14 +742,18 @@ const JobSearch = () => {
                         </div>
                     </div>
                 ) : jobs.length === 0 ? (
-                    <div className="text-center py-20">
+                    <div className="text-center py-20 bg-white/50 rounded-3xl border border-dashed border-[#bac3ff]">
                       <div className="w-20 h-20 rounded-full bg-[#f2ede7] flex items-center justify-center mx-auto mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-[#bac3ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.193 23.193 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
+                        <span className="material-symbols-outlined text-[#bac3ff] text-5xl">search_off</span>
                       </div>
-                      <h3 className="text-xl font-bold text-[#1d1b18] mb-2">Chưa có tin tuyển dụng nào</h3>
-                      <p className="text-sm text-[#454652]">Các vị trí mới sẽ sớm được cập nhật.</p>
+                      <h3 className="text-xl font-bold text-[#1d1b18] mb-2">Không tìm thấy công việc phù hợp</h3>
+                      <p className="text-sm text-[#454652]">Thử thay đổi từ khóa hoặc bộ lọc để có kết quả tốt hơn.</p>
+                      <button 
+                        onClick={clearFilters}
+                        className="mt-6 text-sm font-bold text-[#4153b4] hover:underline"
+                      >
+                        Xóa tất cả bộ lọc
+                      </button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

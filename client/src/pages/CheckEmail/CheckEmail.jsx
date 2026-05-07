@@ -31,10 +31,10 @@ const CheckEmail = () => {
 
       <header className="w-full flex items-center justify-between px-8 py-6 max-w-[1440px] mx-auto z-10">
         <div className="flex items-center gap-3 text-text-main dark:text-white">
-        <div className="flex items-center justify-center size-8 rounded-xl bg-primary/10 text-primary">
-          <span className="material-symbols-outlined text-2xl">diamond</span>
-        </div>
-        <h2 className="text-2xl font-bold tracking-tight">Korra</h2>
+          <div className="flex items-center justify-center size-8 rounded-xl bg-primary/10 text-primary">
+            <span className="material-symbols-outlined text-2xl">diamond</span>
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight">Korra</h2>
         </div>
         <nav className="hidden md:flex gap-6 text-sm font-medium font-sans text-text-muted dark:text-gray-400">
           <a className="hover:text-primary transition-colors" href="#">Help Center</a>
@@ -62,7 +62,7 @@ const CheckEmail = () => {
                 <span className="material-symbols-outlined text-xl">open_in_new</span>
               </button>
               <div className="text-sm text-text-muted dark:text-gray-500 font-sans mt-3">
-                Did not receive the email? <br/>
+                Did not receive the email? <br />
                 <button onClick={handleResend} className="text-primary font-bold hover:text-primary-dark hover:underline mt-1 inline-flex items-center gap-1 transition-colors bg-transparent border-none cursor-pointer">
                   Click to resend
                   <span className="material-symbols-outlined text-sm">refresh</span>

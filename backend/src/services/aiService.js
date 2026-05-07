@@ -74,23 +74,23 @@ const chat = async (profileContext, conversationHistory) => {
   try {
     // Primary: Gemini
     if (!process.env.GEMINI_API_KEY) throw new Error('No Gemini API Key configured');
-    console.log('[aiService] Using Gemini provider');
+    console.log(`[aiService] Attempting Gemini with model: ${process.env.GEMINI_MODEL || 'gemini-1.5-flash'}`);
     rawText = await geminiProvider.chat(messages);
   } catch (geminiError) {
-    console.warn(`[aiService] Gemini failed (${geminiError.message}), falling back to Ollama...`);
-    try {
-      rawText = await ollamaProvider.chat(messages);
-      console.log('[aiService] Ollama fallback succeeded');
-    } catch (ollamaError) {
-      console.error(`Both AI providers failed. Gemini: ${geminiError.message} | Ollama: ${ollamaError.message}`);
-      console.warn('[aiService] Using mock response due to AI provider failure.');
-      rawText = JSON.stringify({
-        type: 'options',
-        message: 'Xin lỗi, hệ thống AI hiện đang quá tải. Tuy nhiên, tôi có thể gợi ý một số hướng đi mẫu để bạn tiếp tục khám phá:',
-        options: ['Làm việc với con người', 'Làm việc với công nghệ', 'Sáng tạo và nghệ thuật'],
-        suggestions: null
-      });
-    }
+    console.error('[aiService] Gemini API Error Details:', {
+      message: geminiError.message,
+      status: geminiError.status,
+      stack: geminiError.stack
+    });
+    
+    console.warn(`[aiService] Gemini failed, using mock response.`);
+    console.warn('[aiService] Using mock response due to AI provider failure.');
+    rawText = JSON.stringify({
+      type: 'options',
+      message: 'Xin lỗi, hệ thống AI hiện đang quá tải. Tuy nhiên, tôi có thể gợi ý một số hướng đi mẫu để bạn tiếp tục khám phá:',
+      options: ['Làm việc với con người', 'Làm việc với công nghệ', 'Sáng tạo và nghệ thuật'],
+      suggestions: null
+    });
   }
 
   // Parse JSON response from LLM
