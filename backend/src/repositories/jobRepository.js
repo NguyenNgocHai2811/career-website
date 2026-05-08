@@ -151,6 +151,7 @@ const applyToJob = async (userId, jobId, applicationData) => {
       `MATCH (u:User {userId: $userId})
        MATCH (j:Job {jobId: $jobId, status: 'ACTIVE'})
        WHERE NOT (u)-[:POSTED]->(j)
+       OPTIONAL MATCH (recruiter:User)-[:POSTED]->(j)
        CREATE (u)-[r:APPLIED_TO {
          cvType: $cvType,
          cvUrl: $cvUrl,
@@ -158,7 +159,7 @@ const applyToJob = async (userId, jobId, applicationData) => {
          status: 'PENDING',
          appliedAt: datetime()
        }]->(j)
-       RETURN r, j.title AS jobTitle`,
+       RETURN r, j.title AS jobTitle, recruiter.userId AS recruiterId`,
       {
         userId,
         jobId,
@@ -172,8 +173,9 @@ const applyToJob = async (userId, jobId, applicationData) => {
 
     const rel = result.records[0].get('r').properties;
     const jobTitle = result.records[0].get('jobTitle');
+    const recruiterId = result.records[0].get('recruiterId');
 
-    return { ...rel, jobTitle };
+    return { ...rel, jobTitle, recruiterId };
   } finally {
     await session.close();
   }
