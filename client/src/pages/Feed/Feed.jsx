@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PostItem from '../../components/PostItem/PostItem';
 import AppHeader from '../../components/AppHeader/AppHeader';
-import { searchUsersToConnect, sendConnectionRequest } from '../../services/networkService';
+import { searchUsersToConnect, sendConnectionRequest, getPendingRequests } from '../../services/networkService';
 
 const formatDate = (dateString) => {
   if (!dateString) return '';
@@ -32,6 +32,7 @@ const Feed = () => {
   const [postContent, setPostContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
+  const [pendingInvitationsCount, setPendingInvitationsCount] = useState(0);
 
   const navigate = useNavigate();
 
@@ -59,10 +60,10 @@ const Feed = () => {
               isCompanyIdentity: true
             });
           } else {
-            setUser({ ...parsedUser, avatar: parsedUser.avatar || null });
+            setUser({ ...parsedUser, avatar: parsedUser.avatarUrl || parsedUser.avatar || null });
           }
         } else {
-          setUser({ ...parsedUser, avatar: parsedUser.avatar || null });
+          setUser({ ...parsedUser, avatar: parsedUser.avatarUrl || parsedUser.avatar || null });
         }
       } catch (e) {
         console.error('Failed to parse user from local storage');
@@ -73,6 +74,8 @@ const Feed = () => {
     fetchPosts();
     // Load friend suggestions
     loadSuggestions();
+    // Load pending invitations count
+    loadPendingInvitationsCount();
   }, []);
 
   const loadSuggestions = async () => {
@@ -83,6 +86,18 @@ const Feed = () => {
         setSuggestions(data.slice(0, 3)); // show top 3
       }
     } catch(err) { console.error('Failed to load suggestions:', err); }
+  };
+
+  const loadPendingInvitationsCount = async () => {
+    try {
+      const token = getAuthToken();
+      if (token) {
+        const pending = await getPendingRequests(token);
+        setPendingInvitationsCount(Array.isArray(pending) ? pending.length : 0);
+      }
+    } catch (err) {
+      console.error('Failed to load pending invitations:', err);
+    }
   };
 
   const handleConnect = async (userId) => {
@@ -307,16 +322,20 @@ const Feed = () => {
             {/* Navigation Menu */}
             <div className="dark:bg-card-dark shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden bg-white rounded-2xl">
               <div className="flex flex-col">
-                <a href="#" className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-50 dark:border-gray-700/50 group">
+                <Link to="/network?tab=invitations" className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-50 dark:border-gray-700/50 group no-underline">
                   <div className="flex items-center gap-3">
                     <div className="size-8 bg-orange-50 text-orange-600 flex items-center justify-center rounded-lg group-hover:scale-110 transition-transform">
                       <span className="material-symbols-outlined text-[18px]">mail</span>
                     </div>
                     <span className="text-sm text-slate-700 dark:text-slate-200 font-semibold">Invitations</span>
                   </div>
-                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
-                </a>
-                <a href="#" className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-50 dark:border-gray-700/50 group">
+                  {pendingInvitationsCount > 0 && (
+                    <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                      {pendingInvitationsCount}
+                    </span>
+                  )}
+                </Link>
+                <Link to="/network" className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-50 dark:border-gray-700/50 group no-underline">
                   <div className="flex items-center gap-3">
                     <div className="size-8 bg-blue-50 text-blue-600 flex items-center justify-center rounded-lg group-hover:scale-110 transition-transform">
                       <span className="material-symbols-outlined text-[18px]">group</span>
@@ -324,7 +343,7 @@ const Feed = () => {
                     <span className="text-sm text-slate-700 dark:text-slate-200 font-semibold">My Network</span>
                   </div>
                   <span className="material-symbols-outlined text-gray-300 text-[18px]">chevron_right</span>
-                </a>
+                </Link>
               </div>
             </div>
           </aside>
@@ -431,7 +450,11 @@ const Feed = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h5 className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">{person.fullName}</h5>
-                      <p className="text-[10px] text-slate-500 dark:text-gray-400 truncate">{person.headline || 'Member'}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-gray-400 truncate">
+                        {person.mutualConnectionsCount > 0
+                          ? `${person.mutualConnectionsCount} mutual connections`
+                          : (person.headline || 'Member')}
+                      </p>
                     </div>
                     <button onClick={()=>handleConnect(person.id)} className="size-8 rounded-lg bg-gray-50 dark:bg-gray-800 text-slate-400 hover:text-primary hover:bg-primary/10 flex items-center justify-center transition-all">
                       <span className="material-symbols-outlined text-[18px]">add</span>
@@ -455,7 +478,6 @@ const Feed = () => {
                 </div>
               </div>
             </div>
-
             <footer className="px-4 text-center">
               <p className="text-[10px] text-slate-400">© 2024 Korra Careers • Privacy • Terms</p>
             </footer>
@@ -468,3 +490,5 @@ const Feed = () => {
 };
 
 export default Feed;
+
+

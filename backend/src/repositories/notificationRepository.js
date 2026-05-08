@@ -35,7 +35,13 @@ const getNotifications = async (userId, limit = 20, skip = 0) => {
       SKIP toInteger($skip) LIMIT toInteger($limit)
     `;
     const result = await session.run(query, { userId, limit, skip });
-    return result.records.map(r => r.get('n').properties);
+    return result.records.map(r => {
+      const props = r.get('n').properties;
+      return {
+        ...props,
+        createdAt: props.createdAt ? new Date(props.createdAt.toString()).toISOString() : null,
+      };
+    });
   } finally {
     await session.close();
   }

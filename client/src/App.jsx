@@ -14,6 +14,10 @@ import JobSearch from './pages/JobSearch/JobSearch.jsx';
 import RecruiterDashboard from './pages/Recruiter/RecruiterDashboard.jsx';
 import Messaging from './pages/Messaging/Messaging.jsx';
 import CareerExplorer from './pages/CareerAI/CareerExplorer.jsx';
+import AdminDashboard from './pages/Admin/AdminDashboard.jsx';
+import AdminUsers from './pages/Admin/AdminUsers.jsx';
+import AdminJobs from './pages/Admin/AdminJobs.jsx';
+import AdminPosts from './pages/Admin/AdminPosts.jsx';
 
 import CompanyProfile from './pages/Company/CompanyProfile.jsx';
 import MyNetwork from './pages/Network/MyNetwork.jsx';
@@ -34,6 +38,10 @@ function App() {
         <Route path="/recruiter/*" element={<RecruiterDashboard />} />
         <Route path="/messages" element={<Messaging />} />
         <Route path="/career-ai" element={<CareerExplorer />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/admin/jobs" element={<AdminJobs />} />
+        <Route path="/admin/posts" element={<AdminPosts />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />

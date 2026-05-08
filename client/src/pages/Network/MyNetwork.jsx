@@ -1,13 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader/AppHeader';
 import { getMyConnections, getPendingRequests, acceptConnectionRequest, rejectConnectionRequest } from '../../services/networkService';
 
 const MyNetwork = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [connections, setConnections] = useState([]);
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const activeTab = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('tab');
+  }, [location.search]);
 
   const fetchNetwork = async () => {
     try {
@@ -28,6 +34,13 @@ const MyNetwork = () => {
   useEffect(() => {
     fetchNetwork();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'invitations') {
+      const el = document.getElementById('invitations');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [activeTab, pending.length]);
 
   const handleAccept = async (senderId) => {
     try {
@@ -81,7 +94,10 @@ const MyNetwork = () => {
         <main className="lg:col-span-3 space-y-6">
           {/* Pending Invitations */}
           {pending.length > 0 && (
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#ece7e2]">
+            <div
+              id="invitations"
+              className={`bg-white rounded-2xl p-6 shadow-sm border ${activeTab === 'invitations' ? 'border-primary/40 ring-2 ring-primary/10' : 'border-[#ece7e2]'}`}
+            >
                <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-4">
                  <h2 className="text-xl font-bold font-serif">Invitations</h2>
                  <span className="text-sm font-bold text-primary">Manage</span>

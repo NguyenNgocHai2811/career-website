@@ -40,7 +40,7 @@ app.use((req, res, next) => {
   if (isAllowed) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
   res.header('Access-Control-Allow-Credentials', 'true');
   
@@ -83,6 +83,7 @@ app.use('/v1/chat', require('./routes/chatRoutes'));
 app.use('/v1/companies', require('./routes/companyRoutes'));
 app.use('/v1/notifications', require('./routes/notificationRoutes'));
 app.use('/v1/ai', require('./routes/aiRoutes'));
+app.use('/v1/admin', require('./routes/adminRoutes'));
 
 // Global Error Handler (Phải đăng ký cuối cùng)
 app.use(errorMiddleware);

@@ -25,7 +25,7 @@ class AuthService {
 
       // 3. Chuẩn bị dữ liệu lưu vào DB
       // Mặc định role là CANDIDATE nếu không hợp lệ
-      const validRoles = ['CANDIDATE', 'RECRUITER'];
+      const validRoles = ['CANDIDATE', 'RECRUITER', 'ADMIN'];
       const assignedRole = validRoles.includes(userData.role?.toUpperCase())
         ? userData.role.toUpperCase()
         : 'CANDIDATE';

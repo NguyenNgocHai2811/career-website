@@ -141,7 +141,7 @@ const TopNav = ({ navigate, activeTab, setActiveTab, selectedCompany, companies,
             </div>
 
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Recruiting for</span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Brand</span>
               <div className="relative">
                 <button 
                   onClick={() => companies.length > 1 && setShowCompanySwitcher(!showCompanySwitcher)}
@@ -192,8 +192,12 @@ const TopNav = ({ navigate, activeTab, setActiveTab, selectedCompany, companies,
         <button className="flex items-center justify-center rounded-xl size-9 md:size-10 bg-[#f1f1f4] dark:bg-gray-800 text-[#121317] dark:text-gray-300">
           <span className="material-symbols-outlined text-[20px] md:text-[24px]">notifications</span>
         </button>
-        <div className="h-9 w-9 md:h-10 md:w-10 rounded-full border-2 border-primary/20 bg-[#dee0ff] text-primary font-bold flex items-center justify-center overflow-hidden cursor-pointer" onClick={() => navigate('/profile')}>
-           {user?.avatarUrl ? <img src={user.avatarUrl} className="w-full h-full object-cover" alt="avatar"/> : (user?.fullName?.charAt(0) || 'R')}
+        <div className="h-9 w-9 md:h-10 md:w-10 rounded-full border-2 border-primary/20 bg-[#dee0ff] text-primary font-bold flex items-center justify-center overflow-hidden cursor-pointer" onClick={() => selectedCompany?.companyId ? navigate(`/company/${selectedCompany.companyId}`) : navigate('/profile')}>
+           {selectedCompany?.logoUrl ? (
+             <img src={selectedCompany.logoUrl} className="w-full h-full object-cover" alt={selectedCompany.name}/>
+           ) : user?.avatarUrl ? (
+             <img src={user.avatarUrl} className="w-full h-full object-cover" alt="avatar"/>
+           ) : (selectedCompany?.name?.charAt(0) || user?.fullName?.charAt(0) || 'R')}
         </div>
       </div>
     </nav>
@@ -686,7 +690,7 @@ const ApplicantList = ({ selectedCompany }) => {
 
         <div className="flex flex-col gap-4">
           {filtered.length > 0 ? filtered.map(app => (
-            <div key={`${app.id}-${app.jobId}`} className="group bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-white dark:border-gray-800 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all">
+            <div key={`${app.id}-${app.jobId}`} className="group bg-white dark:bg-gray-900 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all">
               <div className="flex flex-col sm:flex-row items-start gap-4 md:gap-5">
                 <div className="size-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-primary flex items-center justify-center font-bold text-2xl shrink-0 shadow-inner">
                   {app.avatarUrl ? <img src={app.avatarUrl} className="w-full h-full object-cover rounded-2xl" /> : app.fullName?.charAt(0)}

@@ -31,7 +31,9 @@ function Login() {
         // Handle success
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        if (data.data.user.isOnboarded === false) {
+        if (data.data.user.role === 'ADMIN') {
+          navigate('/admin');
+        } else if (data.data.user.isOnboarded === false) {
           navigate('/onboarding');
         } else if (data.data.user.role === 'RECRUITER') {
           navigate('/recruiter');

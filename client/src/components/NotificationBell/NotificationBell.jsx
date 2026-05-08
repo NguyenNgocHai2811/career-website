@@ -12,6 +12,18 @@ const NOTIFICATION_ICONS = {
 
 const getIcon = (type) => NOTIFICATION_ICONS[type] || 'notifications';
 
+const formatNotifDate = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  const diff = Math.floor((Date.now() - date) / 1000);
+  if (diff < 60) return 'Vừa xong';
+  if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -131,7 +143,7 @@ const NotificationBell = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">{n.content}</p>
-                      <p className="text-xs text-slate-500 mt-1">{new Date(n.createdAt).toLocaleString('vi-VN')}</p>
+                      <p className="text-xs text-slate-500 mt-1">{formatNotifDate(n.createdAt)}</p>
                     </div>
                     {!n.isRead && <div className="size-2 rounded-full bg-primary mt-1 shrink-0"></div>}
                   </div>

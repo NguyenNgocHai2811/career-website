@@ -48,16 +48,23 @@ const completeOnboarding = async (userId) => {
 const getUserProfile = async (userId) => {
   const session = driver.session();
   try {
-    // Main user node
+    // Main user node + (for RECRUITER) auto-pick first company so Profile can redirect to Company page.
     const userResult = await session.run(
       `MATCH (u:User {userId: $userId})
-       RETURN u { .userId, .fullName, .email, .phone, .address,
+       OPTIONAL MATCH (u)-[:IS_RECRUITER_FOR]->(c:Company)
+       WITH u, c ORDER BY c.createdAt ASC
+       WITH u, collect(c)[0] AS firstCompany
+       RETURN u { .userId, .role, .fullName, .email, .phone, .address,
                   .headline, .location, .status, .about,
-                  .avatarUrl, .bannerUrl, .pronouns, .website, .birthday } AS user`,
+                  .avatarUrl, .bannerUrl, .pronouns, .website, .birthday } AS user,
+              CASE WHEN firstCompany IS NULL THEN NULL
+                   ELSE { companyId: firstCompany.companyId, name: firstCompany.name }
+              END AS activeCompany`,
       { userId }
     );
     if (userResult.records.length === 0) return null;
     const user = userResult.records[0].get('user');
+    const activeCompany = userResult.records[0].get('activeCompany');
 
     // Experiences
     const expResult = await session.run(
@@ -101,6 +108,8 @@ const getUserProfile = async (userId) => {
 
     return {
       userId: user.userId,
+      role: user.role || '',
+      activeCompany,
       fullName: user.fullName || '',
       email: user.email || '',
       pronouns: user.pronouns || '',
