@@ -38,7 +38,8 @@ function Register() {
         },
         body: JSON.stringify({
           role: role.toUpperCase(),
-          fullName,
+          // For RECRUITER role, the company name IS the recruiter's identity
+          fullName: role === 'recruiter' ? companyName : fullName,
           email,
           password,
           confirmPassword,
@@ -54,7 +55,12 @@ function Register() {
       if (response.ok) {
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        navigate('/onboarding');
+        // Recruiters skip candidate onboarding — go straight to dashboard
+        if (data.data.user.role === 'RECRUITER') {
+          navigate('/recruiter');
+        } else {
+          navigate('/onboarding');
+        }
       } else {
         setError(data.message || 'Registration failed.');
       }
@@ -106,21 +112,45 @@ function Register() {
                   name="role"
                 />
               </section>
+              {role === 'recruiter' && (
+                <section className="animate-[fadeInUp_0.5s_ease-out]">
+                  <h2 className="text-[#0f111a] dark:text-white text-lg font-bold leading-tight pb-4">Company Identity</h2>
+                  <div className="bg-primary/5 border border-primary/20 p-6 rounded-2xl flex items-center gap-6">
+                    <div className="size-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-3xl">domain</span>
+                    </div>
+                    <div className="flex-1">
+                      <FormInput
+                        label="Company Name"
+                        placeholder="e.g. Korra Careers Inc."
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        required
+                        icon="business"
+                      />
+                      <p className="text-[10px] text-gray-500 mt-2 font-medium uppercase tracking-wider">As a recruiter, your company name IS your identity on the platform.</p>
+                    </div>
+                  </div>
+                </section>
+              )}
+
               <section>
                 <h2 className="text-[#0f111a] dark:text-white text-lg font-bold leading-tight pb-4">Account Basics</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormInput
-                    label="Full Name"
-                    placeholder="Jane Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                    icon="person"
-                  />
+                  {role !== 'recruiter' && (
+                    <FormInput
+                      label="Full Name"
+                      placeholder="Jane Doe"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                      icon="person"
+                    />
+                  )}
                   <FormInput
                     label="Email Address"
                     type="email"
-                    placeholder="jane@example.com"
+                    placeholder={role === 'recruiter' ? 'hr@yourcompany.com' : 'jane@example.com'}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -146,28 +176,6 @@ function Register() {
                   />
                 </div>
               </section>
-
-              {role === 'recruiter' && (
-                <section className="animate-[fadeInUp_0.5s_ease-out]">
-                  <h2 className="text-[#0f111a] dark:text-white text-lg font-bold leading-tight pb-4">Business Identity</h2>
-                  <div className="bg-primary/5 border border-primary/20 p-6 rounded-2xl flex items-center gap-6">
-                    <div className="size-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-3xl">domain</span>
-                    </div>
-                    <div className="flex-1">
-                      <FormInput
-                        label="Company Name"
-                        placeholder="e.g. Korra Careers Inc."
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        required
-                        icon="business"
-                      />
-                      <p className="text-[10px] text-gray-500 mt-2 font-medium uppercase tracking-wider">This name will be your primary identity on the platform.</p>
-                    </div>
-                  </div>
-                </section>
-              )}
               <section>
                 <h2 className="text-[#0f111a] dark:text-white text-lg font-bold leading-tight pb-4">Contact &amp; Personal</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

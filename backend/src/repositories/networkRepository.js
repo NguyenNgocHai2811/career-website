@@ -59,13 +59,28 @@ const getConnections = async (userId) => {
 const searchUsersToConnect = async (userId, term) => {
   const session = driver.session();
   try {
-    // Exclude self and already connected
+    // Exclude self and any existing relationship (pending/accepted),
+    // then rank suggestions by mutual accepted connections.
     const query = `
+      MATCH (me:User {userId: $userId})
       MATCH (u:User)
-      WHERE u.userId <> $userId 
-      AND toLower(u.fullName) CONTAINS toLower($term)
-      AND NOT (u)-[:CONNECTED_WITH]-(:User {userId: $userId})
-      RETURN u.userId AS id, u.fullName AS fullName, u.avatarUrl AS avatarUrl, u.headline AS headline
+      WHERE u.userId <> $userId
+        AND toLower(u.fullName) CONTAINS toLower($term)
+        AND NOT (me)-[:CONNECTED_WITH]-(u)
+      OPTIONAL MATCH (me)-[:CONNECTED_WITH {status: 'ACCEPTED'}]-(mutual:User)-[:CONNECTED_WITH {status: 'ACCEPTED'}]-(u)
+      WITH u, collect(DISTINCT mutual.fullName) AS mutualNames
+      WITH
+        u,
+        size(mutualNames) AS mutualConnectionsCount,
+        [name IN mutualNames WHERE name IS NOT NULL][0..3] AS mutualConnectionNames
+      RETURN
+        u.userId AS id,
+        u.fullName AS fullName,
+        u.avatarUrl AS avatarUrl,
+        u.headline AS headline,
+        mutualConnectionsCount,
+        mutualConnectionNames
+      ORDER BY mutualConnectionsCount DESC, u.fullName ASC
       LIMIT 10
     `;
     const result = await session.run(query, { userId, term });
@@ -73,7 +88,9 @@ const searchUsersToConnect = async (userId, term) => {
       id: r.get('id'),
       fullName: r.get('fullName'),
       avatarUrl: r.get('avatarUrl'),
-      headline: r.get('headline')
+      headline: r.get('headline'),
+      mutualConnectionsCount: Number(r.get('mutualConnectionsCount') || 0),
+      mutualConnectionNames: r.get('mutualConnectionNames') || []
     }));
   } finally {
     await session.close();

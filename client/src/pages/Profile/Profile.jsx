@@ -665,8 +665,30 @@ const Profile = ({ tab = 'profile' }) => {
       const res = await fetch(`${API}/v1/users/${targetId}/profile`, { headers });
       if (!res.ok) throw new Error('Failed to fetch profile');
       const data = await res.json();
+
+      // Recruiter IS Company — redirect to the company brand page instead of personal profile.
+      if (data.role === 'RECRUITER' && data.activeCompany?.companyId) {
+        navigate(`/company/${data.activeCompany.companyId}`, { replace: true });
+        return;
+      }
+
       setProfileData(data);
       setConnStatus(data.connectionStatus || 'NONE');
+
+      // Keep local user identity in sync so other pages (Feed/Header) show latest avatar immediately.
+      try {
+        const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (String(localUser.userId) === String(data.userId || targetId)) {
+          localStorage.setItem('user', JSON.stringify({
+            ...localUser,
+            fullName: data.fullName ?? localUser.fullName,
+            avatarUrl: data.avatarUrl ?? localUser.avatarUrl,
+            avatar: data.avatarUrl ?? localUser.avatar ?? localUser.avatarUrl
+          }));
+        }
+      } catch {
+        // Ignore localStorage sync errors and continue rendering profile data.
+      }
     } catch (err) {
       setError(err.message);
     } finally {

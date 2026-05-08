@@ -5,11 +5,15 @@ const getCompanyById = async (companyId) => {
   try {
     const query = `
       MATCH (c:Company {companyId: $companyId})
-      RETURN c
+      OPTIONAL MATCH (owner:User)-[:IS_RECRUITER_FOR {role: 'OWNER'}]->(c)
+      RETURN c, owner.userId AS ownerId
     `;
     const result = await session.run(query, { companyId });
     if (result.records.length === 0) return null;
-    return result.records[0].get('c').properties;
+    return {
+      ...result.records[0].get('c').properties,
+      ownerId: result.records[0].get('ownerId'),
+    };
   } finally {
     await session.close();
   }
@@ -19,10 +23,10 @@ const getCompanyJobs = async (companyId) => {
   const session = driver.session();
   try {
     const query = `
-      MATCH (c:Company {companyId: $companyId})<-[:POSTED]-(j:Job)
+      MATCH (j:Job)-[:BELONGS_TO]->(c:Company {companyId: $companyId})
       WHERE j.status = 'ACTIVE'
       RETURN j
-      ORDER BY j.createdAt DESC
+      ORDER BY j.postedAt DESC
     `;
     const result = await session.run(query, { companyId });
     return result.records.map(r => r.get('j').properties);

@@ -43,9 +43,9 @@ const PostItem = ({ post, onToggleLike, getAuthToken, user }) => {
       <div className="p-5 pb-2 border-b-none">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Link 
-              to={post.author?.type === 'COMPANY' ? `/company/${post.author?.id}` : `/profile/${post.author?.id || post.author?.userId || ''}`} 
-              className="no-underline"
+            <Link
+              to={post.author?.type === 'COMPANY' ? `/company/${post.author?.id}` : `/profile/${post.author?.id || post.author?.userId || ''}`}
+              className="no-underline relative shrink-0"
             >
               <div className="size-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary transition-all">
                 {post.author?.avatar ? (
@@ -54,16 +54,24 @@ const PostItem = ({ post, onToggleLike, getAuthToken, user }) => {
                   <span className="material-symbols-outlined text-gray-500">{post.author?.type === 'COMPANY' ? 'domain' : 'person'}</span>
                 )}
               </div>
+              {post.author?.type === 'COMPANY' && (
+                <span className="absolute -bottom-0.5 -right-0.5 size-4.5 bg-primary rounded-full flex items-center justify-center border-2 border-white dark:border-card-dark shadow-sm">
+                  <span className="material-symbols-outlined text-white" style={{ fontSize: 10 }}>domain</span>
+                </span>
+              )}
             </Link>
             <div>
               <Link 
                 to={post.author?.type === 'COMPANY' ? `/company/${post.author?.id}` : `/profile/${post.author?.id || post.author?.userId || ''}`} 
                 className="no-underline"
               >
-                <h4 className="font-bold text-text-main dark:text-white text-base font-extrabold hover:text-primary transition-colors">
+                <h4 className="font-extrabold text-text-main dark:text-white text-base hover:text-primary transition-colors flex items-center gap-1.5">
                   {post.author?.fullName || 'Unknown'}
                   {post.author?.type === 'COMPANY' && (
-                    <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">COMPANY</span>
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-primary/8 text-primary border border-primary/15">
+                      <span className="material-symbols-outlined" style={{ fontSize: 10 }}>verified</span>
+                      Company
+                    </span>
                   )}
                 </h4>
               </Link>

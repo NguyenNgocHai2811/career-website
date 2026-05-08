@@ -13,6 +13,9 @@ class AuthRepository {
       // Mặc định tạo label User và label tương ứng với role.
       const additionalLabel = userData.role === 'RECRUITER' ? 'Recruiter' : 'Candidate';
 
+      // Recruiters are "onboarded" the moment they register — their company name is the primary identity.
+      const isOnboardedAtCreation = userData.role === 'RECRUITER';
+
       const query = `
         CREATE (u:User:${additionalLabel} {
           userId: $userId,
@@ -23,7 +26,7 @@ class AuthRepository {
           phone: $phone,
           dateOfBirth: $dateOfBirth,
           address: $address,
-          isOnboarded: false,
+          isOnboarded: $isOnboarded,
           createdAt: datetime()
         })
         WITH u
@@ -52,7 +55,7 @@ class AuthRepository {
         } AS user, c { .companyId, .name } AS company
       `;
 
-      const result = await session.executeWrite(tx => tx.run(query, userData));
+      const result = await session.executeWrite(tx => tx.run(query, { ...userData, isOnboarded: isOnboardedAtCreation }));
 
       if (result.records.length === 0) {
         return null;
@@ -95,8 +98,14 @@ class AuthRepository {
   async getUserByEmail(email) {
     const session = driver.session();
     try {
+      // For RECRUITER users, auto-pick the first company (oldest by createdAt) as activeCompany.
+      // This enforces "Recruiter IS Company" — the UI never has to ask which company is active.
       const query = `
         MATCH (u:User {email: $email})
+        OPTIONAL MATCH (u)-[:IS_RECRUITER_FOR]->(c:Company)
+        WITH u, c
+        ORDER BY c.createdAt ASC
+        WITH u, collect(c)[0] AS firstCompany
         RETURN u {
           .userId,
           .role,
@@ -106,9 +115,14 @@ class AuthRepository {
           .phone,
           .dateOfBirth,
           .address,
+          .avatarUrl,
           .isOnboarded,
           .createdAt
-        } AS user
+        } AS user,
+        CASE WHEN firstCompany IS NULL THEN NULL
+             ELSE { companyId: firstCompany.companyId, name: firstCompany.name,
+                    logoUrl: firstCompany.logoUrl, industry: firstCompany.industry }
+        END AS activeCompany
         LIMIT 1
       `;
 
@@ -118,7 +132,9 @@ class AuthRepository {
         return null;
       }
 
-      return result.records[0].get('user');
+      const user = result.records[0].get('user');
+      const activeCompany = result.records[0].get('activeCompany');
+      return activeCompany ? { ...user, activeCompany } : user;
     } finally {
       await session.close();
     }
