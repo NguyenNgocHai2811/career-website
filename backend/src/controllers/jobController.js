@@ -1,4 +1,6 @@
 const jobRepository = require('../repositories/jobRepository');
+const notificationRepository = require('../repositories/notificationRepository');
+const { sendSocketNotification } = require('../chatSocket');
 
 const getJobs = async (req, res, next) => {
   try {
@@ -70,6 +72,20 @@ const applyToJob = async (req, res, next) => {
 
     if (result.alreadyApplied) {
       return res.status(409).json({ success: false, message: 'You have already applied to this job' });
+    }
+
+    if (result.recruiterId) {
+      try {
+        const notification = await notificationRepository.createNotification(
+          result.recruiterId,
+          'JOB_APPLICATION',
+          `Có ứng viên mới đã nộp đơn vào vị trí "${result.jobTitle}"`,
+          jobId
+        );
+        if (notification) sendSocketNotification(result.recruiterId, notification);
+      } catch (notifErr) {
+        console.error('Notification error (applyToJob):', notifErr);
+      }
     }
 
     res.status(201).json({

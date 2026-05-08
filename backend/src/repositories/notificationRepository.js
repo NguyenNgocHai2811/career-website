@@ -75,6 +75,19 @@ const markAsRead = async (notificationIds) => {
   }
 };
 
+const markAllAsRead = async (userId) => {
+  const session = driver.session();
+  try {
+    await session.run(
+      `MATCH (:User {userId: $userId})-[:HAS_NOTIFICATION]->(n:Notification {isRead: false})
+       SET n.isRead = true`,
+      { userId }
+    );
+  } finally {
+    await session.close();
+  }
+};
+
 const deleteOldNotifications = async (days = 30) => {
   const session = driver.session();
   try {
@@ -97,5 +110,6 @@ module.exports = {
   getNotifications,
   getUnreadCount,
   markAsRead,
+  markAllAsRead,
   deleteOldNotifications
 };

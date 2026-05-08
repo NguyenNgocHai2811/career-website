@@ -1,4 +1,6 @@
 const networkRepository = require('../repositories/networkRepository');
+const notificationRepository = require('../repositories/notificationRepository');
+const { sendSocketNotification } = require('../chatSocket');
 
 const sendRequest = async (req, res, next) => {
   try {
@@ -6,6 +8,19 @@ const sendRequest = async (req, res, next) => {
     const { receiverId } = req.body;
     if (!receiverId) return res.status(400).json({ success: false, message: 'receiverId required' });
     const rel = await networkRepository.sendConnectionRequest(senderId, receiverId);
+
+    try {
+      const notification = await notificationRepository.createNotification(
+        receiverId,
+        'CONNECTION_REQUEST',
+        'Ai đó muốn kết nối với bạn',
+        senderId
+      );
+      if (notification) sendSocketNotification(receiverId, notification);
+    } catch (notifErr) {
+      console.error('Notification error (sendRequest):', notifErr);
+    }
+
     res.status(200).json({ success: true, data: rel, message: 'Request sent' });
   } catch (err) {
     next(err);
@@ -17,6 +32,19 @@ const acceptRequest = async (req, res, next) => {
     const userId = req.user.userId;
     const { senderId } = req.body;
     const rel = await networkRepository.acceptConnectionRequest(userId, senderId);
+
+    try {
+      const notification = await notificationRepository.createNotification(
+        senderId,
+        'CONNECTION_ACCEPTED',
+        'Yêu cầu kết nối của bạn đã được chấp nhận',
+        userId
+      );
+      if (notification) sendSocketNotification(senderId, notification);
+    } catch (notifErr) {
+      console.error('Notification error (acceptRequest):', notifErr);
+    }
+
     res.status(200).json({ success: true, data: rel, message: 'Request accepted' });
   } catch (err) {
     next(err);

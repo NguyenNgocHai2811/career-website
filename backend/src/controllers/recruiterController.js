@@ -1,4 +1,6 @@
 const recruiterRepository = require('../repositories/recruiterRepository');
+const notificationRepository = require('../repositories/notificationRepository');
+const { sendSocketNotification } = require('../chatSocket');
 
 const getDashboardMetrics = async (req, res, next) => {
   try {
@@ -78,6 +80,18 @@ const updateApplicationStatus = async (req, res, next) => {
     const updated = await recruiterRepository.updateApplicationStatus(recruiterId, applicantId, jobId, status);
     if (!updated) {
       return res.status(404).json({ success: false, message: 'Application not found or unauthorized' });
+    }
+
+    try {
+      const notification = await notificationRepository.createNotification(
+        applicantId,
+        'APPLICATION_STATUS_CHANGE',
+        `Đơn ứng tuyển của bạn đã được cập nhật: ${status}`,
+        jobId
+      );
+      if (notification) sendSocketNotification(applicantId, notification);
+    } catch (notifErr) {
+      console.error('Notification error (updateApplicationStatus):', notifErr);
     }
 
     res.status(200).json({ success: true, message: `Status updated to ${status}`, data: updated });
