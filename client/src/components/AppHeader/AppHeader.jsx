@@ -70,7 +70,7 @@ const AppHeader = ({ activeTab = null }) => {
     { key: 'jobs', label: 'Jobs', to: '/jobs', guest: true },
     { key: 'network', label: 'Network', to: '/network', guest: false },
     { key: 'messages', label: 'Messages', to: '/messages', guest: false },
-    { key: 'career-ai', label: '✦ Career AI', to: '/career-ai', guest: true },
+    { key: 'career-ai', label: '✦ Career Explorer', to: '/career-ai', guest: true },
   ];
 
   const navLinks = allNavLinks.filter(link => isLoggedIn || link.guest);

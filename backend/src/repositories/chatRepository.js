@@ -1,6 +1,13 @@
 const { driver } = require('../config/neo4j');
 const { v4: uuidv4 } = require('uuid');
 
+const toISO = (val) => {
+  if (!val) return null;
+  if (typeof val === 'string') return val;
+  if (typeof val.toString === 'function') return val.toString();
+  return null;
+};
+
 const saveMessage = async (senderId, receiverId, content) => {
   const session = driver.session();
   try {
@@ -30,7 +37,7 @@ const saveMessage = async (senderId, receiverId, content) => {
     return {
       messageId: msgData.messageId,
       content: msgData.content,
-      createdAt: msgData.createdAt,
+      createdAt: toISO(msgData.createdAt),
       senderId,
       receiverId
     };
@@ -54,7 +61,7 @@ const getChatHistory = async (userId, friendId) => {
     return result.records.map(rec => ({
       id: rec.get('id'),
       content: rec.get('content'),
-      createdAt: rec.get('createdAt'),
+      createdAt: toISO(rec.get('createdAt')),
       senderId: rec.get('senderId')
     }));
   } finally {
@@ -82,7 +89,7 @@ const getRecentChats = async (userId) => {
       id: rec.get('id'),
       fullName: rec.get('fullName'),
       avatarUrl: rec.get('avatarUrl'),
-      lastMessageAt: rec.get('lastMessageAt'),
+      lastMessageAt: toISO(rec.get('lastMessageAt')),
       lastMessageContent: rec.get('lastMessageContent') || ''
     }));
   } finally {

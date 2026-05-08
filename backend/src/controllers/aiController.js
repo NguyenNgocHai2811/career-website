@@ -3,7 +3,6 @@ const userRepository = require('../repositories/userRepository');
 
 /**
  * Build a compact, readable profile context string to inject into the LLM prompt.
- * Pulls from existing getUserProfile() — no new DB queries needed.
  */
 const buildProfileContext = (profile) => {
   if (!profile) return 'Người dùng chưa có thông tin hồ sơ.';
@@ -41,81 +40,193 @@ const buildProfileContext = (profile) => {
 };
 
 /**
- * POST /v1/ai/career-predict
- * Body: { message: string, conversationHistory: [{role, text}] }
- * Returns: { type, message, options, suggestions }
+ * Map low-level AI errors to user-friendly 503 responses.
+ * Returns true if response was sent (caller should return), false otherwise.
  */
-const careerPredict = async (req, res, next) => {
-  try {
-    const { userId } = req.user;
-    const { message, conversationHistory = [] } = req.body;
-
-    if (!message || message.trim().length === 0) {
-      return res.status(400).json({ success: false, error: 'Tin nhắn không được để trống.' });
-    }
-
-    if (message.length > 500) {
-      return res.status(400).json({ success: false, error: 'Tin nhắn không được vượt quá 500 ký tự.' });
-    }
-
-    // Limit conversation history length to prevent abuse
-    const trimmedHistory = conversationHistory.slice(-20);
-
-    // 1. Load user profile for personalized context
-    const profile = await userRepository.getUserProfile(userId);
-    const profileContext = buildProfileContext(profile);
-
-    // 2. Append new user message to history
-    const updatedHistory = [
-      ...trimmedHistory,
-      { role: 'user', text: message }
-    ];
-
-    // 3. Call AI service (Gemini → Ollama fallback)
-    const aiResponse = await aiService.chat(profileContext, updatedHistory);
-
-    // 4. Return structured response to frontend
-    res.status(200).json({
-      success: true,
-      data: aiResponse
+const handleAiError = (err, res) => {
+  const msg = err?.message || '';
+  if (msg.includes('RESOURCE_EXHAUSTED') || msg.includes('quota')) {
+    res.status(503).json({
+      success: false,
+      error: 'Hệ thống AI đang quá tải. Vui lòng thử lại sau vài phút.',
     });
+    return true;
+  }
+  return false;
+};
+
+/**
+ * POST /v1/ai/career-tasks
+ * Body: { role: string, organization?: string }
+ */
+const generateTasks = async (req, res, next) => {
+  try {
+    const { role, organization = '' } = req.body || {};
+
+    if (!role || typeof role !== 'string' || role.trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Vai trò không được để trống.' });
+    }
+    if (role.length > 100) {
+      return res.status(400).json({ success: false, error: 'Vai trò không được vượt quá 100 ký tự.' });
+    }
+    if (typeof organization !== 'string' || organization.length > 100) {
+      return res.status(400).json({ success: false, error: 'Tổ chức không được vượt quá 100 ký tự.' });
+    }
+
+    const data = await aiService.generateTasks({
+      role: role.trim(),
+      organization: organization.trim(),
+    });
+
+    res.status(200).json({ success: true, data });
   } catch (err) {
-    // Handle specific AI-related errors gracefully
-    const errorMessage = err.message || '';
-
-    if (errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('quota')) {
-      return res.status(503).json({
-        success: false,
-        error: 'Hệ thống AI đang quá tải. Vui lòng thử lại sau vài phút.'
-      });
-    }
-
-    if (errorMessage.includes('Both AI providers failed')) {
-      return res.status(503).json({
-        success: false,
-        error: 'Tất cả hệ thống AI hiện không khả dụng. Vui lòng thử lại sau.'
-      });
-    }
-
+    if (handleAiError(err, res)) return;
     next(err);
   }
 };
 
 /**
- * POST /v1/ai/export-context
- * Body: { selectedOptions: string[], suggestions: object[], targetCareer: string }
- * Returns: { contextText: string }
+ * POST /v1/ai/career-skills
+ * Body: { role: string, tasks: string[] }
  */
-const exportContext = async (req, res, next) => {
+const generateSkills = async (req, res, next) => {
   try {
-    const { selectedOptions = [], suggestions = [], targetCareer = '' } = req.body;
+    const { role, tasks } = req.body || {};
 
-    const contextText = aiService.buildExportContext(selectedOptions, suggestions, targetCareer);
+    if (!role || typeof role !== 'string' || role.trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Vai trò không được để trống.' });
+    }
+    if (!Array.isArray(tasks) || tasks.length === 0) {
+      return res.status(400).json({ success: false, error: 'Cần ít nhất 1 nhiệm vụ.' });
+    }
+    if (tasks.length > 20) {
+      return res.status(400).json({ success: false, error: 'Tối đa 20 nhiệm vụ.' });
+    }
+    if (tasks.some(t => typeof t !== 'string' || t.length > 200)) {
+      return res.status(400).json({ success: false, error: 'Mỗi nhiệm vụ phải là chuỗi ≤ 200 ký tự.' });
+    }
 
-    res.status(200).json({ success: true, data: { contextText } });
+    const data = await aiService.generateSkills({
+      role: role.trim(),
+      tasks: tasks.map(t => t.trim()),
+    });
+
+    res.status(200).json({ success: true, data });
   } catch (err) {
+    if (handleAiError(err, res)) return;
     next(err);
   }
 };
 
-module.exports = { careerPredict, exportContext };
+/**
+ * POST /v1/ai/career-identity
+ * Body: { role, organization?, tasks: string[], skills: string[] }
+ */
+const generateIdentity = async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+    const { role, organization = '', tasks = [], skills } = req.body || {};
+
+    if (!role || typeof role !== 'string') {
+      return res.status(400).json({ success: false, error: 'Vai trò không được để trống.' });
+    }
+    if (!Array.isArray(skills) || skills.length < 3) {
+      return res.status(400).json({ success: false, error: 'Cần chọn tối thiểu 3 kỹ năng.' });
+    }
+    if (skills.length > 30) {
+      return res.status(400).json({ success: false, error: 'Tối đa 30 kỹ năng.' });
+    }
+    if (!Array.isArray(tasks)) {
+      return res.status(400).json({ success: false, error: 'tasks phải là một mảng.' });
+    }
+
+    const profile = await userRepository.getUserProfile(userId);
+    const profileContext = buildProfileContext(profile);
+
+    const data = await aiService.generateIdentityStatement({
+      role: role.trim(),
+      organization: organization.trim(),
+      tasks: tasks.map(t => String(t).trim()).filter(Boolean),
+      skills: skills.map(s => String(s).trim()).filter(Boolean),
+      profileContext,
+    });
+
+    res.status(200).json({ success: true, data });
+  } catch (err) {
+    if (handleAiError(err, res)) return;
+    next(err);
+  }
+};
+
+/**
+ * POST /v1/ai/career-paths
+ * Body: { identityStatement: string, skills: string[] }
+ */
+const generateCareerPaths = async (req, res, next) => {
+  try {
+    const { identityStatement, skills } = req.body || {};
+
+    if (!identityStatement || typeof identityStatement !== 'string' || identityStatement.trim().length < 50) {
+      return res.status(400).json({ success: false, error: 'Career Identity Statement quá ngắn (cần ≥ 50 ký tự).' });
+    }
+    if (identityStatement.length > 3000) {
+      return res.status(400).json({ success: false, error: 'Career Identity Statement quá dài (≤ 3000 ký tự).' });
+    }
+    if (!Array.isArray(skills) || skills.length < 3) {
+      return res.status(400).json({ success: false, error: 'Cần ít nhất 3 kỹ năng.' });
+    }
+
+    const data = await aiService.generateCareerPaths({
+      identityStatement: identityStatement.trim(),
+      skills: skills.map(s => String(s).trim()).filter(Boolean),
+    });
+
+    res.status(200).json({ success: true, data });
+  } catch (err) {
+    if (handleAiError(err, res)) return;
+    next(err);
+  }
+};
+
+/**
+ * POST /v1/ai/career-detail
+ * Body: { careerId: string, careerTitle: string }
+ */
+const generateCareerDetail = async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+    const { careerId, careerTitle } = req.body || {};
+
+    if (!careerId || typeof careerId !== 'string') {
+      return res.status(400).json({ success: false, error: 'careerId không được để trống.' });
+    }
+    if (!careerTitle || typeof careerTitle !== 'string') {
+      return res.status(400).json({ success: false, error: 'careerTitle không được để trống.' });
+    }
+    if (careerId.length > 100 || careerTitle.length > 200) {
+      return res.status(400).json({ success: false, error: 'careerId/careerTitle quá dài.' });
+    }
+
+    const profile = await userRepository.getUserProfile(userId);
+    const profileContext = buildProfileContext(profile);
+
+    const data = await aiService.generateCareerDetail({
+      careerId: careerId.trim(),
+      careerTitle: careerTitle.trim(),
+      profileContext,
+    });
+
+    res.status(200).json({ success: true, data });
+  } catch (err) {
+    if (handleAiError(err, res)) return;
+    next(err);
+  }
+};
+
+module.exports = {
+  generateTasks,
+  generateSkills,
+  generateIdentity,
+  generateCareerPaths,
+  generateCareerDetail,
+};
