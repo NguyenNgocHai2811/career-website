@@ -430,22 +430,83 @@ const Profile = ({ tab = 'profile' }) => {
         return rgba || 'rgba(0,0,0,0)';
       });
     };
+    const labToRgba = (L, a, b, alpha = 1) => {
+      const fy = (Number(L) + 16) / 116;
+      const fx = Number(a) / 500 + fy;
+      const fz = fy - Number(b) / 200;
+      const eps = 216 / 24389;
+      const kap = 24389 / 27;
+      const xr = fx ** 3 > eps ? fx ** 3 : (116 * fx - 16) / kap;
+      const yr = Number(L) > kap * eps ? ((Number(L) + 16) / 116) ** 3 : Number(L) / kap;
+      const zr = fz ** 3 > eps ? fz ** 3 : (116 * fz - 16) / kap;
+      const x50 = xr * 0.9642, y50 = yr, z50 = zr * 0.8249;
+      const xd = 0.9555766 * x50 - 0.0230393 * y50 + 0.0631636 * z50;
+      const yd = -0.0282895 * x50 + 1.0099416 * y50 + 0.0210077 * z50;
+      const zd = 0.0122982 * x50 - 0.0204830 * y50 + 1.3299098 * z50;
+      const rLin = 3.2404542 * xd - 1.5371385 * yd - 0.4985314 * zd;
+      const gLin = -0.9692660 * xd + 1.8760108 * yd + 0.0415560 * zd;
+      const bLin = 0.0556434 * xd - 0.2040259 * yd + 1.0572252 * zd;
+      return `rgba(${toByte(srgbFromLinear(rLin))}, ${toByte(srgbFromLinear(gLin))}, ${toByte(srgbFromLinear(bLin))}, ${clamp01(alpha)})`;
+    };
+    const parseLabInner = (inner) => {
+      if (!inner || typeof inner !== 'string') return null;
+      const parts = inner.split('/');
+      const main = (parts[0] || '').trim();
+      const alpha = parseAlpha(parts[1]);
+      const nums = main.split(/\s+/).filter(Boolean);
+      if (nums.length < 3) return null;
+      const l = parseFloat(nums[0]);
+      const a = nums[1].endsWith('%') ? parseFloat(nums[1]) * 1.25 : parseFloat(nums[1]);
+      const b = nums[2].endsWith('%') ? parseFloat(nums[2]) * 1.25 : parseFloat(nums[2]);
+      if (![l, a, b].every(Number.isFinite)) return null;
+      return labToRgba(l, a, b, alpha);
+    };
+    const replaceLabInString = (val) => {
+      if (!val || typeof val !== 'string' || !/\blab\s*\(/i.test(val)) return val;
+      return val.replace(/\blab\s*\(\s*([^\)]*?)\s*\)/gi, (full, inner) => {
+        const rgba = parseLabInner(inner);
+        return rgba || 'rgba(0,0,0,0)';
+      });
+    };
+    const lchToRgba = (L, C, H, alpha = 1) => {
+      const a = Number(C) * Math.cos(Number(H) * Math.PI / 180);
+      const b = Number(C) * Math.sin(Number(H) * Math.PI / 180);
+      return labToRgba(L, a, b, alpha);
+    };
+    const parseLchInner = (inner) => {
+      if (!inner || typeof inner !== 'string') return null;
+      const parts = inner.split('/');
+      const main = (parts[0] || '').trim();
+      const alpha = parseAlpha(parts[1]);
+      const nums = main.split(/\s+/).filter(Boolean);
+      if (nums.length < 3) return null;
+      const l = parseFloat(nums[0]);
+      const c = parseFloat(nums[1]);
+      const h = parseFloat(String(nums[2]).replace(/deg$/i, ''));
+      if (![l, c, h].every(Number.isFinite)) return null;
+      return lchToRgba(l, c, h, alpha);
+    };
+    const replaceLchInString = (val) => {
+      if (!val || typeof val !== 'string' || !/\blch\s*\(/i.test(val)) return val;
+      return val.replace(/\blch\s*\(\s*([^\)]*?)\s*\)/gi, (full, inner) => {
+        const rgba = parseLchInner(inner);
+        return rgba || 'rgba(0,0,0,0)';
+      });
+    };
     const normalizeCssValue = (val, propName) => {
       if (!val || typeof val !== 'string') return val;
       let out = val;
       if (/oklch\s*\(/i.test(out)) out = replaceOklchInString(out);
       if (/oklab\s*\(/i.test(out)) out = replaceOklabInString(out);
-      if (out.includes('color-mix')) {
+      if (/\blab\s*\(/i.test(out)) out = replaceLabInString(out);
+      if (/\blch\s*\(/i.test(out)) out = replaceLchInString(out);
+      const hasUnsupported = out.includes('color-mix')
+        || /okl(?:ab|ch)\s*\(/i.test(out)
+        || /\b(?:lab|lch)\s*\(/i.test(out)
+        || /\bcolor\s*\(\s*(?:display-p3|a98-rgb|prophoto-rgb|rec2020|srgb-linear|xyz)/i.test(out);
+      if (hasUnsupported) {
         const p = String(propName || '').toLowerCase();
         if (p.includes('background-image') || p === 'background') return 'none';
-        if (p.includes('background')) return '#ffffff';
-        if (p.includes('color') || p.includes('fill') || p.includes('stroke')) return '#0f172a';
-        if (p.includes('border') || p.includes('outline')) return '#cbd5e1';
-        if (p.includes('shadow')) return 'none';
-        return 'none';
-      }
-      if (/okl(?:ab|ch)\s*\(/i.test(out)) {
-        const p = String(propName || '').toLowerCase();
         if (p.includes('background')) return '#ffffff';
         if (p.includes('color') || p.includes('fill') || p.includes('stroke')) return '#0f172a';
         if (p.includes('border') || p.includes('outline')) return '#cbd5e1';
@@ -460,12 +521,12 @@ const Profile = ({ tab = 'profile' }) => {
           return function (p) {
             const val = target.getPropertyValue(p);
             const norm = normalizeCssValue(val, p);
-            if (val !== norm && (/okl(?:ab|ch)\s*\(/i.test(val) || val.includes('color-mix'))) pushPdfStyleHit(el, p, val, pseudo);
+            if (val !== norm && (/okl(?:ab|ch)\s*\(/i.test(val) || /\b(?:lab|lch)\s*\(/i.test(val) || val.includes('color-mix'))) pushPdfStyleHit(el, p, val, pseudo);
             return norm;
           };
         }
         const val = target[prop];
-        if (val && typeof val === 'string' && (/okl(?:ab|ch)\s*\(/i.test(val) || val.includes('color-mix'))) {
+        if (val && typeof val === 'string' && (/okl(?:ab|ch)\s*\(/i.test(val) || /\b(?:lab|lch)\s*\(/i.test(val) || val.includes('color-mix'))) {
           pushPdfStyleHit(el, typeof prop === 'string' ? prop : '', val, pseudo);
           return normalizeCssValue(val, typeof prop === 'string' ? prop : '');
         }

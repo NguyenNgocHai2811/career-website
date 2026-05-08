@@ -25,3 +25,6 @@ Profile_post.html
 # Logs
 logs/
 *.log
+
+# Documentation
+docs/
