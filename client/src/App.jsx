@@ -13,7 +13,7 @@ import Profile from './pages/Profile/Profile.jsx';
 import JobSearch from './pages/JobSearch/JobSearch.jsx';
 import RecruiterDashboard from './pages/Recruiter/RecruiterDashboard.jsx';
 import Messaging from './pages/Messaging/Messaging.jsx';
-import CareerAI from './pages/CareerAI/CareerAI.jsx';
+import CareerExplorer from './pages/CareerAI/CareerExplorer.jsx';
 
 import CompanyProfile from './pages/Company/CompanyProfile.jsx';
 import MyNetwork from './pages/Network/MyNetwork.jsx';
@@ -33,7 +33,7 @@ function App() {
         <Route path="/jobs" element={<JobSearch />} />
         <Route path="/recruiter/*" element={<RecruiterDashboard />} />
         <Route path="/messages" element={<Messaging />} />
-        <Route path="/career-ai" element={<CareerAI />} />
+        <Route path="/career-ai" element={<CareerExplorer />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />
