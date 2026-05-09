@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getDashboardMetrics, getMyCompanies, postJob, getApplicants, getMyJobs, updateApplicationStatus, createCompany, updateCompany, uploadCompanyLogo } from '../../services/recruiterService';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 
 const RecruiterDashboard = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const location = useLocation();
+  const initialTab = new URLSearchParams(location.search).get('tab') || 'dashboard';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

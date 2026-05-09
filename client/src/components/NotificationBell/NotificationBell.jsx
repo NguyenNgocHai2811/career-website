@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../hooks/useSocket';
 import { fetchNotifications, markAsRead, markAllAsRead } from '../../services/notificationService';
 
@@ -11,6 +12,23 @@ const NOTIFICATION_ICONS = {
 };
 
 const getIcon = (type) => NOTIFICATION_ICONS[type] || 'notifications';
+
+const getNotificationLink = (type, referenceId) => {
+  switch (type) {
+    case 'NEW_MESSAGE':
+      return '/messages';
+    case 'JOB_APPLICATION':
+      return '/recruiter?tab=applicants';
+    case 'APPLICATION_STATUS_CHANGE':
+      return '/jobs';
+    case 'CONNECTION_REQUEST':
+      return '/network';
+    case 'CONNECTION_ACCEPTED':
+      return referenceId ? `/profile/${referenceId}` : '/network';
+    default:
+      return null;
+  }
+};
 
 const formatNotifDate = (dateStr) => {
   if (!dateStr) return '';
@@ -29,6 +47,7 @@ const NotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
   const socketRef = useSocket(token);
@@ -86,6 +105,17 @@ const NotificationBell = () => {
     }
   };
 
+  const handleNotificationClick = async (n) => {
+    if (!n.isRead) {
+      await handleMarkAsRead(n.id);
+    }
+    const link = getNotificationLink(n.type, n.referenceId);
+    if (link) {
+      setIsOpen(false);
+      navigate(link);
+    }
+  };
+
   const handleMarkAllAsRead = async () => {
     try {
       const json = await markAllAsRead(token);
@@ -132,7 +162,7 @@ const NotificationBell = () => {
               notifications.map(n => (
                 <div
                   key={n.id}
-                  onClick={() => !n.isRead && handleMarkAsRead(n.id)}
+                  onClick={() => handleNotificationClick(n)}
                   className={`px-4 py-3 border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${n.isRead ? 'opacity-60' : 'bg-primary/5'}`}
                 >
                   <div className="flex gap-3">

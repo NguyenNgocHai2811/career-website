@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import html2pdf from 'html2pdf.js';
 import AppHeader from '../../components/AppHeader/AppHeader';
 
@@ -299,9 +299,18 @@ const AddBtn = ({ onClick }) => (
 // MAIN PROFILE COMPONENT
 // ===========================
 
-const Profile = ({ tab = 'profile' }) => {
+const Profile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const initialTab = (() => {
+    const path = location.pathname;
+    if (path.endsWith('/posts')) return 'posts';
+    if (path.endsWith('/activity')) return 'activity';
+    return 'profile';
+  })();
+  const [activeTab, setActiveTab] = useState(initialTab);
   const token = localStorage.getItem('token');
 
   const [profileData, setProfileData] = useState(null);
@@ -979,9 +988,9 @@ const Profile = ({ tab = 'profile' }) => {
 
           {/* Tabs */}
           <div data-html2canvas-ignore="true" className="flex items-center gap-8 px-6 md:px-8 border-t border-slate-100 dark:border-slate-700 pt-1 overflow-x-auto no-scrollbar">
-            <button onClick={() => navigate(userId ? `/profile/${userId}` : '/profile')} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${tab === 'profile' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Profile</button>
-            <button onClick={() => navigate(userId ? `/profile/${userId}/posts` : '/profile/me/posts')} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${tab === 'posts' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Posts</button>
-            <button onClick={() => navigate(userId ? `/profile/${userId}/activity` : '/profile/me/activity')} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${tab === 'activity' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Activity</button>
+            <button onClick={() => { setActiveTab('profile'); navigate(userId ? `/profile/${userId}` : '/profile', { replace: true }); }} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'profile' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Profile</button>
+            <button onClick={() => { setActiveTab('posts'); navigate(userId ? `/profile/${userId}/posts` : '/profile/posts', { replace: true }); }} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'posts' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Posts</button>
+            <button onClick={() => { setActiveTab('activity'); navigate(userId ? `/profile/${userId}/activity` : '/profile/activity', { replace: true }); }} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'activity' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Activity</button>
           </div>
         </header>
 
@@ -1101,7 +1110,7 @@ const Profile = ({ tab = 'profile' }) => {
 
           {/* ===== RIGHT MAIN CONTENT ===== */}
           <section className="lg:col-span-8 space-y-5">
-            {tab === 'profile' && (
+            {activeTab === 'profile' && (
               <>
 
                 {/* Experience */}
@@ -1248,8 +1257,8 @@ const Profile = ({ tab = 'profile' }) => {
               </>
             )}
 
-            {tab === 'posts' && <ProfilePosts userId={userId === 'me' ? profileData?.userId : userId} token={token} isOwner={isOwner} profileData={profileData} />}
-            {tab === 'activity' && <ProfileActivity userId={userId === 'me' ? profileData?.userId : userId} token={token} isOwner={isOwner} profileData={profileData} />}
+            {activeTab === 'posts' && <ProfilePosts userId={userId === 'me' ? profileData?.userId : userId} token={token} isOwner={isOwner} profileData={profileData} />}
+            {activeTab === 'activity' && <ProfileActivity userId={userId === 'me' ? profileData?.userId : userId} token={token} isOwner={isOwner} profileData={profileData} />}
 
           </section>
         </div>

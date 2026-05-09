@@ -29,9 +29,7 @@ function App() {
         <Route path="/" element={<Homepage />} />
         <Route path="/feed" element={<Feed />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/profile/:userId" element={<Profile />} />
-        <Route path="/profile/:userId/posts" element={<Profile tab="posts" />} />
-        <Route path="/profile/:userId/activity" element={<Profile tab="activity" />} />
+        <Route path="/profile/:userId/*" element={<Profile />} />
         <Route path="/company/:companyId" element={<CompanyProfile />} />
         <Route path="/network" element={<MyNetwork />} />
         <Route path="/jobs" element={<JobSearch />} />

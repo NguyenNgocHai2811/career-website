@@ -100,7 +100,24 @@ const CompanyProfile = () => {
   return (
     <div className="bg-[#FEF9F3] dark:bg-gray-950 min-h-screen text-[#1D1B18] dark:text-white font-body pb-20">
       <AppHeader />
-      <div className="max-w-300 mx-auto pt-20 px-4 md:px-8">
+
+      {isOwner && (
+        <div className="fixed top-16 left-0 right-0 z-40 bg-primary/95 backdrop-blur-sm text-white px-4 py-2 flex items-center justify-between shadow-md">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+            Bạn đang xem trang công ty của mình
+          </div>
+          <button
+            onClick={() => navigate('/recruiter')}
+            className="flex items-center gap-1.5 text-sm font-bold bg-white/20 hover:bg-white/30 transition-colors px-3 py-1.5 rounded-lg"
+          >
+            <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+            Về Dashboard
+          </button>
+        </div>
+      )}
+
+      <div className={`max-w-300 mx-auto px-4 md:px-8 ${isOwner ? 'pt-28' : 'pt-20'}`}>
 
         {/* Header Card */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-[#ece7e2] dark:border-gray-800 overflow-hidden mb-6">
@@ -163,15 +180,7 @@ const CompanyProfile = () => {
                   </a>
                 )}
 
-                {isOwner ? (
-                  <button
-                    onClick={() => navigate('/recruiter')}
-                    className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity flex items-center gap-1.5"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">settings</span>
-                    Manage
-                  </button>
-                ) : (
+                {!isOwner && (
                   <button
                     onClick={() => setFollowed(f => !f)}
                     className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-1.5 ${
