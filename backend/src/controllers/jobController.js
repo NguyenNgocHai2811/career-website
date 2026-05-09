@@ -21,13 +21,16 @@ const getJobById = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Job not found' });
     }
     
-    // If user is logged in, check if they already applied
     let hasApplied = false;
+    let isSaved = false;
     if (req.user?.userId) {
-      hasApplied = await jobRepository.hasApplied(req.user.userId, id);
+      [hasApplied, isSaved] = await Promise.all([
+        jobRepository.hasApplied(req.user.userId, id),
+        jobRepository.isSaved(req.user.userId, id),
+      ]);
     }
-    
-    res.status(200).json({ success: true, data: { ...job, hasApplied } });
+
+    res.status(200).json({ success: true, data: { ...job, hasApplied, isSaved } });
   } catch (error) {
     next(error);
   }
@@ -98,8 +101,43 @@ const applyToJob = async (req, res, next) => {
   }
 };
 
+const saveJob = async (req, res, next) => {
+  try {
+    const { id: jobId } = req.params;
+    const userId = req.user.userId;
+    await jobRepository.saveJob(userId, jobId);
+    res.status(200).json({ success: true, message: 'Job saved' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const unsaveJob = async (req, res, next) => {
+  try {
+    const { id: jobId } = req.params;
+    const userId = req.user.userId;
+    await jobRepository.unsaveJob(userId, jobId);
+    res.status(200).json({ success: true, message: 'Job unsaved' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getSavedJobs = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const jobs = await jobRepository.getSavedJobs(userId);
+    res.status(200).json({ success: true, data: jobs });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getJobs,
   getJobById,
   applyToJob,
+  saveJob,
+  unsaveJob,
+  getSavedJobs,
 };

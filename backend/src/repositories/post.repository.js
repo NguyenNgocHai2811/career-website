@@ -351,6 +351,57 @@ const getComments = async (postId, page = 1, limit = 10) => {
   }
 };
 
+const updatePost = async (userId, postId, { content, privacy }) => {
+  const session = driver.session();
+  try {
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId})-[:POSTED]->(p:Post {id: $postId})
+       SET p.content = $content, p.privacy = $privacy, p.updatedAt = datetime()
+       RETURN p`,
+      { userId, postId, content, privacy }
+    );
+    if (result.records.length === 0) return null;
+    const post = result.records[0].get('p').properties;
+    if (post.updatedAt) post.updatedAt = new Date(post.updatedAt.toString()).toISOString();
+    return post;
+  } finally {
+    await session.close();
+  }
+};
+
+const deletePost = async (userId, postId) => {
+  const session = driver.session();
+  try {
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId})-[:POSTED]->(p:Post {id: $postId})
+       DETACH DELETE p
+       RETURN count(p) AS deleted`,
+      { userId, postId }
+    );
+    return result.records.length > 0;
+  } finally {
+    await session.close();
+  }
+};
+
+const reportPost = async (userId, postId, reason) => {
+  const session = driver.session();
+  try {
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId}), (p:Post {id: $postId})
+       MERGE (u)-[r:REPORTED]->(p)
+       ON CREATE SET r.reportId = randomUUID(), r.reason = $reason,
+                     r.targetType = 'POST', r.status = 'PENDING', r.createdAt = datetime()
+       RETURN r.reportId AS reportId, r.createdAt AS createdAt`,
+      { userId, postId, reason }
+    );
+    if (result.records.length === 0) return null;
+    return { reportId: result.records[0].get('reportId') };
+  } finally {
+    await session.close();
+  }
+};
+
 module.exports = {
   createPost,
   getPosts,
@@ -359,5 +410,8 @@ module.exports = {
   removeReaction,
   addComment,
   getComments,
-  getUserPosts
+  getUserPosts,
+  updatePost,
+  deletePost,
+  reportPost,
 };

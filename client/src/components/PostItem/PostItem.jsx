@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import CommentSection from '../Comments/CommentSection';
+
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const REACTION_ICONS = {
   'Like': { icon: '👍', color: 'text-blue-500' },
@@ -35,8 +38,92 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString();
 };
 
-const PostItem = ({ post, onToggleLike, getAuthToken, user }) => {
+const PostItem = ({ post, onToggleLike, getAuthToken, user, onDelete, onUpdate }) => {
   const [showComments, setShowComments] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState(post.content || '');
+  const [saving, setSaving] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [copyDone, setCopyDone] = useState(false);
+  const shareRef = useRef(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const CHAR_LIMIT = 300;
+  const [reportReason, setReportReason] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportDone, setReportDone] = useState(false);
+  const menuRef = useRef(null);
+
+  const REPORT_REASONS = ['Spam', 'Thông tin sai lệch', 'Ngôn từ thù địch', 'Nội dung không phù hợp', 'Quấy rối', 'Khác'];
+
+  const handleReport = async () => {
+    if (!reportReason) return;
+    setReportSubmitting(true);
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API}/v1/posts/${post.id}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reason: reportReason }),
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+      setReportDone(true);
+      setTimeout(() => { setShowReportModal(false); setReportDone(false); setReportReason(''); }, 1500);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
+
+  const authorId = post.author?.userId || post.author?.id;
+  const isAuthor = user && authorId && String(user.userId) === String(authorId);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false);
+      if (shareRef.current && !shareRef.current.contains(e.target)) setShowShareMenu(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const handleSaveEdit = async () => {
+    if (!editContent.trim()) return;
+    setSaving(true);
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API}/v1/posts/${post.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ content: editContent.trim(), privacy: post.privacy || 'Public' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Lỗi khi lưu');
+      onUpdate?.({ ...post, content: editContent.trim(), updatedAt: data.post?.updatedAt });
+      setEditing(false);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Xóa bài viết này?')) return;
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API}/v1/posts/${post.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+      onDelete?.(post.id);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   return (
     <article className="bg-card-light dark:bg-card-dark rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden animate-fade-in-up">
@@ -61,8 +148,8 @@ const PostItem = ({ post, onToggleLike, getAuthToken, user }) => {
               )}
             </Link>
             <div>
-              <Link 
-                to={post.author?.type === 'COMPANY' ? `/company/${post.author?.id}` : `/profile/${post.author?.id || post.author?.userId || ''}`} 
+              <Link
+                to={post.author?.type === 'COMPANY' ? `/company/${post.author?.id}` : `/profile/${post.author?.id || post.author?.userId || ''}`}
                 className="no-underline"
               >
                 <h4 className="font-extrabold text-text-main dark:text-white text-base hover:text-primary transition-colors flex items-center gap-1.5">
@@ -77,17 +164,136 @@ const PostItem = ({ post, onToggleLike, getAuthToken, user }) => {
               </Link>
               <p className="text-xs text-text-secondary dark:text-gray-400">
                 {post.createdAt ? formatDate(post.createdAt) : ''}
+                {post.updatedAt && post.updatedAt !== post.createdAt && <span className="ml-1 opacity-60">(đã sửa)</span>}
               </p>
             </div>
           </div>
-          <button className="text-text-secondary hover:text-text-main dark:text-gray-400 dark:hover:text-white">
-            <span className="material-symbols-outlined">more_horiz</span>
-          </button>
+
+          {/* Action menu */}
+          {user && (
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setShowMenu(v => !v)}
+                className="text-text-secondary hover:text-text-main dark:text-gray-400 dark:hover:text-white p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <span className="material-symbols-outlined">more_horiz</span>
+              </button>
+              {showMenu && (
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-1.5 z-50">
+                  {isAuthor ? (
+                    <>
+                      <button
+                        onClick={() => { setEditing(true); setEditContent(post.content || ''); setShowMenu(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[18px] text-primary">edit</span>
+                        Chỉnh sửa
+                      </button>
+                      <button
+                        onClick={handleDelete}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                        Xóa bài viết
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => { setShowReportModal(true); setShowMenu(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[18px] text-amber-500">flag</span>
+                      Báo cáo bài viết
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Report Modal — rendered via portal to escape overflow:hidden */}
+          {showReportModal && createPortal(
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" onClick={() => setShowReportModal(false)}>
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+              <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+                {reportDone ? (
+                  <div className="flex flex-col items-center py-4 gap-3">
+                    <span className="material-symbols-outlined text-5xl text-green-500">check_circle</span>
+                    <p className="font-bold text-gray-800 dark:text-white">Báo cáo đã được ghi nhận</p>
+                    <p className="text-sm text-gray-500 text-center">Chúng tôi sẽ xem xét và xử lý sớm nhất.</p>
+                  </div>
+                ) : (
+                  <>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">Báo cáo bài viết</h3>
+                    <p className="text-xs text-gray-500 mb-4">Chọn lý do phù hợp nhất với nội dung vi phạm.</p>
+                    <div className="space-y-2 mb-5">
+                      {REPORT_REASONS.map(reason => (
+                        <label key={reason} className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
+                          <input
+                            type="radio"
+                            name={`reportReason-${post.id}`}
+                            value={reason}
+                            checked={reportReason === reason}
+                            onChange={() => setReportReason(reason)}
+                            className="text-primary focus:ring-primary"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-200">{reason}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => setShowReportModal(false)} className="flex-1 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Hủy</button>
+                      <button
+                        onClick={handleReport}
+                        disabled={!reportReason || reportSubmitting}
+                        className="flex-1 py-2 rounded-xl bg-amber-500 text-white text-sm font-bold disabled:opacity-50 hover:bg-amber-600 transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        {reportSubmitting && <div className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                        Gửi báo cáo
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>,
+            document.body
+          )}
         </div>
 
-        <p className="text-text-main dark:text-gray-200 leading-relaxed mb-4 text-[15px] font-medium">
-          {post.content}
-        </p>
+        {editing ? (
+          <div className="mb-4">
+            <textarea
+              value={editContent}
+              onChange={e => setEditContent(e.target.value)}
+              rows={4}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-sm text-text-main dark:text-white resize-none focus:ring-2 focus:ring-primary/30 outline-none"
+              autoFocus
+            />
+            <div className="flex justify-end gap-2 mt-2">
+              <button onClick={() => setEditing(false)} className="px-4 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Hủy</button>
+              <button onClick={handleSaveEdit} disabled={saving || !editContent.trim()} className="px-4 py-1.5 rounded-lg bg-primary text-white text-sm font-bold disabled:opacity-60 flex items-center gap-1.5 hover:bg-primary/90 transition-colors">
+                {saving && <div className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                Lưu
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-4">
+            <p className="text-text-main dark:text-gray-200 leading-relaxed text-[15px] font-medium whitespace-pre-line">
+              {post.content && post.content.length > CHAR_LIMIT && !expanded
+                ? post.content.slice(0, CHAR_LIMIT).trimEnd() + '…'
+                : post.content}
+            </p>
+            {post.content && post.content.length > CHAR_LIMIT && (
+              <button
+                onClick={() => setExpanded(v => !v)}
+                className="mt-1 text-sm font-bold text-primary hover:underline"
+              >
+                {expanded ? 'Thu gọn' : 'Xem thêm'}
+              </button>
+            )}
+          </div>
+        )}
 
         {post.mediaUrl && (
           <div className="rounded-xl overflow-hidden mb-4 bg-gray-100 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
@@ -156,9 +362,50 @@ const PostItem = ({ post, onToggleLike, getAuthToken, user }) => {
           <button onClick={() => setShowComments(!showComments)} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium text-sm ${showComments ? 'text-korra_active bg-gray-50 dark:bg-gray-800' : 'text-text-secondary dark:text-gray-400'}`}>
             <span className="material-symbols-outlined text-[20px]">chat_bubble</span> Comment
           </button>
-          <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-medium text-sm">
-            <span className="material-symbols-outlined text-[20px]">share</span> Share
-          </button>
+          <div className="flex-1 relative" ref={shareRef}>
+            <button
+              onClick={() => setShowShareMenu(v => !v)}
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-text-secondary dark:text-gray-400 font-medium text-sm"
+            >
+              <span className="material-symbols-outlined text-[20px]">share</span> Share
+            </button>
+
+            {showShareMenu && (
+              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-52 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 py-1.5 z-30">
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/feed?postId=${post.id}`;
+                    navigator.clipboard.writeText(url).then(() => {
+                      setCopyDone(true);
+                      setTimeout(() => { setCopyDone(false); setShowShareMenu(false); }, 1500);
+                    });
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-primary">
+                    {copyDone ? 'check_circle' : 'link'}
+                  </span>
+                  {copyDone ? 'Đã sao chép!' : 'Sao chép liên kết'}
+                </button>
+
+                {typeof navigator.share === 'function' && (
+                  <button
+                    onClick={() => {
+                      navigator.share({
+                        title: `Bài viết của ${post.author?.fullName || 'ai đó'}`,
+                        text: post.content?.slice(0, 100),
+                        url: `${window.location.origin}/feed?postId=${post.id}`,
+                      }).finally(() => setShowShareMenu(false));
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px] text-green-500">ios_share</span>
+                    Chia sẻ qua ứng dụng
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

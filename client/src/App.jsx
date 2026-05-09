@@ -29,6 +29,7 @@ function App() {
         <Route path="/" element={<Homepage />} />
         <Route path="/feed" element={<Feed />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/saved-jobs" element={<Profile />} />
         <Route path="/profile/:userId/*" element={<Profile />} />
         <Route path="/company/:companyId" element={<CompanyProfile />} />
         <Route path="/network" element={<MyNetwork />} />

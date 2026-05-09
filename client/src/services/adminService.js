@@ -68,3 +68,20 @@ export async function deletePost(token, postId) {
   if (!res.ok) throw new Error('Failed to delete post');
   return res.json();
 }
+
+export async function fetchReports(token, { page = 1, limit = 20, status = 'PENDING' } = {}) {
+  const params = new URLSearchParams({ page, limit, status });
+  const res = await fetch(`${API_BASE}/v1/admin/reports?${params}`, { headers: authHeaders(token) });
+  if (!res.ok) throw new Error('Failed to fetch reports');
+  return res.json();
+}
+
+export async function resolveReport(token, reportId, action) {
+  const res = await fetch(`${API_BASE}/v1/admin/reports/${reportId}/resolve`, {
+    method: 'PATCH',
+    headers: authHeaders(token),
+    body: JSON.stringify({ action }),
+  });
+  if (!res.ok) throw new Error('Failed to resolve report');
+  return res.json();
+}

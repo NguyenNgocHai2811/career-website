@@ -7,11 +7,19 @@ const { uploadCV } = require('../config/cloudinary');
 // GET /v1/jobs - Fetch list of jobs (public)
 router.get('/', jobController.getJobs);
 
-// GET /v1/jobs/:id - Fetch single job by ID (optional auth to check hasApplied)
+// GET /v1/jobs/saved - Get saved jobs for logged-in user (must be before /:id)
+router.get('/saved', authMiddleware.verifyToken, jobController.getSavedJobs);
+
+// GET /v1/jobs/:id - Fetch single job by ID (optional auth to check hasApplied, isSaved)
 router.get('/:id', authMiddleware.verifyTokenOptional, jobController.getJobById);
 
 // POST /v1/jobs/:id/apply - Apply to a job (requires auth)
-// uploadCV.single('cv') handles the optional file upload field named 'cv'
 router.post('/:id/apply', authMiddleware.verifyToken, uploadCV.single('cv'), jobController.applyToJob);
+
+// POST /v1/jobs/:id/save - Save a job
+router.post('/:id/save', authMiddleware.verifyToken, jobController.saveJob);
+
+// DELETE /v1/jobs/:id/save - Unsave a job
+router.delete('/:id/save', authMiddleware.verifyToken, jobController.unsaveJob);
 
 module.exports = router;

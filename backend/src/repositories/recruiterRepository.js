@@ -269,6 +269,61 @@ const updateCompany = async (userId, companyId, companyData) => {
   }
 };
 
+const updateJob = async (userId, jobId, jobData) => {
+  const session = driver.session();
+  try {
+    const allowedFields = ['title', 'description', 'employmentType', 'location', 'salaryMin', 'salaryMax', 'category', 'experience', 'level'];
+    const updates = {};
+    allowedFields.forEach(f => {
+      if (jobData[f] !== undefined) updates[f] = jobData[f];
+    });
+    if (updates.salaryMin !== undefined) updates.salaryMin = updates.salaryMin ? parseInt(updates.salaryMin) : null;
+    if (updates.salaryMax !== undefined) updates.salaryMax = updates.salaryMax ? parseInt(updates.salaryMax) : null;
+
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId})-[:POSTED]->(j:Job {jobId: $jobId})
+       SET j += $updates, j.updatedAt = datetime()
+       RETURN j`,
+      { userId, jobId, updates }
+    );
+    if (result.records.length === 0) return null;
+    return result.records[0].get('j').properties;
+  } finally {
+    await session.close();
+  }
+};
+
+const setJobStatus = async (userId, jobId, status) => {
+  const session = driver.session();
+  try {
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId})-[:POSTED]->(j:Job {jobId: $jobId})
+       SET j.status = $status, j.updatedAt = datetime()
+       RETURN j`,
+      { userId, jobId, status }
+    );
+    if (result.records.length === 0) return null;
+    return result.records[0].get('j').properties;
+  } finally {
+    await session.close();
+  }
+};
+
+const deleteJob = async (userId, jobId) => {
+  const session = driver.session();
+  try {
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId})-[:POSTED]->(j:Job {jobId: $jobId})
+       DETACH DELETE j
+       RETURN count(j) AS deleted`,
+      { userId, jobId }
+    );
+    return result.records.length > 0;
+  } finally {
+    await session.close();
+  }
+};
+
 module.exports = {
   getDashboardMetrics,
   getMyCompanies,
@@ -279,4 +334,7 @@ module.exports = {
   updateApplicationStatus,
   createCompany,
   updateCompany,
+  updateJob,
+  setJobStatus,
+  deleteJob,
 };

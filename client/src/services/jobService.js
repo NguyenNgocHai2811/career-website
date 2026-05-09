@@ -41,6 +41,35 @@ export const getJobById = async (id) => {
  * @param {string} token - auth JWT
  * @param {string} coverLetter - optional text
  */
+export const saveJob = async (jobId, token) => {
+  const response = await fetch(`${API_URL}/${jobId}/save`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to save job');
+  return result;
+};
+
+export const unsaveJob = async (jobId, token) => {
+  const response = await fetch(`${API_URL}/${jobId}/save`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to unsave job');
+  return result;
+};
+
+export const getSavedJobs = async (token) => {
+  const response = await fetch(`${API_URL}/saved`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error('Failed to fetch saved jobs');
+  const result = await response.json();
+  return result.data;
+};
+
 export const applyToJob = async ({ jobId, cvType, cvFile, token, coverLetter = '' }) => {
   try {
     const formData = new FormData();

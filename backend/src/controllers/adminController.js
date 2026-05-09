@@ -106,4 +106,33 @@ const deletePost = async (req, res, next) => {
   }
 };
 
-module.exports = { getStats, getUsers, banUser, deleteUser, getJobs, deleteJob, getPosts, deletePost };
+const getReports = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20, status = 'PENDING' } = req.query;
+    const result = await adminService.getReports({ page: parseInt(page), limit: parseInt(limit), status });
+    res.status(200).json({
+      success: true,
+      data: result.reports,
+      meta: { total: result.total, page: parseInt(page), limit: parseInt(limit) },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resolveReport = async (req, res, next) => {
+  try {
+    const { reportId } = req.params;
+    const { action } = req.body;
+    if (!['DISMISS', 'DELETE_CONTENT'].includes(action)) {
+      return res.status(400).json({ success: false, message: 'action must be DISMISS or DELETE_CONTENT' });
+    }
+    const ok = await adminService.resolveReport(reportId, action);
+    if (!ok) return res.status(404).json({ success: false, message: 'Report not found' });
+    res.status(200).json({ success: true, message: action === 'DELETE_CONTENT' ? 'Nội dung đã bị xóa' : 'Báo cáo đã bị bỏ qua' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getStats, getUsers, banUser, deleteUser, getJobs, deleteJob, getPosts, deletePost, getReports, resolveReport };

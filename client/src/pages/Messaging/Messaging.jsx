@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { getRecentChats, getChatHistory } from '../../services/chatService';
 import { getMyConnections, searchUsersToConnect, sendConnectionRequest } from '../../services/networkService';
 import { io } from 'socket.io-client';
@@ -7,6 +8,8 @@ import AppHeader from '../../components/AppHeader/AppHeader';
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const Messaging = () => {
+    const location = useLocation();
+    const openChatUser = location.state?.openChatUser || null;
     const [activeTab, setActiveTab] = useState('chats'); // 'chats', 'connections', 'discover'
     const [chats, setChats] = useState([]);
     const [connections, setConnections] = useState([]);
@@ -20,7 +23,11 @@ const Messaging = () => {
     const [mobileView, setMobileView] = useState('list'); // 'list' or 'chat'
 
     const socketRef = useRef();
+    const autoOpenedUserRef = useRef(null);
     const messagesEndRef = useRef(null);
+    const messagesContainerRef = useRef(null);
+    const isNearBottomRef = useRef(true);
+    const [showViewNow, setShowViewNow] = useState(false);
 
     const currentUserId = JSON.parse(localStorage.getItem('user'))?.userId;
 
@@ -35,6 +42,17 @@ const Messaging = () => {
     useEffect(() => {
         currentUserIdRef.current = currentUserId;
     }, [currentUserId]);
+
+    useEffect(() => {
+        if (!openChatUser?.id) return;
+        if (autoOpenedUserRef.current === String(openChatUser.id)) return;
+        const fromChats = chats.find(c => String(c.id) === String(openChatUser.id));
+        const fromConnections = connections.find(c => String(c.id) === String(openChatUser.id));
+        const target = fromChats || fromConnections || openChatUser;
+        autoOpenedUserRef.current = String(openChatUser.id);
+        openChat(target);
+        setActiveTab('chats');
+    }, [openChatUser, chats, connections]);
 
     const loadChats = async () => {
         try {
@@ -79,14 +97,33 @@ const Messaging = () => {
             const token = localStorage.getItem('token');
             const history = await getChatHistory(token, friend.id);
             setMessages(history);
-            scrollToBottom();
+            isNearBottomRef.current = true;
+            setShowViewNow(false);
+            scrollToBottom('auto');
         } catch (err) { console.error(err); }
     };
 
-    const scrollToBottom = () => {
-        setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
+    const isNearBottom = () => {
+        const el = messagesContainerRef.current;
+        if (!el) return true;
+        const threshold = 120;
+        return el.scrollHeight - (el.scrollTop + el.clientHeight) <= threshold;
+    };
+
+    const scrollToBottom = (behavior = 'smooth') => {
+        const el = messagesContainerRef.current;
+        if (!el) return;
+        requestAnimationFrame(() => {
+            el.scrollTo({ top: el.scrollHeight, behavior });
+            isNearBottomRef.current = true;
+            setShowViewNow(false);
+        });
+    };
+
+    const handleMessagesScroll = () => {
+        const nearBottom = isNearBottom();
+        isNearBottomRef.current = nearBottom;
+        setShowViewNow(!nearBottom);
     };
 
     const sendMessage = (e) => {
@@ -139,7 +176,11 @@ const Messaging = () => {
                         if (replaced.some(m => m.messageId === msg.messageId)) return replaced;
                         return [...prev, msg];
                     });
-                    scrollToBottom();
+                    if (isNearBottomRef.current) {
+                        scrollToBottom();
+                    } else {
+                        setShowViewNow(true);
+                    }
                 }
                 loadChats();
             });
@@ -151,10 +192,10 @@ const Messaging = () => {
     }, []);
 
     return (
-        <div className="bg-[#f8fafc] dark:bg-[#0f172a] text-slate-900 dark:text-white min-h-screen flex flex-col font-sans overflow-hidden">
+        <div className="bg-[#f8fafc] dark:bg-[#0f172a] text-slate-900 dark:text-white min-h-screen h-screen flex flex-col font-sans overflow-hidden">
             <AppHeader activeTab="messages" />
 
-            <main className="flex-1 flex overflow-hidden max-w-[1440px] mx-auto w-full relative">
+            <main className="flex-1 min-h-0 flex overflow-hidden max-w-[1440px] mx-auto w-full relative">
                 {/* Conversations Sidebar */}
                 <aside className={`
                     ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'}
@@ -261,7 +302,7 @@ const Messaging = () => {
                 {/* Chat Area */}
                 <section className={`
                     ${mobileView === 'list' ? 'hidden md:flex' : 'flex'}
-                    flex-1 flex-col bg-[#f8fafc] dark:bg-[#0f172a] relative transition-all duration-300
+                    flex-1 min-h-0 flex-col bg-[#f8fafc] dark:bg-[#0f172a] relative transition-all duration-300
                 `}>
                     {activeChat ? (
                         <>
@@ -296,34 +337,49 @@ const Messaging = () => {
                             </header>
 
                             {/* Messages List */}
-                            <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 custom-scrollbar bg-bubbles">
-                                {messages.map((msg, idx) => {
-                                    const isMe = msg.senderId == currentUserId;
-                                    const showDate = idx === 0 || new Date(msg.createdAt).toLocaleDateString() !== new Date(messages[idx-1].createdAt).toLocaleDateString();
-                                    
-                                    return (
-                                        <React.Fragment key={msg.messageId || idx}>
-                                            {showDate && (
-                                                <div className="flex justify-center my-6">
-                                                    <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                        {new Date(msg.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} group animate-fade-in-up`}>
-                                                <div className={`max-w-[85%] md:max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
-                                                    <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${isMe ? 'bg-primary text-white rounded-tr-none' : 'bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-200 rounded-tl-none border border-gray-100 dark:border-gray-700'}`}>
-                                                        {msg.content}
+                            <div className="relative flex-1 min-h-0">
+                                <div
+                                    ref={messagesContainerRef}
+                                    onScroll={handleMessagesScroll}
+                                    className="h-full overflow-y-auto p-4 md:p-8 space-y-6 custom-scrollbar bg-bubbles"
+                                >
+                                    {messages.map((msg, idx) => {
+                                        const isMe = msg.senderId == currentUserId;
+                                        const showDate = idx === 0 || new Date(msg.createdAt).toLocaleDateString() !== new Date(messages[idx-1].createdAt).toLocaleDateString();
+                                        
+                                        return (
+                                            <React.Fragment key={msg.messageId || idx}>
+                                                {showDate && (
+                                                    <div className="flex justify-center my-6">
+                                                        <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                            {new Date(msg.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                        </span>
                                                     </div>
-                                                    <span className="text-[10px] text-slate-400 mt-1.5 font-medium px-1">
-                                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    </span>
+                                                )}
+                                                <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} group animate-fade-in-up`}>
+                                                    <div className={`max-w-[85%] md:max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
+                                                        <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${isMe ? 'bg-primary text-white rounded-tr-none' : 'bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-200 rounded-tl-none border border-gray-100 dark:border-gray-700'}`}>
+                                                            {msg.content}
+                                                        </div>
+                                                        <span className="text-[10px] text-slate-400 mt-1.5 font-medium px-1">
+                                                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </React.Fragment>
-                                    );
-                                })}
-                                <div ref={messagesEndRef} />
+                                            </React.Fragment>
+                                        );
+                                    })}
+                                    <div ref={messagesEndRef} />
+                                </div>
+                                {showViewNow && (
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollToBottom()}
+                                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-2 rounded-full bg-primary text-white text-xs font-bold shadow-lg shadow-primary/30 hover:scale-105 transition-all"
+                                    >
+                                        View now
+                                    </button>
+                                )}
                             </div>
 
                             {/* Message Input */}

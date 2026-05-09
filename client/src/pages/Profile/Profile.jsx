@@ -5,6 +5,7 @@ import AppHeader from '../../components/AppHeader/AppHeader';
 
 import ProfilePosts from './ProfilePosts';
 import ProfileActivity from './ProfileActivity';
+import ProfileSavedJobs from './ProfileSavedJobs';
 import { sendConnectionRequest, removeConnection, acceptConnectionRequest } from '../../services/networkService';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -308,6 +309,7 @@ const Profile = () => {
     const path = location.pathname;
     if (path.endsWith('/posts')) return 'posts';
     if (path.endsWith('/activity')) return 'activity';
+    if (path.includes('/saved-jobs')) return 'saved';
     return 'profile';
   })();
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -991,6 +993,9 @@ const Profile = () => {
             <button onClick={() => { setActiveTab('profile'); navigate(userId ? `/profile/${userId}` : '/profile', { replace: true }); }} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'profile' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Profile</button>
             <button onClick={() => { setActiveTab('posts'); navigate(userId ? `/profile/${userId}/posts` : '/profile/posts', { replace: true }); }} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'posts' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Posts</button>
             <button onClick={() => { setActiveTab('activity'); navigate(userId ? `/profile/${userId}/activity` : '/profile/activity', { replace: true }); }} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'activity' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Activity</button>
+            {isOwner && (
+              <button onClick={() => { setActiveTab('saved'); navigate(`/profile/${userId || 'me'}/saved-jobs`, { replace: true }); }} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'saved' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Việc đã lưu</button>
+            )}
           </div>
         </header>
 
@@ -1259,6 +1264,7 @@ const Profile = () => {
 
             {activeTab === 'posts' && <ProfilePosts userId={userId === 'me' ? profileData?.userId : userId} token={token} isOwner={isOwner} profileData={profileData} />}
             {activeTab === 'activity' && <ProfileActivity userId={userId === 'me' ? profileData?.userId : userId} token={token} isOwner={isOwner} profileData={profileData} />}
+            {activeTab === 'saved' && isOwner && <ProfileSavedJobs token={token} />}
 
           </section>
         </div>

@@ -1,18 +1,33 @@
 const { driver } = require('../config/neo4j');
 
-const getCompanyById = async (companyId) => {
+const getCompanyById = async (companyId, currentUserId = null) => {
   const session = driver.session();
   try {
     const query = `
       MATCH (c:Company {companyId: $companyId})
       OPTIONAL MATCH (owner:User)-[:IS_RECRUITER_FOR {role: 'OWNER'}]->(c)
-      RETURN c, owner.userId AS ownerId
+      OPTIONAL MATCH (:User)-[:FOLLOWS]->(c)
+      WITH c, owner, count(*) AS followerCount
+      RETURN c, owner.userId AS ownerId, followerCount
     `;
     const result = await session.run(query, { companyId });
     if (result.records.length === 0) return null;
+    const rec = result.records[0];
+
+    let isFollowing = false;
+    if (currentUserId) {
+      const followCheck = await session.run(
+        `MATCH (u:User {userId: $currentUserId})-[:FOLLOWS]->(c:Company {companyId: $companyId}) RETURN c`,
+        { currentUserId, companyId }
+      );
+      isFollowing = followCheck.records.length > 0;
+    }
+
     return {
-      ...result.records[0].get('c').properties,
-      ownerId: result.records[0].get('ownerId'),
+      ...rec.get('c').properties,
+      ownerId: rec.get('ownerId'),
+      followerCount: rec.get('followerCount').toNumber(),
+      isFollowing,
     };
   } finally {
     await session.close();
@@ -59,8 +74,85 @@ const getCompanyEmployees = async (companyId) => {
   }
 };
 
+const getCompanyPosts = async (companyId, currentUserId = null) => {
+  const session = driver.session();
+  try {
+    const result = await session.run(`
+      MATCH (u:User)-[:IS_RECRUITER_FOR]->(c:Company {companyId: $companyId})
+      MATCH (u)-[:POSTED]->(p:Post)
+      OPTIONAL MATCH (u)-[:IS_RECRUITER_FOR]->(comp:Company)
+      OPTIONAL MATCH (p)<-[:COMMENTED_ON]-(cm:Comment)
+      WITH p, u, comp, count(DISTINCT cm) AS commentsCount
+      OPTIONAL MATCH (p)<-[r:REACTED_TO]-(liker:User)
+      WITH p, u, comp, commentsCount, r.type AS rType, liker.userId AS rUserId
+      WITH p, u, comp, commentsCount,
+           collect(CASE WHEN rType IS NULL THEN null ELSE {type: rType, userId: rUserId} END) AS rawReacts
+      WITH p, u, comp, commentsCount, [x IN rawReacts WHERE x IS NOT NULL] AS reacts
+      RETURN p, u, comp, commentsCount,
+             size(reacts) AS reactionsCount,
+             head([x IN reacts WHERE x.userId = $currentUserId | x.type]) AS userReactionType,
+             [x IN reacts | x.type] AS allTypes
+      ORDER BY p.createdAt DESC
+    `, { companyId, currentUserId: currentUserId || '' });
+
+    return result.records.map(rec => {
+      const post = rec.get('p').properties;
+      if (post.createdAt) post.createdAt = new Date(post.createdAt.toString()).toISOString();
+      if (post.updatedAt) post.updatedAt = new Date(post.updatedAt.toString()).toISOString();
+      const author = rec.get('u').properties;
+      const company = rec.get('comp')?.properties;
+      const reactionsCount = rec.get('reactionsCount');
+      return {
+        ...post,
+        commentsCount: rec.get('commentsCount').toNumber(),
+        reactionsCount: typeof reactionsCount?.toNumber === 'function' ? reactionsCount.toNumber() : (reactionsCount || 0),
+        userReactionType: rec.get('userReactionType') || null,
+        allTypes: rec.get('allTypes') || [],
+        author: company ? {
+          id: company.companyId, fullName: company.name, avatar: company.logoUrl, type: 'COMPANY'
+        } : {
+          userId: author.userId, fullName: author.fullName, avatar: author.avatarUrl, type: 'USER'
+        },
+      };
+    });
+  } finally {
+    await session.close();
+  }
+};
+
+const followCompany = async (userId, companyId) => {
+  const session = driver.session();
+  try {
+    await session.run(
+      `MATCH (u:User {userId: $userId}), (c:Company {companyId: $companyId})
+       MERGE (u)-[:FOLLOWS]->(c)`,
+      { userId, companyId }
+    );
+    return true;
+  } finally {
+    await session.close();
+  }
+};
+
+const unfollowCompany = async (userId, companyId) => {
+  const session = driver.session();
+  try {
+    await session.run(
+      `MATCH (u:User {userId: $userId})-[r:FOLLOWS]->(c:Company {companyId: $companyId})
+       DELETE r`,
+      { userId, companyId }
+    );
+    return true;
+  } finally {
+    await session.close();
+  }
+};
+
 module.exports = {
   getCompanyById,
   getCompanyJobs,
-  getCompanyEmployees
+  getCompanyEmployees,
+  getCompanyPosts,
+  followCompany,
+  unfollowCompany,
 };

@@ -8,6 +8,17 @@ function Homepage() {
   const [featuredRef, isFeaturedVisible, hasFeaturedIntersected] = useIntersectionObserver();
   const isLoggedIn = !!localStorage.getItem('token');
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const homeNavLinks = [
+    { label: 'Find Jobs', to: '/jobs', icon: 'work' },
+    ...(isLoggedIn ? [
+      { label: 'Feed', to: '/feed', icon: 'rss_feed' },
+      { label: 'Network', to: '/network', icon: 'group' },
+      { label: 'Messages', to: '/messages', icon: 'chat' },
+    ] : []),
+    { label: 'Career Explorer', to: '/career-ai', icon: 'auto_awesome' },
+  ];
 
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
@@ -25,6 +36,13 @@ function Homepage() {
     };
     fetchFeatured();
   }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   // Search states
   const [searchTitle, setSearchTitle] = useState('');
@@ -63,9 +81,9 @@ function Homepage() {
               <a className="text-[#4a5568] hover:text-primary text-sm font-medium transition-colors" href="#">Salaries</a>
               <a className="text-[#4a5568] hover:text-primary text-sm font-medium transition-colors" href="#">Advice</a>
             </nav>
-            <div className="flex gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {isLoggedIn ? (
-                <Link to={storedUser.role === 'RECRUITER' ? '/recruiter' : '/feed'} className="flex items-center justify-center rounded-xl h-10 px-6 bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 text-sm font-bold transition-all transform hover:scale-[1.05]">
+                <Link to={storedUser.role === 'RECRUITER' ? '/recruiter' : '/feed'} className="hidden sm:flex items-center justify-center rounded-xl h-10 px-6 bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 text-sm font-bold transition-all transform hover:scale-[1.05]">
                   {storedUser.role === 'RECRUITER' ? 'Dashboard' : 'Go to Feed'}
                 </Link>
               ) : (
@@ -78,9 +96,70 @@ function Homepage() {
                   </Link>
                 </>
               )}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                className="md:hidden flex items-center justify-center size-10 rounded-xl bg-white/80 border border-primary/10 text-[#2d3748] shadow-sm"
+                aria-label="Open navigation menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                <span className="material-symbols-outlined">menu</span>
+              </button>
             </div>
           </div>
         </header>
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-[60] md:hidden">
+            <div
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <div className="absolute right-0 top-0 h-full w-[min(88vw,320px)] bg-white shadow-2xl flex flex-col">
+              <div className="p-5 flex items-center justify-between border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center size-9 rounded-xl bg-primary/10 text-primary">
+                    <span className="material-symbols-outlined">diamond</span>
+                  </div>
+                  <h3 className="font-bold text-[#2d3748]">KorraCareers</h3>
+                </div>
+                <button onClick={() => setMobileMenuOpen(false)} className="size-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-slate-500">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+                {homeNavLinks.map(link => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-4 px-4 py-3 rounded-xl font-semibold text-slate-600 hover:bg-gray-50 hover:text-primary no-underline transition-all"
+                  >
+                    <span className="material-symbols-outlined">{link.icon}</span>
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+
+              <div className="p-5 border-t border-gray-100 bg-gray-50">
+                {isLoggedIn ? (
+                  <Link
+                    to={storedUser.role === 'RECRUITER' ? '/recruiter' : '/feed'}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center rounded-xl h-11 bg-primary text-white text-sm font-bold no-underline shadow-lg shadow-primary/20"
+                  >
+                    {storedUser.role === 'RECRUITER' ? 'Dashboard' : 'Go to Feed'}
+                  </Link>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center rounded-xl h-11 bg-white text-sm font-bold text-slate-700 no-underline shadow-sm">Sign In</Link>
+                    <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center rounded-xl h-11 bg-primary text-sm font-bold text-white no-underline shadow-sm">Join Now</Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         <main className="flex-grow pt-24 md:pt-32">
           <section className="relative px-6 pb-20 overflow-visible">
             <div className="relative z-10 max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">

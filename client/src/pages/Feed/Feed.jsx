@@ -426,7 +426,15 @@ const Feed = () => {
             {/* Posts List */}
             <div className="space-y-6">
               {posts.map((post) => (
-                <PostItem key={post.id} post={post} onToggleLike={handleToggleLike} getAuthToken={getAuthToken} user={user} />
+                <PostItem
+                  key={post.id}
+                  post={post}
+                  onToggleLike={handleToggleLike}
+                  getAuthToken={getAuthToken}
+                  user={user}
+                  onDelete={(id) => setPosts(prev => prev.filter(p => p.id !== id))}
+                  onUpdate={(updated) => setPosts(prev => prev.map(p => p.id === updated.id ? { ...p, ...updated } : p))}
+                />
               ))}
               {posts.length === 0 && (
                 <div className="text-center py-12 bg-white dark:bg-card-dark rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">

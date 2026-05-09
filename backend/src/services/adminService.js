@@ -16,4 +16,7 @@ const getPosts = async (params) => adminRepository.getPosts(params);
 
 const deletePost = async (postId) => adminRepository.deletePost(postId);
 
-module.exports = { getStats, getUsers, banUser, deleteUser, getJobs, deleteJob, getPosts, deletePost };
+const getReports = async (params) => adminRepository.getReports(params);
+const resolveReport = async (reportId, action) => adminRepository.resolveReport(reportId, action);
+
+module.exports = { getStats, getUsers, banUser, deleteUser, getJobs, deleteJob, getPosts, deletePost, getReports, resolveReport };

@@ -13,6 +13,15 @@ router.post('/', authMiddleware.verifyToken, upload.single('media'), postControl
 // Get post details
 router.get('/:id', postController.getPostById); // Public
 
+// Edit a post (author only)
+router.put('/:id', authMiddleware.verifyToken, postController.updatePost);
+
+// Delete a post (author only)
+router.delete('/:id', authMiddleware.verifyToken, postController.deletePost);
+
+// Report a post
+router.post('/:id/report', authMiddleware.verifyToken, postController.reportPost);
+
 // Add a reaction to a post
 router.post('/:id/reactions', authMiddleware.verifyToken, postController.addReaction);
 

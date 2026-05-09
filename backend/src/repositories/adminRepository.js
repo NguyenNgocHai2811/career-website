@@ -154,11 +154,16 @@ const getPosts = async ({ page = 1, limit = 20 }) => {
 
     const countResult = await session.run(`MATCH (p:Post) RETURN count(p) AS total`);
 
+    const toISO = (val) => {
+      if (!val) return null;
+      try { return new Date(val.toString()).toISOString(); } catch { return null; }
+    };
+
     return {
       posts: result.records.map(r => ({
         postId: r.get('postId'),
         content: r.get('content'),
-        createdAt: r.get('createdAt'),
+        createdAt: toISO(r.get('createdAt')),
         authorName: r.get('authorName'),
         authorId: r.get('authorId'),
       })),
@@ -182,4 +187,91 @@ const deletePost = async (postId) => {
   }
 };
 
-module.exports = { getStats, getUsers, banUser, deleteUser, getJobs, deleteJob, getPosts, deletePost };
+const getReports = async ({ page = 1, limit = 20, status = 'PENDING' }) => {
+  const session = driver.session();
+  const skip = (page - 1) * limit;
+  try {
+    const result = await session.run(`
+      MATCH (reporter:User)-[r:REPORTED]->(target)
+      WHERE r.status = $status
+      OPTIONAL MATCH (author:User)-[:POSTED]->(target)
+      RETURN r.reportId AS reportId,
+             r.reason AS reason,
+             r.targetType AS targetType,
+             r.createdAt AS createdAt,
+             r.status AS status,
+             reporter.fullName AS reporterName,
+             reporter.userId AS reporterId,
+             CASE WHEN target:Post THEN target.id ELSE target.id END AS targetId,
+             CASE WHEN target:Post THEN target.content ELSE target.content END AS targetContent,
+             author.fullName AS authorName,
+             author.userId AS authorId
+      ORDER BY r.createdAt DESC
+      SKIP toInteger($skip) LIMIT toInteger($limit)
+    `, { status, skip, limit });
+
+    const countResult = await session.run(`
+      MATCH (:User)-[r:REPORTED]->()
+      WHERE r.status = $status
+      RETURN count(r) AS total
+    `, { status });
+
+    const toISO = (val) => {
+      if (!val) return null;
+      try { return new Date(val.toString()).toISOString(); } catch { return null; }
+    };
+
+    return {
+      reports: result.records.map(rec => ({
+        reportId: rec.get('reportId'),
+        reason: rec.get('reason'),
+        targetType: rec.get('targetType'),
+        targetId: rec.get('targetId'),
+        targetContent: rec.get('targetContent'),
+        reporterName: rec.get('reporterName'),
+        reporterId: rec.get('reporterId'),
+        authorName: rec.get('authorName'),
+        authorId: rec.get('authorId'),
+        createdAt: toISO(rec.get('createdAt')),
+        status: rec.get('status'),
+      })),
+      total: countResult.records[0].get('total').toNumber(),
+    };
+  } finally {
+    await session.close();
+  }
+};
+
+const resolveReport = async (reportId, action) => {
+  const session = driver.session();
+  try {
+    const newStatus = action === 'DELETE_CONTENT' ? 'RESOLVED' : 'DISMISSED';
+
+    const result = await session.run(`
+      MATCH (reporter:User)-[r:REPORTED {reportId: $reportId}]->(target)
+      SET r.status = $newStatus, r.resolvedAt = datetime()
+      RETURN target, labels(target)[0] AS targetType
+    `, { reportId, newStatus });
+
+    if (result.records.length === 0) return false;
+
+    if (action === 'DELETE_CONTENT') {
+      const targetType = result.records[0].get('targetType');
+      const target = result.records[0].get('target').properties;
+      const targetId = target.id || target.postId || target.commentId;
+      if (targetId) {
+        if (targetType === 'Post') {
+          await session.run(`MATCH (p:Post {id: $targetId}) DETACH DELETE p`, { targetId });
+        } else if (targetType === 'Comment') {
+          await session.run(`MATCH (c:Comment {id: $targetId}) DETACH DELETE c`, { targetId });
+        }
+      }
+    }
+
+    return true;
+  } finally {
+    await session.close();
+  }
+};
+
+module.exports = { getStats, getUsers, banUser, deleteUser, getJobs, deleteJob, getPosts, deletePost, getReports, resolveReport };

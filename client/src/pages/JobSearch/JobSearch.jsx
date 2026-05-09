@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { getJobs, applyToJob } from '../../services/jobService';
+import { getJobs, getJobById, applyToJob, saveJob, unsaveJob } from '../../services/jobService';
 import AppHeader from '../../components/AppHeader/AppHeader';
 
 // ============================
@@ -227,6 +227,33 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
 // ============================
 // JOB CARD COMPONENT
 // ============================
+const timeAgo = (dateVal) => {
+  if (!dateVal) return '';
+  // Neo4j integers are serialized as { low, high } — unwrap if needed
+  const n = (v) => (v && typeof v === 'object' && 'low' in v ? v.low : v);
+  let date;
+  if (typeof dateVal === 'string') {
+    date = new Date(dateVal);
+  } else if (typeof dateVal === 'object' && dateVal.year !== undefined) {
+    const y = n(dateVal.year);
+    const mo = String(n(dateVal.month)).padStart(2, '0');
+    const d = String(n(dateVal.day)).padStart(2, '0');
+    const h = String(n(dateVal.hour) || 0).padStart(2, '0');
+    const mi = String(n(dateVal.minute) || 0).padStart(2, '0');
+    const s = String(n(dateVal.second) || 0).padStart(2, '0');
+    date = new Date(`${y}-${mo}-${d}T${h}:${mi}:${s}Z`);
+  } else {
+    return '';
+  }
+  if (isNaN(date)) return '';
+  const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (diff < 3600) return `${Math.max(1, Math.floor(diff / 60))} phút trước`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+  if (diff < 2592000) return `${Math.floor(diff / 86400)} ngày trước`;
+  if (diff < 31536000) return `${Math.floor(diff / 2592000)} tháng trước`;
+  return `${Math.floor(diff / 31536000)} năm trước`;
+};
+
 const JobCard = ({ job, onClick }) => {
   // Deterministic random image index based on jobId string
   const imgIdx = job.jobId ? job.jobId.charCodeAt(job.jobId.length - 1) % 5 : 0;
@@ -293,7 +320,7 @@ const JobCard = ({ job, onClick }) => {
             {job.salaryMin ? `$${job.salaryMin/1000}k` : 'Negotiable'}
             {job.salaryMin && job.salaryMax ? ` - $${job.salaryMax/1000}k` : ''}
           </span>
-          <span className="text-[#a0aec0] text-[0.6rem] font-bold uppercase tracking-widest">New</span>
+          <span className="text-[#a0aec0] text-[0.6rem] font-bold uppercase tracking-widest">{timeAgo(job.postedAt)}</span>
         </div>
       </div>
     </div>
@@ -310,6 +337,10 @@ const JobSearch = () => {
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const [savedJobIds, setSavedJobIds] = useState(new Set());
+  const [savingJobId, setSavingJobId] = useState(null);
+  const [page, setPage] = useState(1);
+  const JOBS_PER_PAGE = 12;
 
   // Search & Filter States
   const [keyword, setKeyword] = useState(searchParams.get('title') || '');
@@ -348,6 +379,7 @@ const JobSearch = () => {
 
       const data = await getJobs(filters);
       setJobs(data || []);
+      setPage(1);
 
       // Auto-select job if jobId is in URL
       const urlJobId = searchParams.get('jobId');
@@ -402,6 +434,32 @@ const JobSearch = () => {
     setShowApplyModal(true);
   };
 
+  const handleSaveToggle = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Vui lòng đăng nhập để lưu công việc.');
+      navigate('/login');
+      return;
+    }
+    if (!selectedJob || savingJobId === selectedJob.jobId) return;
+    const jobId = selectedJob.jobId;
+    const alreadySaved = savedJobIds.has(jobId);
+    setSavingJobId(jobId);
+    try {
+      if (alreadySaved) {
+        await unsaveJob(jobId, token);
+        setSavedJobIds(prev => { const next = new Set(prev); next.delete(jobId); return next; });
+      } else {
+        await saveJob(jobId, token);
+        setSavedJobIds(prev => new Set([...prev, jobId]));
+      }
+    } catch (err) {
+      console.error('Save toggle error:', err);
+    } finally {
+      setSavingJobId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FEF9F3] selection:bg-[#4153b4]/20" style={{
       backgroundImage: `radial-gradient(circle at 10% 20%, rgba(207, 229, 255, 0.4) 0%, transparent 40%),
@@ -438,7 +496,19 @@ const JobSearch = () => {
               {jobs.map(job => (
                 <div 
                   key={job.jobId} 
-                  onClick={() => setSelectedJob(job)}
+                  onClick={async () => {
+                    setSelectedJob(job);
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                      try {
+                        const detail = await getJobById(job.jobId);
+                        setSelectedJob(detail);
+                        if (detail.isSaved) {
+                          setSavedJobIds(prev => new Set([...prev, detail.jobId]));
+                        }
+                      } catch (_) {}
+                    }
+                  }}
                   className={`p-4 rounded-2xl cursor-pointer border transition-all duration-300 flex items-center gap-4 ${selectedJob.jobId === job.jobId ? 'border-[#4153b4] bg-white shadow-md scale-[1.02] z-10' : 'border-transparent bg-white/50 hover:bg-white hover:border-[#ece7e2]'}`}
                 >
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${selectedJob.jobId === job.jobId ? 'bg-[#4153b4]/10' : 'bg-white shadow-sm'}`}>
@@ -518,8 +588,19 @@ const JobSearch = () => {
                     Nộp đơn ứng tuyển
                   </button>
                 )}
-                <button className="px-6 py-3 bg-[#f8f3ed] text-[#4153b4] rounded-full font-bold text-sm tracking-wider hover:bg-[#ece7e2] transition-colors">
-                  Lưu lại
+                <button
+                  onClick={handleSaveToggle}
+                  disabled={savingJobId === selectedJob.jobId}
+                  className={`px-6 py-3 rounded-full font-bold text-sm tracking-wider transition-colors flex items-center gap-2 ${
+                    savedJobIds.has(selectedJob.jobId)
+                      ? 'bg-[#4153b4] text-white hover:bg-[#293d9d]'
+                      : 'bg-[#f8f3ed] text-[#4153b4] hover:bg-[#ece7e2]'
+                  } disabled:opacity-60 disabled:cursor-not-allowed`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill={savedJobIds.has(selectedJob.jobId) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  {savedJobIds.has(selectedJob.jobId) ? 'Đã lưu' : 'Lưu lại'}
                 </button>
               </div>
               
@@ -748,20 +829,67 @@ const JobSearch = () => {
                       </div>
                       <h3 className="text-xl font-bold text-[#1d1b18] mb-2">Không tìm thấy công việc phù hợp</h3>
                       <p className="text-sm text-[#454652]">Thử thay đổi từ khóa hoặc bộ lọc để có kết quả tốt hơn.</p>
-                      <button 
-                        onClick={clearFilters}
-                        className="mt-6 text-sm font-bold text-[#4153b4] hover:underline"
-                      >
+                      <button onClick={clearFilters} className="mt-6 text-sm font-bold text-[#4153b4] hover:underline">
                         Xóa tất cả bộ lọc
                       </button>
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                      {jobs.map(job => (
-                        <JobCard key={job.jobId} job={job} onClick={setSelectedJob} />
-                      ))}
-                    </div>
-                )}
+                ) : (() => {
+                    const totalPages = Math.ceil(jobs.length / JOBS_PER_PAGE);
+                    const paginatedJobs = jobs.slice((page - 1) * JOBS_PER_PAGE, page * JOBS_PER_PAGE);
+                    return (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                          {paginatedJobs.map(job => (
+                            <JobCard key={job.jobId} job={job} onClick={setSelectedJob} />
+                          ))}
+                        </div>
+
+                        {totalPages > 1 && (
+                          <div className="flex items-center justify-center gap-2 mt-12">
+                            <button
+                              onClick={() => { setPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                              disabled={page === 1}
+                              className="w-10 h-10 flex items-center justify-center rounded-xl border border-[#ece7e2] bg-white text-[#454652] hover:border-[#4153b4] hover:text-[#4153b4] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                              </svg>
+                            </button>
+
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => {
+                              if (totalPages > 7 && Math.abs(p - page) > 2 && p !== 1 && p !== totalPages) {
+                                if (p === 2 || p === totalPages - 1) return <span key={p} className="w-10 h-10 flex items-center justify-center text-[#a0aec0] text-sm">···</span>;
+                                return null;
+                              }
+                              return (
+                                <button
+                                  key={p}
+                                  onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                  className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                                    p === page
+                                      ? 'bg-[#4153b4] text-white shadow-lg shadow-[#4153b4]/20'
+                                      : 'border border-[#ece7e2] bg-white text-[#454652] hover:border-[#4153b4] hover:text-[#4153b4]'
+                                  }`}
+                                >
+                                  {p}
+                                </button>
+                              );
+                            })}
+
+                            <button
+                              onClick={() => { setPage(p => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                              disabled={page === totalPages}
+                              className="w-10 h-10 flex items-center justify-center rounded-xl border border-[#ece7e2] bg-white text-[#454652] hover:border-[#4153b4] hover:text-[#4153b4] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    );
+                })()}
               </div>
             </div>
           </>

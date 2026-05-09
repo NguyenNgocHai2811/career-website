@@ -198,9 +198,77 @@ const hasApplied = async (userId, jobId) => {
   }
 };
 
+const saveJob = async (userId, jobId) => {
+  const session = driver.session();
+  try {
+    await session.run(
+      `MATCH (u:User {userId: $userId}), (j:Job {jobId: $jobId})
+       MERGE (u)-[r:SAVED_JOB]->(j)
+       ON CREATE SET r.savedAt = datetime()
+       RETURN r`,
+      { userId, jobId }
+    );
+    return true;
+  } finally {
+    await session.close();
+  }
+};
+
+const unsaveJob = async (userId, jobId) => {
+  const session = driver.session();
+  try {
+    await session.run(
+      `MATCH (u:User {userId: $userId})-[r:SAVED_JOB]->(j:Job {jobId: $jobId})
+       DELETE r`,
+      { userId, jobId }
+    );
+    return true;
+  } finally {
+    await session.close();
+  }
+};
+
+const getSavedJobs = async (userId) => {
+  const session = driver.session();
+  try {
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId})-[r:SAVED_JOB]->(j:Job)-[:BELONGS_TO]->(c:Company)
+       RETURN j, c, r.savedAt AS savedAt
+       ORDER BY r.savedAt DESC`,
+      { userId }
+    );
+    return result.records.map(record => ({
+      ...record.get('j').properties,
+      company: record.get('c').properties,
+      savedAt: record.get('savedAt'),
+      isSaved: true,
+    }));
+  } finally {
+    await session.close();
+  }
+};
+
+const isSaved = async (userId, jobId) => {
+  const session = driver.session();
+  try {
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId})-[r:SAVED_JOB]->(j:Job {jobId: $jobId})
+       RETURN r`,
+      { userId, jobId }
+    );
+    return result.records.length > 0;
+  } finally {
+    await session.close();
+  }
+};
+
 module.exports = {
   getAllJobs,
   getJobById,
   applyToJob,
   hasApplied,
+  saveJob,
+  unsaveJob,
+  getSavedJobs,
+  isSaved,
 };

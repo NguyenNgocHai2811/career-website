@@ -110,6 +110,38 @@ export const updateApplicationStatus = async (token, { applicantId, jobId, statu
   return result;
 };
 
+export const updateJob = async (token, jobId, data) => {
+  const response = await fetch(`${API_URL}/jobs/${jobId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to update job');
+  return result.data;
+};
+
+export const setJobStatus = async (token, jobId, status) => {
+  const response = await fetch(`${API_URL}/jobs/${jobId}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ status }),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to update job status');
+  return result.data;
+};
+
+export const deleteJob = async (token, jobId) => {
+  const response = await fetch(`${API_URL}/jobs/${jobId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to delete job');
+  return result;
+};
+
 export const getApplicantResumeDownloadUrl = async (token, { applicantId, jobId }) => {
   const response = await fetch(`${API_URL}/applications/${jobId}/${applicantId}/resume`, {
     headers: { Authorization: `Bearer ${token}` },

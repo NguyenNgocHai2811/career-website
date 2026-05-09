@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import NotificationBell from '../NotificationBell/NotificationBell';
 
 /**
@@ -8,6 +8,7 @@ import NotificationBell from '../NotificationBell/NotificationBell';
  */
 const AppHeader = ({ activeTab = null }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -54,7 +55,22 @@ const AppHeader = ({ activeTab = null }) => {
   useEffect(() => {
     setMobileMenuOpen(false);
     setDropdownOpen(false);
-  }, [activeTab]);
+  }, [activeTab, location.pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, []);
 
   const isLoggedIn = !!localStorage.getItem('token');
 
@@ -128,7 +144,7 @@ const AppHeader = ({ activeTab = null }) => {
                 <NotificationBell />
               </div>
 
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative hidden md:block" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(prev => !prev)}
                   className="flex items-center gap-2 cursor-pointer group"
@@ -199,7 +215,9 @@ const AppHeader = ({ activeTab = null }) => {
 
           <button 
             onClick={() => setMobileMenuOpen(true)}
-            className="md:hidden flex items-center justify-center size-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-slate-600 dark:text-slate-300"
+            className="md:hidden flex items-center justify-center size-10 rounded-xl border border-primary/10 bg-primary/10 text-primary shadow-sm"
+            aria-label="Open navigation menu"
+            aria-expanded={mobileMenuOpen}
           >
             <span className="material-symbols-outlined">menu</span>
           </button>
@@ -207,24 +225,32 @@ const AppHeader = ({ activeTab = null }) => {
       </div>
 
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[60] md:hidden">
+        <div className="fixed inset-0 z-[1000] md:hidden isolate">
           <div 
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
+            className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm animate-fade-in"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="absolute right-0 top-0 h-full w-[280px] bg-white dark:bg-[#1e293b] shadow-2xl animate-slide-in-right flex flex-col">
-            <div className="p-5 flex items-center justify-between border-b border-gray-100 dark:border-gray-700">
-              <h3 className="font-bold text-slate-900 dark:text-white">Menu</h3>
+          <div className="fixed right-0 top-0 bottom-0 w-[88vw] max-w-[360px] bg-white dark:bg-[#1e293b] shadow-2xl animate-slide-in-right flex flex-col overflow-hidden">
+            <div className="p-5 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-[#1e293b]">
+              <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 no-underline">
+                <div className="flex items-center justify-center size-9 rounded-xl bg-primary/10 text-primary">
+                  <span className="material-symbols-outlined">diamond</span>
+                </div>
+                <h3 className="font-bold text-slate-900 dark:text-white">
+                  Korra<span className="font-light text-primary">Careers</span>
+                </h3>
+              </Link>
               <button onClick={() => setMobileMenuOpen(false)} className="size-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-slate-500">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
             
-            <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+            <nav className="shrink-0 p-4 space-y-2 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-[#1e293b]">
               {navLinks.map(link => (
                 <Link
                   key={link.key}
                   to={link.to}
+                  onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-4 px-4 py-3 rounded-xl font-semibold no-underline transition-all
                     ${activeTab === link.key
                       ? 'bg-primary/10 text-primary'
@@ -236,14 +262,58 @@ const AppHeader = ({ activeTab = null }) => {
                      link.key === 'jobs' ? 'work' : 
                      link.key === 'network' ? 'group' : 
                      link.key === 'messages' ? 'chat' : 
-                     link.key === 'career-ai' ? 'auto_awesome' : 'home'}
+                     link.key === 'career-ai' ? 'auto_awesome' :
+                     link.key === 'dashboard' ? 'dashboard' : 'home'}
                   </span>
                   {link.label}
                 </Link>
               ))}
             </nav>
 
-            <div className="p-5 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+            <div className="flex-1 overflow-y-auto p-5 bg-gray-50 dark:bg-gray-900">
+              {isLoggedIn ? (
+                <>
+                  <div className="mb-3 flex items-center gap-3 rounded-xl bg-white dark:bg-gray-900 p-3 shadow-sm">
+                    <div className="size-10 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center shrink-0">
+                      {user.avatar ? (
+                        <img alt="Avatar" className="w-full h-full object-cover" src={user.avatar} />
+                      ) : (
+                        <span className="material-symbols-outlined text-gray-500">{user.isCompany ? 'domain' : 'person'}</span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm text-slate-900 dark:text-white truncate">{user.fullName}</p>
+                      <p className="text-xs text-slate-500 truncate">{user.role}</p>
+                    </div>
+                  </div>
+
+                  <div className="mb-4 rounded-xl bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+                    <Link to={user.isCompany ? `/company/${user.companyId}` : `/profile/${user.userId}`} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors no-underline">
+                      <span className="material-symbols-outlined text-[20px] text-slate-400">{user.isCompany ? 'domain' : 'person'}</span>
+                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{user.isCompany ? 'View Brand Page' : 'View Profile'}</span>
+                    </Link>
+                    {user.role && user.role.toUpperCase() === 'RECRUITER' && (
+                      <Link to="/recruiter" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors no-underline">
+                        <span className="material-symbols-outlined text-[20px] text-slate-400">dashboard</span>
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Dashboard</span>
+                      </Link>
+                    )}
+                    <button className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full text-left">
+                      <span className="material-symbols-outlined text-[20px] text-slate-400">settings</span>
+                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Settings</span>
+                    </button>
+                    <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full text-left">
+                      <span className="material-symbols-outlined text-[20px] text-slate-400">logout</span>
+                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Sign Out</span>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="mb-4 grid grid-cols-2 gap-2">
+                  <Link to="/login" className="flex items-center justify-center rounded-xl h-10 bg-white dark:bg-gray-900 text-sm font-bold text-slate-700 dark:text-slate-200 no-underline shadow-sm">Sign In</Link>
+                  <Link to="/register" className="flex items-center justify-center rounded-xl h-10 bg-primary text-sm font-bold text-white no-underline shadow-sm">Sign Up</Link>
+                </div>
+              )}
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Quick Search</p>
               <div className="relative flex items-center mb-4">
                 <span className="material-symbols-outlined absolute left-3 text-slate-400 text-[18px]">search</span>

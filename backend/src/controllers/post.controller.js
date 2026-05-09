@@ -107,6 +107,44 @@ const getComments = async (req, res) => {
   }
 };
 
+const updatePost = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+    const { content, privacy } = req.body;
+    const updated = await postService.updatePost(userId, id, { content, privacy });
+    res.status(200).json({ message: 'Post updated', post: updated });
+  } catch (error) {
+    const status = error.message.includes('không tồn tại') ? 404 : 400;
+    res.status(status).json({ error: error.message });
+  }
+};
+
+const deletePost = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+    await postService.deletePost(userId, id);
+    res.status(200).json({ message: 'Post deleted' });
+  } catch (error) {
+    const status = error.message.includes('không tồn tại') ? 404 : 400;
+    res.status(status).json({ error: error.message });
+  }
+};
+
+const reportPost = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+    const { reason } = req.body;
+    if (!reason) return res.status(400).json({ error: 'Vui lòng chọn lý do báo cáo' });
+    const result = await postService.reportPost(userId, id, reason);
+    res.status(201).json({ message: 'Báo cáo đã được ghi nhận', data: result });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createPost,
   getPosts,
@@ -114,5 +152,8 @@ module.exports = {
   addReaction,
   removeReaction,
   addComment,
-  getComments
+  getComments,
+  updatePost,
+  deletePost,
+  reportPost,
 };

@@ -43,6 +43,28 @@ const getComments = async (postId, page, limit) => {
   return await postRepository.getComments(postId, page, limit);
 };
 
+const updatePost = async (userId, postId, { content, privacy }) => {
+  if (!content?.trim()) throw new Error('Nội dung bài viết không được để trống');
+  const updated = await postRepository.updatePost(userId, postId, { content: content.trim(), privacy: privacy || 'Public' });
+  if (!updated) throw new Error('Bài viết không tồn tại hoặc bạn không có quyền chỉnh sửa');
+  return updated;
+};
+
+const deletePost = async (userId, postId) => {
+  const deleted = await postRepository.deletePost(userId, postId);
+  if (!deleted) throw new Error('Bài viết không tồn tại hoặc bạn không có quyền xóa');
+  return true;
+};
+
+const VALID_REASONS = ['Spam', 'Thông tin sai lệch', 'Ngôn từ thù địch', 'Nội dung không phù hợp', 'Quấy rối', 'Khác'];
+
+const reportPost = async (userId, postId, reason) => {
+  if (!VALID_REASONS.includes(reason)) throw new Error('Lý do không hợp lệ');
+  const result = await postRepository.reportPost(userId, postId, reason);
+  if (!result) throw new Error('Bài viết không tồn tại');
+  return result;
+};
+
 module.exports = {
   createPost,
   getPosts,
@@ -50,5 +72,8 @@ module.exports = {
   addReaction,
   removeReaction,
   addComment,
-  getComments
+  getComments,
+  updatePost,
+  deletePost,
+  reportPost,
 };

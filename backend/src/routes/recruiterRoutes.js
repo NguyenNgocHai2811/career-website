@@ -25,6 +25,15 @@ router.post('/companies/:companyId/logo', upload.single('logo'), recruiterContro
 // Post a new job
 router.post('/jobs', recruiterController.postJob);
 
+// Update a job
+router.put('/jobs/:jobId', recruiterController.updateJob);
+
+// Set job status (ACTIVE | CLOSED)
+router.patch('/jobs/:jobId/status', recruiterController.setJobStatus);
+
+// Delete a job
+router.delete('/jobs/:jobId', recruiterController.deleteJob);
+
 // Get jobs posted by this recruiter (with applicant count)
 router.get('/my-jobs', recruiterController.getMyJobs);
 

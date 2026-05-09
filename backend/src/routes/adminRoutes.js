@@ -12,4 +12,8 @@ router.delete('/jobs/:jobId', verifyAdmin, adminController.deleteJob);
 router.get('/posts', verifyAdmin, adminController.getPosts);
 router.delete('/posts/:postId', verifyAdmin, adminController.deletePost);
 
+// Report queue
+router.get('/reports', verifyAdmin, adminController.getReports);
+router.patch('/reports/:reportId/resolve', verifyAdmin, adminController.resolveReport);
+
 module.exports = router;

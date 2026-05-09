@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getDashboardMetrics, getMyCompanies, postJob, getApplicants, getMyJobs, updateApplicationStatus, createCompany, updateCompany, uploadCompanyLogo, getApplicantResumeDownloadUrl } from '../../services/recruiterService';
+import { getDashboardMetrics, getMyCompanies, postJob, getApplicants, getMyJobs, updateApplicationStatus, createCompany, updateCompany, uploadCompanyLogo, getApplicantResumeDownloadUrl, updateJob, setJobStatus, deleteJob } from '../../services/recruiterService';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -235,13 +235,17 @@ const SideNav = ({ activeTab, setActiveTab, selectedCompany, mobileMenuOpen, set
         <nav className="flex-1">
           {[
             { id: 'dashboard', icon: 'account_tree', label: 'Pipeline' },
+            { id: 'post_job', icon: 'add_business', label: 'Post Job' },
             { id: 'my_jobs', icon: 'work', label: 'My Jobs' },
             { id: 'applicants', icon: 'groups', label: 'Applicants' },
             { id: 'company_profile', icon: 'domain', label: 'Company Profile' },
           ].map(item => (
             <button 
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                setActiveTab(item.id);
+                setMobileMenuOpen(false);
+              }}
               className={`w-full flex items-center gap-3 px-6 py-4 transition-all duration-200 ${activeTab === item.id ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
             >
               <span className="material-symbols-outlined">{item.icon}</span>
@@ -597,6 +601,7 @@ const StatusDropdown = ({ currentStatus, onChangeStatus }) => {
 };
 
 const ApplicantList = ({ selectedCompany }) => {
+  const navigate = useNavigate();
   const [applicants, setApplicants] = useState([]);
   const [filterMode, setFilterMode] = useState('All');
   const [search, setSearch] = useState('');
@@ -717,7 +722,22 @@ const ApplicantList = ({ selectedCompany }) => {
                     </div>
                     <div className="flex items-center gap-2 self-end sm:self-auto">
                       <StatusDropdown currentStatus={app.status || 'PENDING'} onChangeStatus={(s) => handleStatusChange(app, s)} />
-                      <button className="size-10 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-primary hover:bg-primary/5 transition-all">
+                      <button
+                        onClick={() =>
+                          navigate('/messages', {
+                            state: {
+                              openChatUser: {
+                                id: app.id,
+                                fullName: app.fullName,
+                                avatarUrl: app.avatarUrl,
+                                headline: app.currentRole || '',
+                              },
+                            },
+                          })
+                        }
+                        className="size-10 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-primary hover:bg-primary/5 transition-all"
+                        title="Nhắn tin ứng viên"
+                      >
                         <span className="material-symbols-outlined text-[20px]">chat</span>
                       </button>
                     </div>
@@ -765,38 +785,151 @@ const ApplicantList = ({ selectedCompany }) => {
   );
 };
 
+const EMPTY_EDIT_FORM = { title: '', employmentType: 'Full-time', location: '', salaryMin: '', salaryMax: '', description: '' };
+
 const MyJobsList = ({ setActiveTab, selectedCompany }) => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [menuJobId, setMenuJobId] = useState(null);
+  const [editingJob, setEditingJob] = useState(null); // job object being edited
+  const [editForm, setEditForm] = useState(EMPTY_EDIT_FORM);
+  const [saving, setSaving] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null); // jobId being acted on
 
-  useEffect(() => {
-    const fetch_ = async () => {
-      const token = localStorage.getItem('token');
-      if (token) { 
-        try { 
-          const allJobs = await getMyJobs(token); 
-          const filteredJobs = selectedCompany 
-            ? allJobs.filter(j => j.company?.companyId === selectedCompany.companyId)
-            : allJobs;
-          setJobs(filteredJobs);
-        } catch (e) { console.error(e); } 
-      }
-      setLoading(false);
-    };
-    fetch_();
-  }, [selectedCompany]);
+  const loadJobs = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const allJobs = await getMyJobs(token);
+      const filtered = selectedCompany ? allJobs.filter(j => j.company?.companyId === selectedCompany.companyId) : allJobs;
+      setJobs(filtered);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadJobs(); }, [selectedCompany]);
+
+  const openEdit = (job) => {
+    setEditingJob(job);
+    setEditForm({
+      title: job.title || '',
+      employmentType: job.employmentType || 'Full-time',
+      location: job.location || '',
+      salaryMin: job.salaryMin || '',
+      salaryMax: job.salaryMax || '',
+      description: job.description || '',
+    });
+    setMenuJobId(null);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    setSaving(true);
+    try {
+      const updated = await updateJob(token, editingJob.jobId, editForm);
+      setJobs(prev => prev.map(j => j.jobId === editingJob.jobId ? { ...j, ...updated } : j));
+      setEditingJob(null);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleStatus = async (job) => {
+    const token = localStorage.getItem('token');
+    const newStatus = job.status === 'ACTIVE' ? 'CLOSED' : 'ACTIVE';
+    setActionLoading(job.jobId);
+    setMenuJobId(null);
+    try {
+      const updated = await setJobStatus(token, job.jobId, newStatus);
+      setJobs(prev => prev.map(j => j.jobId === job.jobId ? { ...j, ...updated } : j));
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async (job) => {
+    if (!window.confirm(`Xóa vị trí "${job.title}"? Tất cả đơn ứng tuyển liên quan cũng sẽ bị xóa.`)) return;
+    const token = localStorage.getItem('token');
+    setActionLoading(job.jobId);
+    setMenuJobId(null);
+    try {
+      await deleteJob(token, job.jobId);
+      setJobs(prev => prev.filter(j => j.jobId !== job.jobId));
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   return (
-    <div className="animate-fade-in-up max-w-5xl mx-auto py-4 md:py-8">
+    <div className="animate-fade-in-up max-w-5xl mx-auto py-4 md:py-8" onClick={() => setMenuJobId(null)}>
+      {/* Edit Modal */}
+      {editingJob && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={e => e.stopPropagation()}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setEditingJob(null)} />
+          <div className="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-[#1d1b18] dark:text-white">Chỉnh sửa tin tuyển dụng</h3>
+              <button onClick={() => setEditingJob(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="flex flex-col gap-5">
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tên vị trí *</span>
+                <input required type="text" value={editForm.title} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 h-11 px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20" />
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Loại hình</span>
+                  <select value={editForm.employmentType} onChange={e => setEditForm(f => ({ ...f, employmentType: e.target.value }))} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 h-11 px-4 text-sm outline-none">
+                    <option>Full-time</option>
+                    <option>Part-time</option>
+                    <option>Contract</option>
+                    <option>Remote</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Địa điểm</span>
+                  <input type="text" value={editForm.location} onChange={e => setEditForm(f => ({ ...f, location: e.target.value }))} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 h-11 px-4 text-sm outline-none" placeholder="Hà Nội, Remote..." />
+                </label>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Lương (USD)</span>
+                <div className="flex items-center gap-3">
+                  <input type="number" placeholder="Min" value={editForm.salaryMin} onChange={e => setEditForm(f => ({ ...f, salaryMin: e.target.value }))} className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 h-11 px-4 text-sm outline-none" />
+                  <span className="text-gray-300">–</span>
+                  <input type="number" placeholder="Max" value={editForm.salaryMax} onChange={e => setEditForm(f => ({ ...f, salaryMax: e.target.value }))} className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 h-11 px-4 text-sm outline-none" />
+                </div>
+              </div>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Mô tả</span>
+                <textarea rows={5} value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 p-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none" />
+              </label>
+              <div className="flex justify-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <button type="button" onClick={() => setEditingJob(null)} className="px-6 h-10 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Hủy</button>
+                <button type="submit" disabled={saving} className="px-8 h-10 rounded-xl bg-primary text-white text-sm font-bold disabled:opacity-60 flex items-center gap-2 hover:bg-primary/90 transition-colors">
+                  {saving && <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                  Lưu thay đổi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 md:mb-12">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-[#1d1b18] dark:text-white tracking-tight">Active Listings</h1>
           <p className="text-sm text-gray-500 font-medium mt-1">Manage and track your open opportunities.</p>
         </div>
-        <button 
-          onClick={() => setActiveTab('post_job')} 
-          className="w-full sm:w-auto px-8 py-3.5 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all active:scale-95"
-        >
+        <button onClick={() => setActiveTab('post_job')} className="w-full sm:w-auto px-8 py-3.5 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all active:scale-95">
           <span className="material-symbols-outlined text-[20px]">add</span>
           Post New Job
         </button>
@@ -833,31 +966,63 @@ const MyJobsList = ({ setActiveTab, selectedCompany }) => {
                       <p className="text-sm text-gray-500 font-medium">{job.location || 'Remote'}</p>
                     </div>
                   </div>
-                  <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${job.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-gray-100 text-gray-500 border border-gray-200'}`}>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${job.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-gray-100 text-gray-500 border border-gray-200'}`}>
                     {job.status}
-                  </div>
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 mb-8">
+                <div className="grid grid-cols-1 gap-4 mb-8">
                   <div className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 text-center border border-gray-100/50 dark:border-gray-700/50">
                     <p className="text-lg font-bold text-primary">{job.applicantCount}</p>
-                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Total Apps</p>
-                  </div>
-                  <div className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 text-center border border-gray-100/50 dark:border-gray-700/50">
-                    <p className="text-lg font-bold text-indigo-500">12</p>
-                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">New</p>
-                  </div>
-                  <div className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 text-center border border-gray-100/50 dark:border-gray-700/50">
-                    <p className="text-lg font-bold text-purple-500">5</p>
-                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Interviews</p>
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Tổng đơn ứng tuyển</p>
                   </div>
                 </div>
 
                 <div className="mt-auto flex items-center justify-between gap-3">
-                  <button onClick={() => setActiveTab('applicants')} className="flex-1 px-4 py-3 bg-primary/5 text-primary rounded-xl font-bold text-xs hover:bg-primary hover:text-white transition-all">View Candidates</button>
-                  <button className="px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-xl text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
-                    <span className="material-symbols-outlined text-[20px]">more_horiz</span>
-                  </button>
+                  <button onClick={() => setActiveTab('applicants')} className="flex-1 px-4 py-3 bg-primary/5 text-primary rounded-xl font-bold text-xs hover:bg-primary hover:text-white transition-all">Xem ứng viên</button>
+
+                  {/* Action menu */}
+                  <div className="relative" onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={() => setMenuJobId(prev => prev === job.jobId ? null : job.jobId)}
+                      disabled={actionLoading === job.jobId}
+                      className="px-4 py-3 border border-gray-100 dark:border-gray-700 rounded-xl text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all disabled:opacity-50"
+                    >
+                      {actionLoading === job.jobId
+                        ? <div className="size-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                        : <span className="material-symbols-outlined text-[20px]">more_horiz</span>
+                      }
+                    </button>
+
+                    {menuJobId === job.jobId && (
+                      <div className="absolute right-0 bottom-full mb-2 w-48 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 py-1.5 z-50 animate-fade-in-up">
+                        <button
+                          onClick={() => openEdit(job)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[18px] text-primary">edit</span>
+                          Chỉnh sửa
+                        </button>
+                        <button
+                          onClick={() => handleToggleStatus(job)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[18px] text-amber-500">
+                            {job.status === 'ACTIVE' ? 'pause_circle' : 'play_circle'}
+                          </span>
+                          {job.status === 'ACTIVE' ? 'Đóng tin' : 'Mở lại'}
+                        </button>
+                        <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                        <button
+                          onClick={() => handleDelete(job)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">delete</span>
+                          Xóa tin
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

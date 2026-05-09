@@ -224,6 +224,47 @@ const getApplicantResumeDownloadUrl = async (req, res, next) => {
   }
 };
 
+const updateJob = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { jobId } = req.params;
+    const updated = await recruiterRepository.updateJob(userId, jobId, req.body);
+    if (!updated) return res.status(404).json({ success: false, message: 'Job not found or unauthorized' });
+    res.status(200).json({ success: true, data: updated, message: 'Job updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const setJobStatus = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { jobId } = req.params;
+    const { status } = req.body;
+    const validStatuses = ['ACTIVE', 'CLOSED'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: 'status must be ACTIVE or CLOSED' });
+    }
+    const updated = await recruiterRepository.setJobStatus(userId, jobId, status);
+    if (!updated) return res.status(404).json({ success: false, message: 'Job not found or unauthorized' });
+    res.status(200).json({ success: true, data: updated, message: `Job ${status.toLowerCase()}` });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteJob = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { jobId } = req.params;
+    const deleted = await recruiterRepository.deleteJob(userId, jobId);
+    if (!deleted) return res.status(404).json({ success: false, message: 'Job not found or unauthorized' });
+    res.status(200).json({ success: true, message: 'Job deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getDashboardMetrics,
   getMyCompanies,
@@ -235,4 +276,7 @@ module.exports = {
   updateCompany,
   uploadCompanyLogo,
   getApplicantResumeDownloadUrl,
+  updateJob,
+  setJobStatus,
+  deleteJob,
 };
