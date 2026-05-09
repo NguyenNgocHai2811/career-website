@@ -1,6 +1,7 @@
 const recruiterRepository = require('../repositories/recruiterRepository');
 const notificationRepository = require('../repositories/notificationRepository');
 const { sendSocketNotification } = require('../chatSocket');
+const { cloudinary } = require('../config/cloudinary');
 
 const getDashboardMetrics = async (req, res, next) => {
   try {
@@ -147,6 +148,82 @@ const uploadCompanyLogo = async (req, res, next) => {
   }
 };
 
+const getApplicantResumeDownloadUrl = async (req, res, next) => {
+  try {
+    const recruiterId = req.user.userId;
+    const { applicantId, jobId } = req.params;
+
+    const application = await recruiterRepository.getApplicantResume(recruiterId, applicantId, jobId);
+    if (!application || !application.cvUrl) {
+      return res.status(404).json({ success: false, message: 'Resume not found' });
+    }
+    if ((application.cvType || '').toLowerCase() !== 'file') {
+      return res.status(400).json({ success: false, message: 'This applicant used profile CV, not uploaded file' });
+    }
+
+    let parsed;
+    try {
+      parsed = new URL(application.cvUrl);
+    } catch (err) {
+      return res.status(400).json({ success: false, message: 'Invalid resume URL' });
+    }
+
+    const pathPart = parsed.pathname || '';
+    const marker = '/upload/';
+    const idx = pathPart.indexOf(marker);
+    if (idx === -1) {
+      return res.status(400).json({ success: false, message: 'Unsupported Cloudinary URL format' });
+    }
+
+    let publicIdWithExt = pathPart.slice(idx + marker.length);
+    publicIdWithExt = publicIdWithExt.replace(/^v\d+\//, '');
+    publicIdWithExt = decodeURIComponent(publicIdWithExt).replace(/^\/+/, '');
+
+    if (!publicIdWithExt.toLowerCase().endsWith('.pdf')) {
+      return res.status(400).json({ success: false, message: 'Resume is not a PDF file' });
+    }
+
+    const publicIdWithoutExt = publicIdWithExt.slice(0, -4); // strip ".pdf"
+    const expiresAt = Math.floor(Date.now() / 1000) + 60 * 10; // 10 minutes
+    const options = {
+      resource_type: 'raw',
+      type: 'upload',
+      attachment: true,
+      expires_at: expiresAt,
+    };
+
+    // Cloudinary raw assets can be stored with extension inside public_id,
+    // depending on upload config/history. Try both variants.
+    const candidates = [
+      cloudinary.utils.private_download_url(publicIdWithExt, 'pdf', options),
+      cloudinary.utils.private_download_url(publicIdWithoutExt, 'pdf', options),
+    ];
+
+    const isReachable = async (url) => {
+      try {
+        const r = await fetch(url, { method: 'HEAD' });
+        return r.ok;
+      } catch (e) {
+        return false;
+      }
+    };
+
+    for (const url of candidates) {
+      // eslint-disable-next-line no-await-in-loop
+      if (await isReachable(url)) {
+        return res.status(200).json({ success: true, data: { url } });
+      }
+    }
+
+    return res.status(404).json({
+      success: false,
+      message: 'Resume resource is unavailable on Cloudinary',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getDashboardMetrics,
   getMyCompanies,
@@ -157,4 +234,5 @@ module.exports = {
   createCompany,
   updateCompany,
   uploadCompanyLogo,
+  getApplicantResumeDownloadUrl,
 };

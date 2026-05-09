@@ -30,6 +30,7 @@ router.get('/my-jobs', recruiterController.getMyJobs);
 
 // Get list of applicants (optional ?jobId=xxx filter)
 router.get('/applicants', recruiterController.getApplicants);
+router.get('/applications/:jobId/:applicantId/resume', recruiterController.getApplicantResumeDownloadUrl);
 
 // Update application status (PENDING | SHORTLISTED | INTERVIEWED | REJECTED | HIRED)
 router.patch('/applications/status', recruiterController.updateApplicationStatus);

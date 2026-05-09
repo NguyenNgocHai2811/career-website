@@ -110,3 +110,12 @@ export const updateApplicationStatus = async (token, { applicantId, jobId, statu
   return result;
 };
 
+export const getApplicantResumeDownloadUrl = async (token, { applicantId, jobId }) => {
+  const response = await fetch(`${API_URL}/applications/${jobId}/${applicantId}/resume`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to get resume download URL');
+  return result.data?.url;
+};
+

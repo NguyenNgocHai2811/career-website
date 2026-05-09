@@ -18,10 +18,11 @@ const replyToComment = async (req, res) => {
 
 const getReplies = async (req, res) => {
   try {
+    const userId = req.user.userId;
     const { id } = req.params; // parent commentId
     const { cursor, limit } = req.query;
 
-    const replies = await commentService.getReplies(id, cursor, limit);
+    const replies = await commentService.getReplies(userId, id, cursor, limit);
     res.status(200).json({ replies });
   } catch (error) {
     res.status(500).json({ error: error.message });

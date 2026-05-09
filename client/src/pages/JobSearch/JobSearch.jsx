@@ -123,7 +123,7 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
                   </svg>
                 </div>
                 <h4 className="font-bold text-sm text-[#1d1b18]">Tải lên CV</h4>
-                <p className="text-[0.7rem] text-[#454652] mt-1 leading-snug">Tải file PDF, DOC hoặc DOCX (tối đa 10MB)</p>
+                <p className="text-[0.7rem] text-[#454652] mt-1 leading-snug">Tải file PDF (tối đa 10MB)</p>
               </button>
             </div>
           </div>
@@ -135,7 +135,7 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#bac3ff] rounded-2xl cursor-pointer bg-[#fef9f3] hover:bg-[#f8f3ed] transition-colors">
                 <input
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept=".pdf,application/pdf"
                   className="hidden"
                   onChange={(e) => setCvFile(e.target.files[0])}
                 />
@@ -157,7 +157,7 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                     <p className="text-sm text-[#454652]">Kéo thả hoặc <span className="text-[#4153b4] font-bold">chọn file</span></p>
-                    <p className="text-[0.65rem] text-[#757684] mt-1">PDF, DOC, DOCX — tối đa 10MB</p>
+                    <p className="text-[0.65rem] text-[#757684] mt-1">PDF — tối đa 10MB</p>
                   </div>
                 )}
               </label>

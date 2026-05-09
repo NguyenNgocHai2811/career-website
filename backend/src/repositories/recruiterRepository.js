@@ -161,6 +161,25 @@ const getApplicants = async (userId, jobId = null) => {
   }
 };
 
+const getApplicantResume = async (recruiterId, applicantId, jobId) => {
+  const session = driver.session();
+  try {
+    const query = `
+      MATCH (recruiter:User {userId: $recruiterId})-[:POSTED]->(j:Job {jobId: $jobId})<-[r:APPLIED_TO]-(applicant:User {userId: $applicantId})
+      RETURN r.cvUrl AS cvUrl, r.cvType AS cvType
+      LIMIT 1
+    `;
+    const result = await session.run(query, { recruiterId, applicantId, jobId });
+    if (result.records.length === 0) return null;
+    return {
+      cvUrl: result.records[0].get('cvUrl'),
+      cvType: result.records[0].get('cvType'),
+    };
+  } finally {
+    await session.close();
+  }
+};
+
 const getMyJobs = async (userId) => {
   const session = driver.session();
   try {
@@ -255,6 +274,7 @@ module.exports = {
   getMyCompanies,
   postJob,
   getApplicants,
+  getApplicantResume,
   getMyJobs,
   updateApplicationStatus,
   createCompany,

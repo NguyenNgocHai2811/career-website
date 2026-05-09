@@ -57,24 +57,27 @@ const uploadProfileImage = multer({
 // ===========================
 const cvStorage = new CloudinaryStorage({
   cloudinary,
-  params: (req, file) => ({
-    folder: 'korra/cv',
-    resource_type: 'raw', // raw = non-image/video files (PDF, DOC, etc.)
-    allowed_formats: ['pdf', 'doc', 'docx'],
-    public_id: `${req.user.userId}_cv_${Date.now()}`,
-  }),
+  params: (req) => {
+    const timestamp = Date.now();
+    const safeExt = '.pdf';
+    const fileName = `${req.user.userId}_cv_${timestamp}${safeExt}`;
+
+    return {
+      folder: 'korra/cv',
+      resource_type: 'raw', // raw = non-image/video files (PDF)
+      allowed_formats: ['pdf'],
+      public_id: fileName,
+      filename_override: fileName,
+    };
+  },
 });
 
 const uploadCV = multer({
   storage: cvStorage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
-    const allowed = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    ];
-    allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Only PDF, DOC, DOCX files are allowed for CV uploads.'));
+    const allowed = ['application/pdf'];
+    allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Only PDF files are allowed for CV uploads.'));
   },
 });
 

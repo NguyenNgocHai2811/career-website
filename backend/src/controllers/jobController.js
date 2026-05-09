@@ -57,7 +57,7 @@ const applyToJob = async (req, res, next) => {
       if (!req.file) {
         return res.status(400).json({ success: false, message: 'CV file is required when cvType is "file"' });
       }
-      cvUrl = req.file.path; // Cloudinary URL from multer-storage-cloudinary
+      cvUrl = req.file.secure_url || req.file.path; // Prefer https URL from Cloudinary
     }
 
     const result = await jobRepository.applyToJob(userId, jobId, {

@@ -5,8 +5,8 @@ const replyToComment = async (userId, commentId, content) => {
   return await commentRepository.replyToComment(userId, commentId, content);
 };
 
-const getReplies = async (commentId, cursor, limit) => {
-  return await commentRepository.getReplies(commentId, cursor, limit);
+const getReplies = async (userId, commentId, cursor, limit) => {
+  return await commentRepository.getReplies(userId, commentId, cursor, limit);
 };
 
 const updateComment = async (userId, commentId, content) => {

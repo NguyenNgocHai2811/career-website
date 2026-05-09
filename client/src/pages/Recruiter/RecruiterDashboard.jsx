@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getDashboardMetrics, getMyCompanies, postJob, getApplicants, getMyJobs, updateApplicationStatus, createCompany, updateCompany, uploadCompanyLogo } from '../../services/recruiterService';
+import { getDashboardMetrics, getMyCompanies, postJob, getApplicants, getMyJobs, updateApplicationStatus, createCompany, updateCompany, uploadCompanyLogo, getApplicantResumeDownloadUrl } from '../../services/recruiterService';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -632,6 +632,18 @@ const ApplicantList = ({ selectedCompany }) => {
     } catch (err) { alert(err.message); }
   };
 
+  const handleViewResume = async (app) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const downloadUrl = await getApplicantResumeDownloadUrl(token, { applicantId: app.id, jobId: app.jobId });
+      if (!downloadUrl) throw new Error('Resume URL not available');
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      alert(err.message || 'Unable to open resume');
+    }
+  };
+
   const filtered = applicants
     .filter(a => filterMode === 'All' || (a.status || 'PENDING').toUpperCase() === filterMode)
     .filter(a => !search || a.fullName?.toLowerCase().includes(search.toLowerCase()) || a.jobTitle?.toLowerCase().includes(search.toLowerCase()));
@@ -720,10 +732,10 @@ const ApplicantList = ({ selectedCompany }) => {
 
                   <div className="mt-5 pt-5 border-t border-gray-50 dark:border-gray-800 flex flex-wrap items-center gap-3">
                     {app.cvUrl && (
-                      <a href={app.cvUrl} target="_blank" rel="noreferrer" className="px-4 py-2 bg-slate-900 text-white text-[11px] font-bold rounded-lg hover:bg-slate-800 transition-all flex items-center gap-2">
+                      <button onClick={() => handleViewResume(app)} className="px-4 py-2 bg-slate-900 text-white text-[11px] font-bold rounded-lg hover:bg-slate-800 transition-all flex items-center gap-2">
                         <span className="material-symbols-outlined text-[16px]">description</span>
                         View Resume
-                      </a>
+                      </button>
                     )}
                     {app.cvType === 'profile' && (
                       <a href={`/profile/${app.id}`} target="_blank" rel="noreferrer" className="px-4 py-2 border border-primary/20 bg-primary/5 text-primary text-[11px] font-bold rounded-lg hover:bg-primary/10 transition-all flex items-center gap-2">
