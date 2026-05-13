@@ -41,6 +41,7 @@ class AuthService {
         address: userData.address || null,
         companyName: userData.companyName || null
       };
+      console.log('Dữ liệu chuẩn bị tạo user:', userToCreate);
 
       // 4. Lưu vào Database thông qua Repository layer
       const createdUser = await authRepository.createUser(userToCreate);

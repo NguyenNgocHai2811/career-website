@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
+const JOB_CATEGORIES = ['IT', 'Kế toán', 'Bán hàng', 'Marketing', 'Nhân sự', 'Sản xuất', 'Thiết kế'];
 
 const RecruiterDashboard = () => {
   const location = useLocation();
@@ -428,7 +429,7 @@ const DashboardOverview = ({ setActiveTab, selectedCompany }) => {
 };
 
 const PostJob = ({ setActiveTab, selectedCompany, companies, setCompanies, setSelectedCompany }) => {
-  const [form, setForm] = useState({ title: '', companyId: selectedCompany?.companyId || '', employmentType: 'Full-time', location: '', salaryMin: '', salaryMax: '', description: '' });
+  const [form, setForm] = useState({ title: '', companyId: selectedCompany?.companyId || '', employmentType: 'Full-time', category: '', location: '', salaryMin: '', salaryMax: '', skills: '', description: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   useEffect(() => {
@@ -525,6 +526,23 @@ const PostJob = ({ setActiveTab, selectedCompany, companies, setCompanies, setSe
               <label className="flex flex-col gap-2">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Location</span>
                 <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})} className="w-full rounded-xl dark:bg-gray-900 border border-gray-200 dark:border-gray-700 h-12 px-4 text-sm font-medium outline-none" placeholder="e.g., San Francisco, CA"/>
+              </label>
+
+              <label className="flex flex-col gap-2">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Category</span>
+                <select required value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="w-full rounded-xl dark:bg-gray-900 border border-gray-200 dark:border-gray-700 h-12 px-4 text-sm font-medium outline-none">
+                  <option value="" disabled>Select job category</option>
+                  {JOB_CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+              <label className="flex flex-col gap-2">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Skill Hints (Optional)</span>
+                <input type="text" value={form.skills} onChange={e => setForm({...form, skills: e.target.value})} className="w-full rounded-xl dark:bg-gray-900 border border-gray-200 dark:border-gray-700 h-12 px-4 text-sm font-medium outline-none" placeholder="Auto-detected from JD, or add React, Node.js, SQL"/>
               </label>
 
               <div className="flex flex-col gap-2">
@@ -785,7 +803,7 @@ const ApplicantList = ({ selectedCompany }) => {
   );
 };
 
-const EMPTY_EDIT_FORM = { title: '', employmentType: 'Full-time', location: '', salaryMin: '', salaryMax: '', description: '' };
+const EMPTY_EDIT_FORM = { title: '', employmentType: 'Full-time', category: '', location: '', salaryMin: '', salaryMax: '', skills: '', description: '' };
 
 const MyJobsList = ({ setActiveTab, selectedCompany }) => {
   const [jobs, setJobs] = useState([]);
@@ -814,9 +832,11 @@ const MyJobsList = ({ setActiveTab, selectedCompany }) => {
     setEditForm({
       title: job.title || '',
       employmentType: job.employmentType || 'Full-time',
+      category: job.category || '',
       location: job.location || '',
       salaryMin: job.salaryMin || '',
       salaryMax: job.salaryMax || '',
+      skills: Array.isArray(job.skills) ? job.skills.map(skill => skill.name || skill).filter(Boolean).join(', ') : (job.skills || ''),
       description: job.description || '',
     });
     setMenuJobId(null);
@@ -896,6 +916,15 @@ const MyJobsList = ({ setActiveTab, selectedCompany }) => {
                   </select>
                 </label>
                 <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Ngành nghề</span>
+                  <select value={editForm.category} onChange={e => setEditForm(f => ({ ...f, category: e.target.value }))} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 h-11 px-4 text-sm outline-none">
+                    <option value="">Chọn ngành nghề</option>
+                    {JOB_CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1.5">
                   <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Địa điểm</span>
                   <input type="text" value={editForm.location} onChange={e => setEditForm(f => ({ ...f, location: e.target.value }))} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 h-11 px-4 text-sm outline-none" placeholder="Hà Nội, Remote..." />
                 </label>
@@ -908,6 +937,10 @@ const MyJobsList = ({ setActiveTab, selectedCompany }) => {
                   <input type="number" placeholder="Max" value={editForm.salaryMax} onChange={e => setEditForm(f => ({ ...f, salaryMax: e.target.value }))} className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 h-11 px-4 text-sm outline-none" />
                 </div>
               </div>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Skill Hints (Optional)</span>
+                <input type="text" value={editForm.skills} onChange={e => setEditForm(f => ({ ...f, skills: e.target.value }))} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 h-11 px-4 text-sm outline-none" placeholder="Auto-detected from JD, or add React, Node.js, SQL" />
+              </label>
               <label className="flex flex-col gap-1.5">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Mô tả</span>
                 <textarea rows={5} value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 p-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none" />

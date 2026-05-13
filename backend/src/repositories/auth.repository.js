@@ -29,19 +29,16 @@ class AuthRepository {
           isOnboarded: $isOnboarded,
           createdAt: datetime()
         })
-        WITH u
-        CALL {
-          WITH u
-          WITH u WHERE u.role = 'RECRUITER' AND $companyName IS NOT NULL
-          CREATE (c:Company {
+        FOREACH (_ IN CASE WHEN u.role = 'RECRUITER' AND $companyName IS NOT NULL THEN [1] ELSE [] END |
+          CREATE (u)-[:IS_RECRUITER_FOR {role: 'OWNER'}]->(:Company {
             companyId: randomUUID(),
             name: $companyName,
             createdAt: datetime(),
             updatedAt: datetime()
           })
-          CREATE (u)-[:IS_RECRUITER_FOR {role: 'OWNER'}]->(c)
-          RETURN c
-        }
+        )
+        WITH u
+        OPTIONAL MATCH (u)-[:IS_RECRUITER_FOR]->(c:Company)
         RETURN u {
           .userId,
           .role,
@@ -56,7 +53,6 @@ class AuthRepository {
       `;
 
       const result = await session.executeWrite(tx => tx.run(query, { ...userData, isOnboarded: isOnboardedAtCreation }));
-
       if (result.records.length === 0) {
         return null;
       }
@@ -65,6 +61,9 @@ class AuthRepository {
         ...result.records[0].get('user'),
         activeCompany: result.records[0].get('company')
       };
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
     } finally {
       await session.close();
     }

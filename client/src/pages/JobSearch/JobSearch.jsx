@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { getJobs, getJobById, applyToJob, saveJob, unsaveJob } from '../../services/jobService';
+import { getJobs, getRecommendedJobs, getJobById, applyToJob, saveJob, unsaveJob } from '../../services/jobService';
 import AppHeader from '../../components/AppHeader/AppHeader';
 
 // ============================
@@ -276,6 +276,11 @@ const JobCard = ({ job, onClick }) => {
         <div className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-lg px-2 py-1 text-[0.6rem] font-bold text-[#1d1b18] uppercase tracking-wider">
           {job.employmentType}
         </div>
+        {job.matchScore !== undefined && (
+          <div className="absolute top-3 left-3 bg-[#4153b4] text-white rounded-lg px-2 py-1 text-[0.6rem] font-bold uppercase tracking-wider">
+            {job.matchScore}% match
+          </div>
+        )}
       </div>
 
       <div className="p-6 pt-10 relative flex-1 flex flex-col">
@@ -315,6 +320,16 @@ const JobCard = ({ job, onClick }) => {
           </span>
         </div>
 
+        {job.recommendationReasons?.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-5">
+            {job.recommendationReasons.slice(0, 2).map(reason => (
+              <span key={reason} className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-[0.6rem] font-bold uppercase tracking-wider">
+                {reason}
+              </span>
+            ))}
+          </div>
+        )}
+
         <div className="mt-auto flex items-center justify-between border-t border-gray-50 pt-4">
           <span className="text-[#1d1b18] font-bold text-sm">
             {job.salaryMin ? `$${job.salaryMin/1000}k` : 'Negotiable'}
@@ -340,6 +355,9 @@ const JobSearch = () => {
   const [savedJobIds, setSavedJobIds] = useState(new Set());
   const [savingJobId, setSavingJobId] = useState(null);
   const [page, setPage] = useState(1);
+  const [jobMode, setJobMode] = useState('all');
+  const [recommendationMeta, setRecommendationMeta] = useState(null);
+  const [recommendationError, setRecommendationError] = useState('');
   const JOBS_PER_PAGE = 12;
 
   // Search & Filter States
@@ -353,6 +371,10 @@ const JobSearch = () => {
   const [selectedExperience, setSelectedExperience] = useState([]);
   const [selectedLevels, setSelectedLevels] = useState([]);
   const [dateRange, setDateRange] = useState('');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = user?.role || null;
+  const canApply = userRole === 'CANDIDATE';
+  const isRecommendedMode = jobMode === 'recommended';
 
   // Sync URL params with state
   useEffect(() => {
@@ -362,22 +384,41 @@ const JobSearch = () => {
     if (loc !== null) setLocation(loc);
   }, [searchParams]);
 
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     setLoading(true);
+    setRecommendationError('');
     try {
-      const filters = {};
-      if (keyword) filters.title = keyword;
-      if (location) filters.location = location;
-      if (selectedTypes.length > 0) filters.employmentType = selectedTypes.join(',');
-      
-      // Advanced Filters
-      if (category) filters.category = category;
-      if (salaryRange) filters.salaryRange = salaryRange;
-      if (selectedExperience.length > 0) filters.experience = selectedExperience.join(',');
-      if (selectedLevels.length > 0) filters.level = selectedLevels.join(',');
-      if (dateRange) filters.dateRange = dateRange;
+      let data = [];
 
-      const data = await getJobs(filters);
+      if (isRecommendedMode) {
+        const token = localStorage.getItem('token');
+        if (!token || !canApply) {
+          setRecommendationMeta(null);
+          setJobs([]);
+          setPage(1);
+          return;
+        }
+
+        const result = await getRecommendedJobs(token, { limit: 60 });
+        data = result.data || [];
+        setRecommendationMeta(result.meta || null);
+      } else {
+        const filters = {};
+        if (keyword) filters.title = keyword;
+        if (location) filters.location = location;
+        if (selectedTypes.length > 0) filters.employmentType = selectedTypes.join(',');
+        
+        // Advanced Filters
+        if (category) filters.category = category;
+        if (salaryRange) filters.salaryRange = salaryRange;
+        if (selectedExperience.length > 0) filters.experience = selectedExperience.join(',');
+        if (selectedLevels.length > 0) filters.level = selectedLevels.join(',');
+        if (dateRange) filters.dateRange = dateRange;
+
+        data = await getJobs(filters);
+        setRecommendationMeta(null);
+      }
+
       setJobs(data || []);
       setPage(1);
 
@@ -389,15 +430,18 @@ const JobSearch = () => {
       }
     } catch (error) {
       console.error(error);
+      if (isRecommendedMode) {
+        setRecommendationError(error.message || 'Failed to load recommendations');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [isRecommendedMode, canApply, keyword, location, selectedTypes, category, salaryRange, selectedExperience, selectedLevels, dateRange, searchParams]);
 
   useEffect(() => {
     fetchJobs();
     // We refetch when any sidebar filter or search keyword changes
-  }, [keyword, location, selectedTypes, category, salaryRange, selectedExperience, selectedLevels, dateRange]);
+  }, [fetchJobs]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -429,6 +473,10 @@ const JobSearch = () => {
     if (!token) {
       alert('Vui lòng đăng nhập để nộp đơn ứng tuyển.');
       navigate('/login');
+      return;
+    }
+    if (!canApply) {
+      alert('Chỉ tài khoản ứng viên mới có thể nộp đơn ứng tuyển.');
       return;
     }
     setShowApplyModal(true);
@@ -506,7 +554,9 @@ const JobSearch = () => {
                         if (detail.isSaved) {
                           setSavedJobIds(prev => new Set([...prev, detail.jobId]));
                         }
-                      } catch (_) {}
+                      } catch (error) {
+                        console.error('Failed to load job detail:', error);
+                      }
                     }
                   }}
                   className={`p-4 rounded-2xl cursor-pointer border transition-all duration-300 flex items-center gap-4 ${selectedJob.jobId === job.jobId ? 'border-[#4153b4] bg-white shadow-md scale-[1.02] z-10' : 'border-transparent bg-white/50 hover:bg-white hover:border-[#ece7e2]'}`}
@@ -580,12 +630,19 @@ const JobSearch = () => {
                     </svg>
                     Đã nộp đơn
                   </button>
-                ) : (
+                ) : canApply ? (
                   <button 
                     onClick={handleApplyClick}
                     className="px-6 py-3 bg-[#4153b4] text-white rounded-full font-bold text-sm tracking-wider hover:bg-[#293d9d] transition-colors shadow-lg shadow-[#4153b4]/20"
                   >
                     Nộp đơn ứng tuyển
+                  </button>
+                ) : (
+                  <button
+                    disabled
+                    className="px-6 py-3 bg-[#ece7e2] text-[#757684] rounded-full font-bold text-sm tracking-wider cursor-not-allowed"
+                  >
+                    Chỉ dành cho ứng viên
                   </button>
                 )}
                 <button
@@ -603,6 +660,31 @@ const JobSearch = () => {
                   {savedJobIds.has(selectedJob.jobId) ? 'Đã lưu' : 'Lưu lại'}
                 </button>
               </div>
+
+              {selectedJob.recommendationReasons?.length > 0 && (
+                <div className="mb-8 rounded-2xl border border-[#dee0ff] bg-[#f8f3ed] p-5">
+                  <div className="flex items-center justify-between gap-4 mb-3">
+                    <h3 className="text-lg font-bold text-[#1d1b18]">Why this matches</h3>
+                    {selectedJob.matchScore !== undefined && (
+                      <span className="rounded-full bg-[#4153b4] px-3 py-1 text-xs font-bold text-white">
+                        {selectedJob.matchScore}% match
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedJob.recommendationReasons.map(reason => (
+                      <span key={reason} className="px-3 py-1.5 bg-white text-[#4153b4] rounded-lg text-xs font-bold">
+                        {reason}
+                      </span>
+                    ))}
+                  </div>
+                  {selectedJob.matchedSkills?.length > 0 && (
+                    <p className="mt-3 text-xs text-[#454652]">
+                      Matched skills: {selectedJob.matchedSkills.join(', ')}
+                    </p>
+                  )}
+                </div>
+              )}
               
               <h3 className="text-xl font-bold mb-4 text-[#1d1b18]">Mô tả công việc</h3>
               <p className="text-[#454652] leading-relaxed mb-6 whitespace-pre-line">{selectedJob.description || 'Chưa có mô tả chi tiết cho vị trí này.'}</p>
@@ -662,6 +744,30 @@ const JobSearch = () => {
                   Tìm kiếm
                 </button>
               </form>
+              {canApply && (
+                <div className="mt-6 inline-flex rounded-2xl border border-[#ece7e2] bg-white p-1 shadow-sm">
+                  {[
+                    { value: 'all', label: 'Tat ca viec lam' },
+                    { value: 'recommended', label: 'Goi y cho ban' },
+                  ].map(mode => (
+                    <button
+                      key={mode.value}
+                      type="button"
+                      onClick={() => {
+                        setSelectedJob(null);
+                        setJobMode(mode.value);
+                      }}
+                      className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                        jobMode === mode.value
+                          ? 'bg-[#4153b4] text-white shadow-md shadow-[#4153b4]/20'
+                          : 'text-[#454652] hover:text-[#4153b4] hover:bg-[#f8f3ed]'
+                      }`}
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </section>
             
             <div className="flex flex-col lg:flex-row gap-12">
@@ -807,10 +913,24 @@ const JobSearch = () => {
                 <div className="flex items-center justify-between mb-8">
                   <span className="text-sm text-[#454652]">
                     {loading ? 'Đang tìm kiếm...' : (
-                      <>Tìm thấy <span className="font-bold text-[#1d1b18]">{jobs.length}</span> vị trí phù hợp</>
+                      isRecommendedMode ? (
+                        <>Goi y <span className="font-bold text-[#1d1b18]">{jobs.length}</span> viec lam theo skills va location cua ban</>
+                      ) : (
+                        <>Tìm thấy <span className="font-bold text-[#1d1b18]">{jobs.length}</span> vị trí phù hợp</>
+                      )
                     )}
                   </span>
+                  {isRecommendedMode && recommendationMeta?.candidateSkillCount > 0 && (
+                    <span className="text-xs font-bold text-[#4153b4] bg-[#dee0ff] px-3 py-1.5 rounded-full">
+                      {recommendationMeta.candidateSkillCount} profile skills
+                    </span>
+                  )}
                 </div>
+                {isRecommendedMode && recommendationError && (
+                  <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                    {recommendationError}
+                  </div>
+                )}
                 
                 {loading ? (
                     <div className="flex justify-center py-20">
@@ -827,11 +947,23 @@ const JobSearch = () => {
                       <div className="w-20 h-20 rounded-full bg-[#f2ede7] flex items-center justify-center mx-auto mb-4">
                         <span className="material-symbols-outlined text-[#bac3ff] text-5xl">search_off</span>
                       </div>
-                      <h3 className="text-xl font-bold text-[#1d1b18] mb-2">Không tìm thấy công việc phù hợp</h3>
-                      <p className="text-sm text-[#454652]">Thử thay đổi từ khóa hoặc bộ lọc để có kết quả tốt hơn.</p>
-                      <button onClick={clearFilters} className="mt-6 text-sm font-bold text-[#4153b4] hover:underline">
-                        Xóa tất cả bộ lọc
-                      </button>
+                      {isRecommendedMode ? (
+                        <>
+                          <h3 className="text-xl font-bold text-[#1d1b18] mb-2">Chua co goi y phu hop</h3>
+                          <p className="text-sm text-[#454652]">Them skills va location vao profile de Neo4j co du lieu goi y tot hon.</p>
+                          <Link to="/profile" className="mt-6 inline-block text-sm font-bold text-[#4153b4] hover:underline">
+                            Cap nhat profile
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <h3 className="text-xl font-bold text-[#1d1b18] mb-2">Không tìm thấy công việc phù hợp</h3>
+                          <p className="text-sm text-[#454652]">Thử thay đổi từ khóa hoặc bộ lọc để có kết quả tốt hơn.</p>
+                          <button onClick={clearFilters} className="mt-6 text-sm font-bold text-[#4153b4] hover:underline">
+                            Xóa tất cả bộ lọc
+                          </button>
+                        </>
+                      )}
                     </div>
                 ) : (() => {
                     const totalPages = Math.ceil(jobs.length / JOBS_PER_PAGE);

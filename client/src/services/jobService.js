@@ -33,6 +33,20 @@ export const getJobById = async (id) => {
   }
 };
 
+export const getRecommendedJobs = async (token, options = {}) => {
+  const params = new URLSearchParams();
+  Object.keys(options).forEach(key => {
+    if (options[key]) params.append(key, options[key]);
+  });
+  const qs = params.toString();
+  const response = await fetch(`${API_URL}/recommended${qs ? `?${qs}` : ''}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to fetch recommended jobs');
+  return result;
+};
+
 /**
  * Apply to a job.
  * @param {string} jobId

@@ -10,6 +10,9 @@ router.get('/', jobController.getJobs);
 // GET /v1/jobs/saved - Get saved jobs for logged-in user (must be before /:id)
 router.get('/saved', authMiddleware.verifyToken, jobController.getSavedJobs);
 
+// GET /v1/jobs/recommended - Get recommended jobs for logged-in candidate (must be before /:id)
+router.get('/recommended', authMiddleware.verifyToken, jobController.getRecommendedJobs);
+
 // GET /v1/jobs/:id - Fetch single job by ID (optional auth to check hasApplied, isSaved)
 router.get('/:id', authMiddleware.verifyTokenOptional, jobController.getJobById);
 

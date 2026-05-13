@@ -57,12 +57,12 @@ app.use(helmet({
 }));
 
 // 🚦 SECURITY: Chặn Spam (100 request/15 phút)
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests, please try again later.',
-});
-app.use('/v1', limiter);
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 100,
+//   message: 'Too many requests, please try again later.',
+// });
+//app.use('/v1', limiter);
 
 // Middleware parse JSON body
 app.use(express.json({ limit: '5mb' }));

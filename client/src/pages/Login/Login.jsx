@@ -38,7 +38,7 @@ function Login() {
         } else if (data.data.user.role === 'RECRUITER') {
           navigate('/recruiter');
         } else {
-          navigate('/feed');
+          navigate('/jobs');
         }
       } else {
         // Handle API errors

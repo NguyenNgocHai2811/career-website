@@ -1,5 +1,52 @@
 const { v4: uuidv4 } = require('uuid');
 const { driver } = require('../config/neo4j');
+const { buildJobMetadataPatch, mergeJobMetadata } = require('../services/jobMetadataExtractor');
+const { extractJobSkills } = require('../services/jobSkillExtractor');
+
+const hasJobSkillsField = (jobData) => (
+  Object.prototype.hasOwnProperty.call(jobData, 'skills')
+  || Object.prototype.hasOwnProperty.call(jobData, 'requiredSkills')
+);
+
+const shouldInferJobSkills = (jobData) => (
+  hasJobSkillsField(jobData)
+  || ['title', 'description', 'requirements', 'benefits', 'category'].some(field =>
+    Object.prototype.hasOwnProperty.call(jobData, field)
+  )
+);
+
+const safelyExtractJobSkills = async (jobData) => {
+  try {
+    return await extractJobSkills(jobData);
+  } catch (error) {
+    console.error('Job skill extraction failed:', error);
+    return [];
+  }
+};
+
+const toNullableInt = (value) => {
+  if (value === undefined || value === null || String(value).trim() === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? parseInt(number, 10) : null;
+};
+
+const syncJobSkills = async (session, jobId, skills) => {
+  await session.run(
+    `MATCH (j:Job {jobId: $jobId})
+     OPTIONAL MATCH (j)-[old:REQUIRES_SKILL]->(:Skill)
+     DELETE old
+     WITH j
+     UNWIND $skills AS skill
+     MERGE (s:Skill {name: skill.name})
+     MERGE (j)-[r:REQUIRES_SKILL]->(s)
+     SET r.weight = skill.weight,
+         r.source = skill.source,
+         r.importance = skill.importance,
+         r.confidence = skill.confidence,
+         r.updatedAt = datetime()`,
+    { jobId, skills }
+  );
+};
 
 const getDashboardMetrics = async (userId) => {
   const session = driver.session();
@@ -75,6 +122,7 @@ const postJob = async (userId, jobData) => {
   const session = driver.session();
   try {
     const jobId = uuidv4();
+    const enrichedJobData = mergeJobMetadata(jobData);
     const query = `
       MATCH (u:User {userId: $userId})-[:IS_RECRUITER_FOR]->(c:Company {companyId: $companyId})
       CREATE (j:Job {
@@ -87,7 +135,11 @@ const postJob = async (userId, jobData) => {
         salaryMax: $salaryMax,
         category: $category,
         experience: $experience,
+        experienceMin: $experienceMin,
+        experienceMax: $experienceMax,
         level: $level,
+        workMode: $workMode,
+        salaryCurrency: $salaryCurrency,
         status: 'ACTIVE',
         postedAt: datetime()
       })
@@ -99,21 +151,33 @@ const postJob = async (userId, jobData) => {
     
     const result = await session.run(query, {
       userId,
-      companyId: jobData.companyId,
+      companyId: enrichedJobData.companyId,
       jobId,
-      title: jobData.title,
-      description: jobData.description || '',
-      employmentType: jobData.employmentType || '',
-      location: jobData.location || '',
-      salaryMin: jobData.salaryMin ? parseInt(jobData.salaryMin) : null,
-      salaryMax: jobData.salaryMax ? parseInt(jobData.salaryMax) : null,
-      category: jobData.category || 'Khác',
-      experience: jobData.experience || 'Không yêu cầu',
-      level: jobData.level || 'Nhân viên',
+      title: enrichedJobData.title,
+      description: enrichedJobData.description || '',
+      employmentType: enrichedJobData.employmentType || '',
+      location: enrichedJobData.location || '',
+      salaryMin: toNullableInt(enrichedJobData.salaryMin),
+      salaryMax: toNullableInt(enrichedJobData.salaryMax),
+      category: enrichedJobData.category || 'Khác',
+      experience: enrichedJobData.experience || 'Không yêu cầu',
+      experienceMin: toNullableInt(enrichedJobData.experienceMin),
+      experienceMax: toNullableInt(enrichedJobData.experienceMax),
+      level: enrichedJobData.level || 'Nhân viên',
+      workMode: enrichedJobData.workMode || '',
+      salaryCurrency: enrichedJobData.salaryCurrency || '',
     });
 
     if (result.records.length === 0) return null;
-    return result.records[0].get('j').properties;
+    const inferredSkills = await safelyExtractJobSkills(enrichedJobData);
+    if (inferredSkills.length > 0) {
+      await syncJobSkills(session, jobId, inferredSkills);
+    }
+
+    return {
+      ...result.records[0].get('j').properties,
+      skills: inferredSkills,
+    };
   } finally {
     await session.close();
   }
@@ -186,7 +250,15 @@ const getMyJobs = async (userId) => {
     const query = `
       MATCH (u:User {userId: $userId})-[:POSTED]->(j:Job)-[:BELONGS_TO]->(c:Company)
       OPTIONAL MATCH (j)<-[r:APPLIED_TO]-(applicant:User)
-      RETURN j, c, count(r) AS applicantCount
+      OPTIONAL MATCH (j)-[skillRel:REQUIRES_SKILL]->(skill:Skill)
+      RETURN j, c, count(DISTINCT r) AS applicantCount,
+             collect(DISTINCT {
+               name: skill.name,
+               weight: skillRel.weight,
+               source: skillRel.source,
+               importance: skillRel.importance,
+               confidence: skillRel.confidence
+             }) AS skills
       ORDER BY j.postedAt DESC
     `;
     const result = await session.run(query, { userId });
@@ -194,6 +266,7 @@ const getMyJobs = async (userId) => {
       ...rec.get('j').properties,
       company: rec.get('c').properties,
       applicantCount: rec.get('applicantCount').toNumber(),
+      skills: rec.get('skills').filter(skill => skill.name !== null),
     }));
   } finally {
     await session.close();
@@ -272,13 +345,30 @@ const updateCompany = async (userId, companyId, companyData) => {
 const updateJob = async (userId, jobId, jobData) => {
   const session = driver.session();
   try {
-    const allowedFields = ['title', 'description', 'employmentType', 'location', 'salaryMin', 'salaryMax', 'category', 'experience', 'level'];
+    const shouldSyncSkills = shouldInferJobSkills(jobData);
+    const allowedFields = [
+      'title',
+      'description',
+      'employmentType',
+      'location',
+      'salaryMin',
+      'salaryMax',
+      'salaryCurrency',
+      'category',
+      'experience',
+      'experienceMin',
+      'experienceMax',
+      'level',
+      'workMode',
+    ];
     const updates = {};
     allowedFields.forEach(f => {
       if (jobData[f] !== undefined) updates[f] = jobData[f];
     });
-    if (updates.salaryMin !== undefined) updates.salaryMin = updates.salaryMin ? parseInt(updates.salaryMin) : null;
-    if (updates.salaryMax !== undefined) updates.salaryMax = updates.salaryMax ? parseInt(updates.salaryMax) : null;
+    if (updates.salaryMin !== undefined) updates.salaryMin = toNullableInt(updates.salaryMin);
+    if (updates.salaryMax !== undefined) updates.salaryMax = toNullableInt(updates.salaryMax);
+    if (updates.experienceMin !== undefined) updates.experienceMin = toNullableInt(updates.experienceMin);
+    if (updates.experienceMax !== undefined) updates.experienceMax = toNullableInt(updates.experienceMax);
 
     const result = await session.run(
       `MATCH (u:User {userId: $userId})-[:POSTED]->(j:Job {jobId: $jobId})
@@ -287,7 +377,29 @@ const updateJob = async (userId, jobId, jobData) => {
       { userId, jobId, updates }
     );
     if (result.records.length === 0) return null;
-    return result.records[0].get('j').properties;
+    let updatedJob = result.records[0].get('j').properties;
+    const metadataPatch = buildJobMetadataPatch(updatedJob, jobData);
+    if (Object.keys(metadataPatch).length > 0) {
+      const metadataResult = await session.run(
+        `MATCH (j:Job {jobId: $jobId})
+         SET j += $metadataPatch, j.updatedAt = datetime()
+         RETURN j`,
+        { jobId, metadataPatch }
+      );
+      updatedJob = metadataResult.records[0].get('j').properties;
+    }
+
+    const inferredSkills = shouldSyncSkills
+      ? await safelyExtractJobSkills({ ...updatedJob, skills: jobData.skills, requiredSkills: jobData.requiredSkills })
+      : [];
+    if (shouldSyncSkills) {
+      await syncJobSkills(session, jobId, inferredSkills);
+    }
+
+    return {
+      ...updatedJob,
+      ...(shouldSyncSkills ? { skills: inferredSkills } : {}),
+    };
   } finally {
     await session.close();
   }

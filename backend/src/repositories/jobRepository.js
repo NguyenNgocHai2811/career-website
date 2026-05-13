@@ -1,5 +1,12 @@
 const { driver } = require('../config/neo4j');
 
+const toNumber = (value) => {
+  if (value == null) return 0;
+  if (typeof value.toNumber === 'function') return value.toNumber();
+  if (typeof value === 'object' && 'low' in value) return value.low;
+  return Number(value) || 0;
+};
+
 const getAllJobs = async (filters = {}) => {
   const session = driver.session();
   try {
@@ -18,21 +25,27 @@ const getAllJobs = async (filters = {}) => {
 
     // 2. Location
     if (filters.location) {
-      query += ` AND (j.location =~ $locationRegex OR c.address =~ $locationRegex)`;
+      query += ` AND (j.location =~ $locationRegex OR j.workMode =~ $locationRegex OR c.address =~ $locationRegex)`;
       params.locationRegex = `(?i).*${filters.location}.*`;
     }
 
     // 3. Employment Type (comma-separated)
     if (filters.employmentType) {
       const types = filters.employmentType.split(',').map(t => t.trim());
-      query += ` AND j.employmentType IN $types`;
+      const includesRemote = types.includes('Remote');
+      query += includesRemote
+        ? ` AND (j.employmentType IN $types OR toLower(coalesce(j.workMode, '')) = 'remote' OR toLower(coalesce(j.location, '')) CONTAINS 'remote')`
+        : ` AND j.employmentType IN $types`;
       params.types = types;
     }
 
-    // 4. Category (comma-separated)
+    // 4. Category (comma-separated, case-insensitive)
     if (filters.category) {
-      const categories = filters.category.split(',').map(t => t.trim());
-      query += ` AND j.category IN $categories`;
+      const categories = filters.category
+        .split(',')
+        .map(t => t.trim().toLowerCase())
+        .filter(Boolean);
+      query += ` AND toLower(trim(coalesce(j.category, ''))) IN $categories`;
       params.categories = categories;
     }
 
@@ -101,6 +114,151 @@ const getAllJobs = async (filters = {}) => {
   }
 };
 
+const getRecommendedJobsForCandidate = async (userId, options = {}) => {
+  const session = driver.session();
+  const limit = Math.min(Math.max(parseInt(options.limit, 10) || 20, 1), 100);
+
+  try {
+    const metaResult = await session.run(
+      `MATCH (u:User {userId: $userId})
+       OPTIONAL MATCH (u)-[:HAS_SKILL]->(s:Skill)
+       RETURN count(DISTINCT s) AS candidateSkillCount,
+              u.location AS candidateLocation`,
+      { userId }
+    );
+
+    if (metaResult.records.length === 0) {
+      return {
+        jobs: [],
+        meta: { source: 'profile', candidateSkillCount: 0, candidateLocation: '' },
+      };
+    }
+
+    const metaRecord = metaResult.records[0];
+    const meta = {
+      source: 'profile',
+      candidateSkillCount: toNumber(metaRecord.get('candidateSkillCount')),
+      candidateLocation: metaRecord.get('candidateLocation') || '',
+    };
+
+    const query = `
+      MATCH (u:User {userId: $userId})
+      OPTIONAL MATCH (u)-[:HAS_SKILL]->(us:Skill)
+      WITH u, collect(DISTINCT toLower(trim(us.name))) AS userSkills
+      MATCH (j:Job)-[:BELONGS_TO]->(c:Company)
+      WHERE j.status = 'ACTIVE'
+        AND NOT EXISTS { MATCH (u)-[:APPLIED_TO]->(j) }
+        AND NOT EXISTS { MATCH (u)-[:POSTED]->(j) }
+      OPTIONAL MATCH (j)-[req:REQUIRES_SKILL]->(js:Skill)
+      WITH u, j, c, userSkills,
+           collect(DISTINCT {
+             name: js.name,
+             key: CASE WHEN js.name IS NULL THEN NULL ELSE toLower(trim(js.name)) END,
+             weight: CASE coalesce(req.source, 'description')
+               WHEN 'manual' THEN toInteger(coalesce(req.weight, 5))
+               WHEN 'description' THEN toInteger(coalesce(
+                 req.weight,
+                 CASE coalesce(req.importance, 'general')
+                   WHEN 'required' THEN 5
+                   WHEN 'preferred' THEN 3
+                   ELSE 4
+                 END
+               ))
+               WHEN 'llm' THEN CASE coalesce(req.importance, 'general')
+                 WHEN 'required' THEN 5
+                 WHEN 'preferred' THEN 3
+                 ELSE 4
+               END
+               WHEN 'title' THEN 3
+               WHEN 'category' THEN 1
+               ELSE toInteger(coalesce(req.weight, 1))
+             END,
+             source: coalesce(req.source, 'unknown'),
+             importance: coalesce(req.importance, 'general'),
+             confidence: coalesce(req.confidence, 1.0)
+           }) AS rawRequiredSkills
+      WITH u, j, c, userSkills,
+           [s IN rawRequiredSkills WHERE s.name IS NOT NULL] AS requiredSkills,
+           toLower(trim(coalesce(u.location, ''))) AS candidateLocationKey,
+           toLower(coalesce(j.location, '') + ' ' + coalesce(c.address, '') + ' ' + coalesce(c.location, '')) AS jobLocationText,
+           toLower(trim(coalesce(j.location, ''))) AS jobLocationKey
+      WITH u, j, c, userSkills, requiredSkills, candidateLocationKey,
+           [s IN requiredSkills WHERE s.key IN userSkills] AS matchedSkills,
+           [s IN requiredSkills WHERE NOT (s.key IN userSkills)] AS missingSkills,
+           (
+             candidateLocationKey <> ''
+             AND (
+               jobLocationText CONTAINS candidateLocationKey
+               OR (jobLocationKey <> '' AND candidateLocationKey CONTAINS jobLocationKey)
+               OR jobLocationText CONTAINS 'remote'
+             )
+           ) AS locationMatch
+      WITH u, j, c, userSkills, requiredSkills, matchedSkills, missingSkills, locationMatch,
+           reduce(total = 0, s IN requiredSkills | total + s.weight) AS totalWeight,
+           reduce(total = 0, s IN matchedSkills | total + s.weight) AS matchedWeight
+      WITH u, j, c, requiredSkills, matchedSkills, missingSkills, locationMatch,
+           CASE
+             WHEN totalWeight > 0
+             THEN toInteger(80 * matchedWeight / CASE WHEN totalWeight < 5 THEN 5 ELSE totalWeight END)
+             ELSE 0
+           END AS skillScore
+      WITH u, j, c, requiredSkills, matchedSkills, missingSkills, locationMatch,
+           toInteger(skillScore) + CASE WHEN locationMatch THEN 20 ELSE 0 END AS matchScore
+      WHERE matchScore > 0
+      OPTIONAL MATCH (u)-[saved:SAVED_JOB]->(j)
+      RETURN j, c,
+             [s IN requiredSkills | {
+               name: s.name,
+               weight: s.weight,
+               source: s.source,
+               importance: s.importance,
+               confidence: s.confidence
+             }] AS skills,
+             [s IN matchedSkills | s.name] AS matchedSkills,
+             [s IN missingSkills | s.name][0..5] AS missingSkills,
+             locationMatch,
+             matchScore,
+             saved IS NOT NULL AS isSaved,
+             false AS hasApplied
+      ORDER BY matchScore DESC, size(matchedSkills) DESC, j.postedAt DESC
+      LIMIT toInteger($limit)
+    `;
+
+    const result = await session.run(query, { userId, limit });
+    const jobs = result.records.map(record => {
+      const matchedSkills = record.get('matchedSkills') || [];
+      const locationMatch = record.get('locationMatch') === true;
+      const recommendationReasons = [];
+
+      if (matchedSkills.length > 0) {
+        recommendationReasons.push(`Matches ${matchedSkills.length} required skill${matchedSkills.length === 1 ? '' : 's'}`);
+      }
+      if (locationMatch) {
+        recommendationReasons.push('Matches your location');
+      }
+
+      return {
+        ...record.get('j').properties,
+        company: record.get('c')?.properties || null,
+        skills: (record.get('skills') || [])
+          .filter(skill => skill.name)
+          .map(skill => ({ ...skill, weight: toNumber(skill.weight) || 1 })),
+        matchedSkills,
+        missingSkills: record.get('missingSkills') || [],
+        locationMatch,
+        matchScore: toNumber(record.get('matchScore')),
+        recommendationReasons,
+        isSaved: record.get('isSaved') === true,
+        hasApplied: record.get('hasApplied') === true,
+      };
+    });
+
+    return { jobs, meta };
+  } finally {
+    await session.close();
+  }
+};
+
 const getJobById = async (jobId) => {
   const session = driver.session();
   try {
@@ -108,7 +266,14 @@ const getJobById = async (jobId) => {
       MATCH (j:Job {jobId: $jobId})
       OPTIONAL MATCH (j)-[:BELONGS_TO]->(c:Company)
       OPTIONAL MATCH (j)-[r:REQUIRES_SKILL]->(s:Skill)
-      RETURN j, c, collect({ name: s.name, weight: r.weight }) AS skills
+      RETURN j, c,
+             collect({
+               name: s.name,
+               weight: r.weight,
+               source: r.source,
+               importance: r.importance,
+               confidence: r.confidence
+             }) AS skills
     `;
     const result = await session.run(query, { jobId });
     if (result.records.length === 0) return null;
@@ -264,6 +429,7 @@ const isSaved = async (userId, jobId) => {
 
 module.exports = {
   getAllJobs,
+  getRecommendedJobsForCandidate,
   getJobById,
   applyToJob,
   hasApplied,

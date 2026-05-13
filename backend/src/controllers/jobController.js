@@ -12,6 +12,20 @@ const getJobs = async (req, res, next) => {
   }
 };
 
+const getRecommendedJobs = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'CANDIDATE') {
+      return res.status(403).json({ success: false, message: 'Recommendations are only available for candidates' });
+    }
+
+    const userId = req.user.userId;
+    const result = await jobRepository.getRecommendedJobsForCandidate(userId, req.query);
+    res.status(200).json({ success: true, data: result.jobs, meta: result.meta });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getJobById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -135,6 +149,7 @@ const getSavedJobs = async (req, res, next) => {
 
 module.exports = {
   getJobs,
+  getRecommendedJobs,
   getJobById,
   applyToJob,
   saveJob,
