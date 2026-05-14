@@ -147,6 +147,77 @@ const getSavedJobs = async (req, res, next) => {
   }
 };
 
+// ─── Candidate Application Tracker Endpoints ──────────────────────────────────
+
+const getMyApplications = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'CANDIDATE') {
+      return res.status(403).json({ success: false, message: 'Application tracker is only available for candidates' });
+    }
+    const userId = req.user.userId;
+    const filters = req.query;
+    const applications = await jobRepository.getMyApplications(userId, filters);
+    res.status(200).json({ success: true, data: applications });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createExternalApplication = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'CANDIDATE') {
+      return res.status(403).json({ success: false, message: 'Application tracker is only available for candidates' });
+    }
+    const userId = req.user.userId;
+    const { title, companyName } = req.body;
+    if (!title || !companyName) {
+      return res.status(400).json({ success: false, message: 'title and companyName are required' });
+    }
+    const application = await jobRepository.createExternalApplication(userId, req.body);
+    if (!application) {
+      return res.status(500).json({ success: false, message: 'Failed to create external application' });
+    }
+    res.status(201).json({ success: true, data: application });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateMyApplication = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'CANDIDATE') {
+      return res.status(403).json({ success: false, message: 'Application tracker is only available for candidates' });
+    }
+    const userId = req.user.userId;
+    const { jobId } = req.params;
+    const application = await jobRepository.updateMyApplication(userId, jobId, req.body);
+    if (!application) {
+      return res.status(404).json({ success: false, message: 'Application not found' });
+    }
+    res.status(200).json({ success: true, data: application });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const archiveMyApplication = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'CANDIDATE') {
+      return res.status(403).json({ success: false, message: 'Application tracker is only available for candidates' });
+    }
+    const userId = req.user.userId;
+    const { jobId } = req.params;
+    const { archived = true } = req.body;
+    const application = await jobRepository.archiveMyApplication(userId, jobId, archived);
+    if (!application) {
+      return res.status(404).json({ success: false, message: 'Application not found' });
+    }
+    res.status(200).json({ success: true, data: application });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getJobs,
   getRecommendedJobs,
@@ -155,4 +226,8 @@ module.exports = {
   saveJob,
   unsaveJob,
   getSavedJobs,
+  getMyApplications,
+  createExternalApplication,
+  updateMyApplication,
+  archiveMyApplication,
 };

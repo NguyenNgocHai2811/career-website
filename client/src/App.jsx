@@ -14,6 +14,7 @@ import JobSearch from './pages/JobSearch/JobSearch.jsx';
 import RecruiterDashboard from './pages/Recruiter/RecruiterDashboard.jsx';
 import Messaging from './pages/Messaging/Messaging.jsx';
 import CareerExplorer from './pages/CareerAI/CareerExplorer.jsx';
+import ApplicationTracker from './pages/Applications/ApplicationTracker.jsx';
 import AdminDashboard from './pages/Admin/AdminDashboard.jsx';
 import AdminUsers from './pages/Admin/AdminUsers.jsx';
 import AdminJobs from './pages/Admin/AdminJobs.jsx';
@@ -37,6 +38,7 @@ function App() {
         <Route path="/recruiter/*" element={<RecruiterDashboard />} />
         <Route path="/messages" element={<Messaging />} />
         <Route path="/career-ai" element={<CareerExplorer />} />
+        <Route path="/applications" element={<ApplicationTracker />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/jobs" element={<AdminJobs />} />

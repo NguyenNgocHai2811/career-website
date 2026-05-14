@@ -54,6 +54,9 @@ const ProfileSavedJobs = ({ token }) => {
         <Link to="/jobs" className="mt-5 px-5 py-2.5 bg-primary text-white rounded-full text-sm font-semibold hover:bg-primary/90 transition-colors">
           Khám phá việc làm
         </Link>
+        <Link to="/applications" className="mt-2 text-sm text-primary font-semibold hover:underline">
+          Xem ứng tuyển của tôi →
+        </Link>
       </div>
     );
   }

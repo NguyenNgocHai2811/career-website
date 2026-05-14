@@ -427,6 +427,187 @@ const isSaved = async (userId, jobId) => {
   }
 };
 
+// ─── Candidate Application Tracker ────────────────────────────────────────────
+
+const toDateString = (value) => {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value.toString === 'function') return value.toString();
+  return null;
+};
+
+const CANDIDATE_ALLOWED_FIELDS = [
+  'candidateStatus', 'notes', 'followUpAt', 'interviewAt',
+  'contactName', 'contactEmail', 'contactPhone', 'externalUrl', 'archived',
+];
+
+const mapApplicationRecord = (record) => {
+  const j = record.get('j').properties;
+  const c = record.get('c');
+  const r = record.get('r').properties;
+  return {
+    jobId: j.jobId,
+    title: j.title,
+    location: j.location || null,
+    employmentType: j.employmentType || null,
+    salaryMin: j.salaryMin ? toNumber(j.salaryMin) : null,
+    salaryMax: j.salaryMax ? toNumber(j.salaryMax) : null,
+    source: r.source || 'internal',
+    officialStatus: r.status || 'PENDING',
+    candidateStatus: r.candidateStatus || 'APPLIED',
+    appliedAt: toDateString(r.appliedAt),
+    updatedAt: toDateString(r.updatedAt),
+    candidateUpdatedAt: toDateString(r.candidateUpdatedAt),
+    followUpAt: toDateString(r.followUpAt),
+    interviewAt: toDateString(r.interviewAt),
+    archived: r.archived || false,
+    notes: r.notes || '',
+    contactName: r.contactName || '',
+    contactEmail: r.contactEmail || '',
+    contactPhone: r.contactPhone || '',
+    externalUrl: r.externalUrl || j.externalUrl || '',
+    cvType: r.cvType || '',
+    cvUrl: r.cvUrl || '',
+    coverLetter: r.coverLetter || '',
+    company: c ? { ...c.properties } : null,
+  };
+};
+
+const getMyApplications = async (userId, filters = {}) => {
+  const session = driver.session();
+  try {
+    const showArchived = filters.archived === 'true' || filters.archived === true;
+    const params = { userId, archived: showArchived };
+    let cypher = `
+      MATCH (u:User {userId: $userId})-[r:APPLIED_TO]->(j:Job)
+      OPTIONAL MATCH (j)-[:BELONGS_TO]->(c:Company)
+      WHERE coalesce(r.archived, false) = $archived
+    `;
+    if (filters.candidateStatus) {
+      cypher += ` AND r.candidateStatus = $candidateStatus`;
+      params.candidateStatus = filters.candidateStatus;
+    }
+    if (filters.source) {
+      cypher += ` AND coalesce(r.source, 'internal') = $source`;
+      params.source = filters.source;
+    }
+    if (filters.search) {
+      cypher += ` AND (toLower(j.title) CONTAINS toLower($search) OR toLower(c.name) CONTAINS toLower($search))`;
+      params.search = filters.search;
+    }
+    cypher += `
+      RETURN j, c, r
+      ORDER BY coalesce(r.followUpAt, r.appliedAt) ASC, r.appliedAt DESC
+    `;
+    const result = await session.run(cypher, params);
+    return result.records.map(mapApplicationRecord);
+  } finally {
+    await session.close();
+  }
+};
+
+const updateMyApplication = async (userId, jobId, data) => {
+  const session = driver.session();
+  try {
+    const updates = {};
+    CANDIDATE_ALLOWED_FIELDS.forEach(field => {
+      if (data[field] !== undefined) updates[field] = data[field];
+    });
+    if (Object.keys(updates).length === 0) return null;
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId})-[r:APPLIED_TO]->(j:Job {jobId: $jobId})
+       SET r += $updates, r.candidateUpdatedAt = datetime()
+       OPTIONAL MATCH (j)-[:BELONGS_TO]->(c:Company)
+       RETURN j, c, r`,
+      { userId, jobId, updates }
+    );
+    if (result.records.length === 0) return null;
+    return mapApplicationRecord(result.records[0]);
+  } finally {
+    await session.close();
+  }
+};
+
+const archiveMyApplication = async (userId, jobId, archived = true) => {
+  const session = driver.session();
+  try {
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId})-[r:APPLIED_TO]->(j:Job {jobId: $jobId})
+       SET r.archived = $archived, r.candidateUpdatedAt = datetime()
+       OPTIONAL MATCH (j)-[:BELONGS_TO]->(c:Company)
+       RETURN j, c, r`,
+      { userId, jobId, archived }
+    );
+    if (result.records.length === 0) return null;
+    return mapApplicationRecord(result.records[0]);
+  } finally {
+    await session.close();
+  }
+};
+
+const createExternalApplication = async (userId, data) => {
+  const { v4: uuidv4 } = require('uuid');
+  const session = driver.session();
+  try {
+    const jobId = uuidv4();
+    const companyId = uuidv4();
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId})
+       MERGE (c:Company {name: $companyName})
+         ON CREATE SET c.companyId = $companyId, c.createdAt = datetime(), c.source = 'external'
+       CREATE (j:Job {
+         jobId: $jobId,
+         title: $title,
+         location: $location,
+         status: 'TRACKED',
+         source: 'external',
+         externalUrl: $externalUrl,
+         postedAt: datetime()
+       })
+       CREATE (j)-[:BELONGS_TO]->(c)
+       CREATE (u)-[r:APPLIED_TO {
+         cvType: 'external',
+         cvUrl: '',
+         coverLetter: '',
+         status: 'PENDING',
+         source: 'external',
+         candidateStatus: $candidateStatus,
+         notes: $notes,
+         followUpAt: $followUpAt,
+         interviewAt: $interviewAt,
+         contactName: $contactName,
+         contactEmail: $contactEmail,
+         contactPhone: $contactPhone,
+         externalUrl: $externalUrl,
+         archived: false,
+         appliedAt: coalesce($appliedAt, datetime())
+       }]->(j)
+       RETURN j, c, r`,
+      {
+        userId,
+        jobId,
+        companyId,
+        companyName: data.companyName || 'Unknown Company',
+        title: data.title || 'Unknown Position',
+        location: data.location || '',
+        externalUrl: data.externalUrl || '',
+        candidateStatus: data.candidateStatus || 'APPLIED',
+        notes: data.notes || '',
+        followUpAt: data.followUpAt || null,
+        interviewAt: data.interviewAt || null,
+        contactName: data.contactName || '',
+        contactEmail: data.contactEmail || '',
+        contactPhone: data.contactPhone || '',
+        appliedAt: data.appliedAt || null,
+      }
+    );
+    if (result.records.length === 0) return null;
+    return mapApplicationRecord(result.records[0]);
+  } finally {
+    await session.close();
+  }
+};
+
 module.exports = {
   getAllJobs,
   getRecommendedJobsForCandidate,
@@ -437,4 +618,8 @@ module.exports = {
   unsaveJob,
   getSavedJobs,
   isSaved,
+  getMyApplications,
+  updateMyApplication,
+  archiveMyApplication,
+  createExternalApplication,
 };
