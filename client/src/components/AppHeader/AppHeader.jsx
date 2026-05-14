@@ -91,6 +91,10 @@ const AppHeader = ({ activeTab = null }) => {
 
   const navLinks = allNavLinks.filter(link => isLoggedIn || link.guest);
 
+  if (isLoggedIn && user.role && user.role.toUpperCase() === 'CANDIDATE') {
+    navLinks.push({ key: 'applications', label: 'Ứng tuyển', to: '/applications' });
+  }
+
   if (isLoggedIn && user.role && user.role.toUpperCase() === 'RECRUITER') {
     navLinks.push({ key: 'dashboard', label: 'Dashboard', to: '/recruiter' });
   }
