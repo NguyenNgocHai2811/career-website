@@ -71,7 +71,7 @@ const CareerExplorer = () => {
 
   const showError = (err) => {
     if (handleAuthError(err)) return;
-    setError(err?.message || 'Đã xảy ra lỗi.');
+    setError(err?.message || 'An error occurred.');
   };
 
   const clearError = () => setError('');
@@ -131,7 +131,7 @@ const CareerExplorer = () => {
   const handleTasksNext = () => {
     if (selectedTasks.length === 0) {
       // allow with empty? force user to pick at least 1.
-      setError('Vui lòng chọn ít nhất 1 nhiệm vụ trước khi tiếp tục.');
+      setError('Please select at least 1 task before continuing.');
       return;
     }
     loadSkills();
@@ -247,7 +247,7 @@ const CareerExplorer = () => {
             onClick={clearError}
             className="text-xs text-red-500 hover:text-red-700"
           >
-            Đóng
+            Dismiss
           </button>
         </div>
       )}

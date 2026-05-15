@@ -75,11 +75,15 @@ function Homepage() {
                 Korra<span className="font-light text-primary">Careers</span>
               </h2>
             </div>
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden md:flex items-center gap-6">
               <Link className="text-[#4a5568] hover:text-primary text-sm font-medium transition-colors no-underline" to="/jobs">Find Jobs</Link>
-              <a className="text-[#4a5568] hover:text-primary text-sm font-medium transition-colors" href="#">Companies</a>
-              <a className="text-[#4a5568] hover:text-primary text-sm font-medium transition-colors" href="#">Salaries</a>
-              <a className="text-[#4a5568] hover:text-primary text-sm font-medium transition-colors" href="#">Advice</a>
+              <Link
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold hover:bg-primary hover:text-white transition-all no-underline"
+                to="/career-ai"
+              >
+                <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
+                Career Explorer
+              </Link>
             </nav>
             <div className="flex items-center gap-2 sm:gap-3">
               {isLoggedIn ? (

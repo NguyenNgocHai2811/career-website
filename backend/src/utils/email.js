@@ -21,20 +21,28 @@ const transporter = nodemailer.createTransport({
 const sendResetPasswordEmail = async (toEmail, resetLink) => {
   try {
     const info = await transporter.sendMail({
-      from: '"Otomate Support" <support@otomate.com>', // sender address
-      to: toEmail, // list of receivers
-      subject: "Khôi phục mật khẩu - Otomate", // Subject line
+      from: '"KorraCareers Support" <support@korracareers.com>',
+      to: toEmail,
+      subject: "Khôi phục mật khẩu - KorraCareers",
       html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6; max-w-lg; margin: auto;">
-          <h2>Yêu cầu đặt lại mật khẩu</h2>
-          <p>Xin chào,</p>
-          <p>Bạn nhận được email này vì chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản Otomate của bạn.</p>
-          <p>Vui lòng click vào đường link bên dưới để đặt lại mật khẩu (link có hiệu lực trong 15 phút):</p>
-          <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; color: white; background-color: #4153b4; text-decoration: none; border-radius: 5px;">Đặt lại mật khẩu</a>
-          <p>Nếu nút bấm không hoạt động, bạn có thể copy và dán đoạn link sau vào trình duyệt:</p>
-          <p><a href="${resetLink}">${resetLink}</a></p>
-          <p>Nếu bạn không yêu cầu đặt lại mật khẩu, xin vui lòng bỏ qua email này.</p>
-          <p>Trân trọng,<br>Đội ngũ Otomate</p>
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 520px; margin: auto; color: #2d3748;">
+          <div style="text-align: center; padding: 32px 0 16px;">
+            <span style="display: inline-block; background: #ede9fe; border-radius: 12px; padding: 12px 16px; font-size: 24px;">◆</span>
+            <h2 style="margin: 12px 0 0; font-size: 20px; color: #4153b4;">Korra<span style="font-weight: 300;">Careers</span></h2>
+          </div>
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px;">
+            <h3 style="margin: 0 0 12px; font-size: 18px;">Yêu cầu đặt lại mật khẩu</h3>
+            <p style="margin: 0 0 8px;">Xin chào,</p>
+            <p style="margin: 0 0 20px; color: #4a5568;">Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản KorraCareers của bạn. Link có hiệu lực trong <strong>15 phút</strong>.</p>
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${resetLink}" style="display: inline-block; padding: 12px 28px; color: white; background-color: #4153b4; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 15px;">Đặt lại mật khẩu</a>
+            </div>
+            <p style="color: #718096; font-size: 13px;">Nếu nút không hoạt động, copy link sau vào trình duyệt:</p>
+            <p style="font-size: 12px; word-break: break-all;"><a href="${resetLink}" style="color: #4153b4;">${resetLink}</a></p>
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+            <p style="color: #a0aec0; font-size: 12px; margin: 0;">Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.</p>
+          </div>
+          <p style="text-align: center; color: #a0aec0; font-size: 12px; margin-top: 20px;">Trân trọng, đội ngũ KorraCareers</p>
         </div>
       `,
     });

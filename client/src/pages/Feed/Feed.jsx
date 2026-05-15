@@ -12,10 +12,10 @@ const formatDate = (dateString) => {
   const now = new Date();
   const diffInSeconds = Math.floor((now - date) / 1000);
   
-  if (diffInSeconds < 60) return 'Vừa xong';
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} phút trước`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} giờ trước`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} ngày trước`;
+  if (diffInSeconds < 60) return 'Just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
   
   return date.toLocaleDateString();
 };
@@ -103,7 +103,7 @@ const Feed = () => {
   const handleConnect = async (userId) => {
     try {
       await sendConnectionRequest(getAuthToken(), userId);
-      alert('Kết bạn thành công! (Request sent)');
+      alert('Connection request sent!');
       setSuggestions(prev => prev.filter(s => s.id !== userId));
     } catch(err) {
       alert(err.message);
@@ -439,7 +439,7 @@ const Feed = () => {
               {posts.length === 0 && (
                 <div className="text-center py-12 bg-white dark:bg-card-dark rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
                   <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">post_add</span>
-                  <p className="text-sm text-gray-500">Chưa có bài viết nào. Hãy là người đầu tiên!</p>
+                  <p className="text-sm text-gray-500">No posts yet. Be the first to share!</p>
                 </div>
               )}
             </div>

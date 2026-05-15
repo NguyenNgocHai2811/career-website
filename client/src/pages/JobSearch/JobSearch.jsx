@@ -19,11 +19,11 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!token) {
-      setError('Bạn cần đăng nhập để nộp đơn.');
+      setError('Please log in to apply.');
       return;
     }
     if (cvType === 'file' && !cvFile) {
-      setError('Vui lòng chọn file CV để tải lên.');
+      setError('Please select a CV file to upload.');
       return;
     }
 
@@ -37,13 +37,13 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
         token,
         coverLetter,
       });
-      setSuccess(result.message || 'Nộp đơn thành công!');
+      setSuccess(result.message || 'Application submitted successfully!');
       setTimeout(() => {
         onApplied?.();
         onClose();
       }, 1500);
     } catch (err) {
-      setError(err.message || 'Đã có lỗi xảy ra.');
+      setError(err.message || 'An error occurred.');
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,7 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
         {/* Header */}
         <div className="sticky top-0 bg-white rounded-t-3xl border-b border-[#ece7e2] px-6 py-5 flex items-center justify-between z-10">
           <div>
-            <h3 className="text-lg font-bold text-[#1d1b18]">Nộp đơn ứng tuyển</h3>
+            <h3 className="text-lg font-bold text-[#1d1b18]">Apply for Position</h3>
             <p className="text-xs text-[#454652] mt-0.5">{job.title} — {job.company?.name}</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-[#f2ede7] flex items-center justify-center transition-colors">
@@ -72,7 +72,7 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
           
           {/* CV Type Selection */}
           <div>
-            <label className="text-xs font-bold text-[#4153b4] uppercase tracking-wider block mb-3">Chọn cách nộp CV</label>
+            <label className="text-xs font-bold text-[#4153b4] uppercase tracking-wider block mb-3">Choose CV Method</label>
             <div className="grid grid-cols-2 gap-3">
               {/* Option: Use Profile */}
               <button
@@ -96,8 +96,8 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <h4 className="font-bold text-sm text-[#1d1b18]">Dùng Profile</h4>
-                <p className="text-[0.7rem] text-[#454652] mt-1 leading-snug">Trang hồ sơ cá nhân của bạn sẽ được sử dụng làm CV</p>
+                <h4 className="font-bold text-sm text-[#1d1b18]">Use Profile</h4>
+                <p className="text-[0.7rem] text-[#454652] mt-1 leading-snug">Your profile page will be used as your CV</p>
               </button>
 
               {/* Option: Upload File */}
@@ -122,8 +122,8 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                 </div>
-                <h4 className="font-bold text-sm text-[#1d1b18]">Tải lên CV</h4>
-                <p className="text-[0.7rem] text-[#454652] mt-1 leading-snug">Tải file PDF (tối đa 10MB)</p>
+                <h4 className="font-bold text-sm text-[#1d1b18]">Upload CV</h4>
+                <p className="text-[0.7rem] text-[#454652] mt-1 leading-snug">Upload a PDF file (max 10MB)</p>
               </button>
             </div>
           </div>
@@ -131,7 +131,7 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
           {/* File Upload Area (shown only when cvType === 'file') */}
           {cvType === 'file' && (
             <div>
-              <label className="text-xs font-bold text-[#4153b4] uppercase tracking-wider block mb-2">Chọn file CV</label>
+              <label className="text-xs font-bold text-[#4153b4] uppercase tracking-wider block mb-2">Select CV File</label>
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#bac3ff] rounded-2xl cursor-pointer bg-[#fef9f3] hover:bg-[#f8f3ed] transition-colors">
                 <input
                   type="file"
@@ -156,8 +156,8 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#bac3ff] mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
-                    <p className="text-sm text-[#454652]">Kéo thả hoặc <span className="text-[#4153b4] font-bold">chọn file</span></p>
-                    <p className="text-[0.65rem] text-[#757684] mt-1">PDF — tối đa 10MB</p>
+                    <p className="text-sm text-[#454652]">Drag & drop or <span className="text-[#4153b4] font-bold">browse</span></p>
+                    <p className="text-[0.65rem] text-[#757684] mt-1">PDF — max 10MB</p>
                   </div>
                 )}
               </label>
@@ -166,11 +166,11 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
 
           {/* Cover Letter */}
           <div>
-            <label className="text-xs font-bold text-[#4153b4] uppercase tracking-wider block mb-2">Thư giới thiệu (không bắt buộc)</label>
+            <label className="text-xs font-bold text-[#4153b4] uppercase tracking-wider block mb-2">Cover Letter (optional)</label>
             <textarea
               value={coverLetter}
               onChange={(e) => setCoverLetter(e.target.value)}
-              placeholder="Viết vài dòng giới thiệu bản thân và lý do bạn phù hợp với vị trí này..."
+              placeholder="Write a few lines about yourself and why you're a great fit..."
               rows={4}
               className="w-full px-4 py-3 rounded-xl border border-[#ece7e2] bg-[#fef9f3] text-sm text-[#1d1b18] resize-none focus:ring-2 focus:ring-[#4153b4]/20 focus:border-[#4153b4] outline-none transition-all placeholder:text-[#757684]"
             />
@@ -191,7 +191,7 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
                 {success}
               </div>
               <Link to="/applications" className="self-start text-xs font-semibold text-emerald-700 underline hover:text-emerald-800">
-                Quản lý ứng tuyển →
+                Manage Applications →
               </Link>
             </div>
           )}
@@ -208,12 +208,12 @@ const ApplyModal = ({ job, onClose, onApplied }) => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                 </svg>
-                Đang nộp đơn...
+                Submitting...
               </>
             ) : success ? (
-              'Đã nộp thành công ✓'
+              'Successfully Applied ✓'
             ) : (
-              'Nộp đơn ứng tuyển'
+              'Submit Application'
             )}
           </button>
         </form>
@@ -252,11 +252,11 @@ const timeAgo = (dateVal) => {
   }
   if (isNaN(date)) return '';
   const diff = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (diff < 3600) return `${Math.max(1, Math.floor(diff / 60))} phút trước`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-  if (diff < 2592000) return `${Math.floor(diff / 86400)} ngày trước`;
-  if (diff < 31536000) return `${Math.floor(diff / 2592000)} tháng trước`;
-  return `${Math.floor(diff / 31536000)} năm trước`;
+  if (diff < 3600) return `${Math.max(1, Math.floor(diff / 60))} min ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} hr ago`;
+  if (diff < 2592000) return `${Math.floor(diff / 86400)} day ago`;
+  if (diff < 31536000) return `${Math.floor(diff / 2592000)} mo ago`;
+  return `${Math.floor(diff / 31536000)} yr ago`;
 };
 
 const JobCard = ({ job, onClick }) => {
@@ -376,6 +376,7 @@ const JobSearch = () => {
   const [selectedExperience, setSelectedExperience] = useState([]);
   const [selectedLevels, setSelectedLevels] = useState([]);
   const [dateRange, setDateRange] = useState('');
+  const isLoggedIn = !!localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = user?.role || null;
   const canApply = userRole === 'CANDIDATE';
@@ -476,12 +477,12 @@ const JobSearch = () => {
     e?.stopPropagation?.();
     const token = localStorage.getItem('token');
     if (!token) {
-      alert('Vui lòng đăng nhập để nộp đơn ứng tuyển.');
+      alert('Please log in to apply.');
       navigate('/login');
       return;
     }
     if (!canApply) {
-      alert('Chỉ tài khoản ứng viên mới có thể nộp đơn ứng tuyển.');
+      alert('Only candidate accounts can apply.');
       return;
     }
     setShowApplyModal(true);
@@ -490,7 +491,7 @@ const JobSearch = () => {
   const handleSaveToggle = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      alert('Vui lòng đăng nhập để lưu công việc.');
+      alert('Please log in to save jobs.');
       navigate('/login');
       return;
     }
@@ -544,7 +545,7 @@ const JobSearch = () => {
                 onClick={() => setSelectedJob(null)}
                 className="text-sm font-bold text-[#4153b4] mb-2 hover:underline text-left block"
               >
-                &larr; Quay lại danh sách
+                &larr; Back to list
               </button>
               {jobs.map(job => (
                 <div 
@@ -626,28 +627,28 @@ const JobSearch = () => {
 
               <div className="flex gap-4 mb-8 border-b border-[#ece7e2] pb-8">
                 {selectedJob.hasApplied ? (
-                  <button 
+                  <button
                     disabled
                     className="px-6 py-3 bg-emerald-500 text-white rounded-full font-bold text-sm tracking-wider cursor-default flex items-center gap-2"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Đã nộp đơn
+                    Already Applied
                   </button>
-                ) : canApply ? (
-                  <button 
-                    onClick={handleApplyClick}
-                    className="px-6 py-3 bg-[#4153b4] text-white rounded-full font-bold text-sm tracking-wider hover:bg-[#293d9d] transition-colors shadow-lg shadow-[#4153b4]/20"
-                  >
-                    Nộp đơn ứng tuyển
-                  </button>
-                ) : (
+                ) : (isLoggedIn && !canApply) ? (
                   <button
                     disabled
                     className="px-6 py-3 bg-[#ece7e2] text-[#757684] rounded-full font-bold text-sm tracking-wider cursor-not-allowed"
                   >
-                    Chỉ dành cho ứng viên
+                    Candidates only
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleApplyClick}
+                    className="px-6 py-3 bg-[#4153b4] text-white rounded-full font-bold text-sm tracking-wider hover:bg-[#293d9d] transition-colors shadow-lg shadow-[#4153b4]/20"
+                  >
+                    Apply Now
                   </button>
                 )}
                 <button
@@ -662,7 +663,7 @@ const JobSearch = () => {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill={savedJobIds.has(selectedJob.jobId) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                   </svg>
-                  {savedJobIds.has(selectedJob.jobId) ? 'Đã lưu' : 'Lưu lại'}
+                  {savedJobIds.has(selectedJob.jobId) ? 'Saved' : 'Save'}
                 </button>
               </div>
 
@@ -691,17 +692,17 @@ const JobSearch = () => {
                 </div>
               )}
               
-              <h3 className="text-xl font-bold mb-4 text-[#1d1b18]">Mô tả công việc</h3>
-              <p className="text-[#454652] leading-relaxed mb-6 whitespace-pre-line">{selectedJob.description || 'Chưa có mô tả chi tiết cho vị trí này.'}</p>
-              
+              <h3 className="text-xl font-bold mb-4 text-[#1d1b18]">Job Description</h3>
+              <p className="text-[#454652] leading-relaxed mb-6 whitespace-pre-line">{selectedJob.description || 'No description available for this position.'}</p>
+
               {selectedJob.skills && selectedJob.skills.length > 0 && (
                 <>
-                  <h3 className="text-xl font-bold mb-4 mt-8 text-[#1d1b18]">Kỹ năng yêu cầu</h3>
+                  <h3 className="text-xl font-bold mb-4 mt-8 text-[#1d1b18]">Required Skills</h3>
                   <div className="flex flex-wrap gap-2">
                     {selectedJob.skills.map(s => (
                       <span key={s.name} className="px-3 py-1.5 bg-[#f4d9ff] text-[#642b88] rounded-lg text-sm font-semibold">
                         {s.name}
-                        {s.weight && <span className="ml-1 text-[0.6rem] opacity-60">({s.weight === 5 ? 'Bắt buộc' : 'Ưu tiên'})</span>}
+                        {s.weight && <span className="ml-1 text-[0.6rem] opacity-60">({s.weight === 5 ? 'Required' : 'Preferred'})</span>}
                       </span>
                     ))}
                   </div>
@@ -714,10 +715,10 @@ const JobSearch = () => {
           <>
             <section className="mb-12">
               <h1 className="text-5xl font-bold text-[#1d1b18] mb-4 leading-tight">
-                Khám phá cơ hội<br/><span className="text-[#4153b4] italic font-light">nghề nghiệp</span> mới.
+                Discover Opportunities<br/><span className="text-[#4153b4] italic font-light">career</span>
               </h1>
               <p className="text-[#454652] max-w-xl text-lg mb-10">
-                Tìm kiếm các vị trí tuyển dụng phù hợp với kỹ năng và đam mê của bạn.
+                Find positions that match your skills and passion.
               </p>
 
               {/* Advanced Search Bar */}
@@ -726,7 +727,7 @@ const JobSearch = () => {
                   <span className="material-symbols-outlined text-[#4153b4]">search</span>
                   <input 
                     type="text" 
-                    placeholder="Tên công việc, từ khóa..." 
+                    placeholder="Job title, keywords..."
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
                     className="w-full bg-transparent outline-none text-[#1d1b18] placeholder:text-[#757684] text-sm"
@@ -736,7 +737,7 @@ const JobSearch = () => {
                   <span className="material-symbols-outlined text-[#4153b4]">location_on</span>
                   <input 
                     type="text" 
-                    placeholder="Địa điểm (Thành phố, Quốc gia...)" 
+                    placeholder="Location (City, Country...)"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     className="w-full bg-transparent outline-none text-[#1d1b18] placeholder:text-[#757684] text-sm"
@@ -746,14 +747,14 @@ const JobSearch = () => {
                   type="submit"
                   className="w-full md:w-auto px-10 py-4 bg-[#4153b4] text-white rounded-2xl font-bold text-sm hover:bg-[#293d9d] transition-all shadow-lg shadow-[#4153b4]/20"
                 >
-                  Tìm kiếm
+                  Search
                 </button>
               </form>
               {canApply && (
                 <div className="mt-6 inline-flex rounded-2xl border border-[#ece7e2] bg-white p-1 shadow-sm">
                   {[
-                    { value: 'all', label: 'Tat ca viec lam' },
-                    { value: 'recommended', label: 'Goi y cho ban' },
+                    { value: 'all', label: 'All Jobs' },
+                    { value: 'recommended', label: 'Recommended' },
                   ].map(mode => (
                     <button
                       key={mode.value}
@@ -779,20 +780,20 @@ const JobSearch = () => {
               <aside className="lg:w-64 flex-shrink-0">
                 <div className="sticky top-24 space-y-2 h-[80vh] overflow-y-auto hide-scrollbar pr-4 pb-12">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-bold text-[#1d1b18] text-lg">Lọc tìm kiếm</h3>
-                    <button onClick={clearFilters} className="text-xs font-bold text-[#4153b4] hover:underline">Xóa tất cả</button>
+                    <h3 className="font-bold text-[#1d1b18] text-lg">Filters</h3>
+                    <button onClick={clearFilters} className="text-xs font-bold text-[#4153b4] hover:underline">Clear all</button>
                   </div>
 
                   {/* Category */}
                   <div className="mb-6">
-                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Ngành nghề</span>
-                    <select 
-                      value={category} 
+                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Industry</span>
+                    <select
+                      value={category}
                       onChange={e => setCategory(e.target.value)}
                       className="w-full p-2.5 rounded-xl border border-[#ece7e2] text-sm text-[#454652] focus:ring-[#4153b4] focus:border-[#4153b4] bg-white outline-none cursor-pointer"
                     >
-                      <option value="">Tất cả ngành nghề</option>
-                      {['IT', 'Kế toán', 'Bán hàng', 'Marketing', 'Nhân sự', 'Sản xuất', 'Thiết kế'].map(cat => (
+                      <option value="">All Industries</option>
+                      {['IT', 'Accounting', 'Sales', 'Marketing', 'HR', 'Manufacturing', 'Design'].map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </select>
@@ -800,13 +801,13 @@ const JobSearch = () => {
 
                   {/* Posting Date */}
                   <div className="mb-6">
-                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Ngày đăng</span>
+                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Posted Date</span>
                     <div className="space-y-1">
                       {[
-                        { label: 'Mọi lúc', value: '' },
-                        { label: '24 giờ qua', value: '24h' },
-                        { label: '3 ngày qua', value: '3d' },
-                        { label: '7 ngày qua', value: '7d' },
+                        { label: 'Any time', value: '' },
+                        { label: 'Last 24 hours', value: '24h' },
+                        { label: 'Last 3 days', value: '3d' },
+                        { label: 'Last 7 days', value: '7d' },
                       ].map(dr => (
                         <label key={dr.value} className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#f8f3ed] cursor-pointer group">
                           <input 
@@ -825,16 +826,16 @@ const JobSearch = () => {
 
                   {/* Salary Range */}
                   <div className="mb-6">
-                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Mức lương</span>
+                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Salary Range</span>
                     <div className="space-y-1">
                       {[
-                        { label: 'Tất cả mức lương', value: '' },
-                        { label: 'Dưới 5 triệu', value: '<5' },
-                        { label: '5 - 10 triệu', value: '5-10' },
-                        { label: '10 - 15 triệu', value: '10-15' },
-                        { label: '15 - 20 triệu', value: '15-20' },
-                        { label: 'Trên 20 triệu', value: '>20' },
-                        { label: 'Thỏa thuận', value: 'negotiable' },
+                        { label: 'All Salaries', value: '' },
+                        { label: 'Under 5M', value: '<5' },
+                        { label: '5 - 10M', value: '5-10' },
+                        { label: '10 - 15M', value: '10-15' },
+                        { label: '15 - 20M', value: '15-20' },
+                        { label: 'Over 20M', value: '>20' },
+                        { label: 'Negotiable', value: 'negotiable' },
                       ].map(sal => (
                         <label key={sal.value} className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#f8f3ed] cursor-pointer group">
                           <input 
@@ -853,9 +854,9 @@ const JobSearch = () => {
 
                   {/* Experience */}
                   <div className="mb-6">
-                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Kinh nghiệm</span>
+                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Experience</span>
                     <div className="space-y-1">
-                      {['Không yêu cầu', 'Dưới 1 năm', '1-3 năm', '3-5 năm', 'Trên 5 năm'].map(exp => (
+                      {['No requirement', 'Under 1 year', '1-3 years', '3-5 years', 'Over 5 years'].map(exp => (
                         <label key={exp} className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f8f3ed] cursor-pointer group">
                           <span className={`text-sm ${selectedExperience.includes(exp) ? 'text-[#4153b4] font-bold' : 'text-[#454652] group-hover:text-[#4153b4]'}`}>{exp}</span>
                           <input 
@@ -871,9 +872,9 @@ const JobSearch = () => {
 
                   {/* Level */}
                   <div className="mb-6">
-                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Cấp bậc</span>
+                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Level</span>
                     <div className="space-y-1">
-                      {['Thực tập sinh', 'Nhân viên', 'Trưởng nhóm', 'Quản lý', 'Giám đốc'].map(lvl => (
+                      {['Intern', 'Staff', 'Team Lead', 'Manager', 'Director'].map(lvl => (
                         <label key={lvl} className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f8f3ed] cursor-pointer group">
                           <span className={`text-sm ${selectedLevels.includes(lvl) ? 'text-[#4153b4] font-bold' : 'text-[#454652] group-hover:text-[#4153b4]'}`}>{lvl}</span>
                           <input 
@@ -889,7 +890,7 @@ const JobSearch = () => {
 
                   {/* Employment Type */}
                   <div className="mb-6">
-                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Hình thức làm việc</span>
+                    <span className="text-[0.75rem] font-bold uppercase tracking-wider text-[#4153b4] mb-3 block">Work Type</span>
                     <div className="space-y-1">
                       {['Full-time', 'Part-time', 'Remote', 'Contract', 'Internship'].map(type => (
                         <label key={type} className="flex items-center justify-between p-2 rounded-lg hover:bg-[#f8f3ed] cursor-pointer group">
@@ -908,8 +909,8 @@ const JobSearch = () => {
                   {/* Talent Pool CTA */}
                   <div className="p-6 rounded-2xl bg-gradient-to-br from-[#4153b4]/10 to-[#7c429f]/10 border-l-4 border-[#4153b4]">
                     <h4 className="text-[#4153b4] font-bold mb-2">Talent Pool</h4>
-                    <p className="text-xs text-[#454652] leading-relaxed">Tham gia nhóm tài năng để được nhà tuyển dụng liên hệ trước.</p>
-                    <button className="mt-4 text-xs font-bold text-[#4153b4] uppercase tracking-widest border-b-2 border-[#4153b4]/20 hover:border-[#4153b4] transition-all">Tham gia</button>
+                    <p className="text-xs text-[#454652] leading-relaxed">Join the talent pool to be contacted by recruiters first.</p>
+                    <button className="mt-4 text-xs font-bold text-[#4153b4] uppercase tracking-widest border-b-2 border-[#4153b4]/20 hover:border-[#4153b4] transition-all">Join</button>
                   </div>
                 </div>
               </aside>
@@ -917,11 +918,11 @@ const JobSearch = () => {
               <div className="flex-grow">
                 <div className="flex items-center justify-between mb-8">
                   <span className="text-sm text-[#454652]">
-                    {loading ? 'Đang tìm kiếm...' : (
+                    {loading ? 'Searching...' : (
                       isRecommendedMode ? (
-                        <>Goi y <span className="font-bold text-[#1d1b18]">{jobs.length}</span> viec lam theo skills va location cua ban</>
+                        <>Showing <span className="font-bold text-[#1d1b18]">{jobs.length}</span> jobs based on your skills and location</>
                       ) : (
-                        <>Tìm thấy <span className="font-bold text-[#1d1b18]">{jobs.length}</span> vị trí phù hợp</>
+                        <>Found <span className="font-bold text-[#1d1b18]">{jobs.length}</span> positions</>
                       )
                     )}
                   </span>
@@ -954,18 +955,18 @@ const JobSearch = () => {
                       </div>
                       {isRecommendedMode ? (
                         <>
-                          <h3 className="text-xl font-bold text-[#1d1b18] mb-2">Chua co goi y phu hop</h3>
-                          <p className="text-sm text-[#454652]">Them skills va location vao profile de Neo4j co du lieu goi y tot hon.</p>
+                          <h3 className="text-xl font-bold text-[#1d1b18] mb-2">No recommendations yet</h3>
+                          <p className="text-sm text-[#454652]">Add skills and location to your profile to get better recommendations.</p>
                           <Link to="/profile" className="mt-6 inline-block text-sm font-bold text-[#4153b4] hover:underline">
-                            Cap nhat profile
+                            Update Profile
                           </Link>
                         </>
                       ) : (
                         <>
-                          <h3 className="text-xl font-bold text-[#1d1b18] mb-2">Không tìm thấy công việc phù hợp</h3>
-                          <p className="text-sm text-[#454652]">Thử thay đổi từ khóa hoặc bộ lọc để có kết quả tốt hơn.</p>
+                          <h3 className="text-xl font-bold text-[#1d1b18] mb-2">No matching jobs found</h3>
+                          <p className="text-sm text-[#454652]">Try changing keywords or filters for better results.</p>
                           <button onClick={clearFilters} className="mt-6 text-sm font-bold text-[#4153b4] hover:underline">
-                            Xóa tất cả bộ lọc
+                            Clear all filters
                           </button>
                         </>
                       )}
