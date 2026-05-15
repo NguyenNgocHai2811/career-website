@@ -8,32 +8,36 @@
  *   - generateCareerPaths: sinh galaxy 8-10 nghề (database + AI gợi ý)
  *   - generateCareerDetail: chi tiết 4 section của 1 nghề
  *
- * Provider: Google Gemini với responseMimeType=JSON.
- * Khi Gemini fail → mock fallback đúng schema từng phase.
+ * Provider: DeepSeek với JSON Output.
+ * Khi DeepSeek fail → mock fallback đúng schema từng phase.
  */
 
-const geminiProvider = require('./providers/geminiProvider');
+const deepseekProvider = require('./providers/deepseekProvider');
 
 const stripFences = (text = '') =>
   text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
 /**
- * Helper chung: gửi 1 prompt tới Gemini, parse JSON, fallback mock nếu fail.
+ * Helper chung: gửi 1 prompt tới DeepSeek, parse JSON, fallback mock nếu fail.
  * @param {string} promptText
  * @param {object} mockFallback - object đúng schema kỳ vọng
  * @returns {Promise<object>}
  */
-const callGeminiJson = async (promptText, mockFallback) => {
+const callDeepSeekJson = async (promptText, mockFallback) => {
   let rawText = '';
   try {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('No Gemini API Key configured');
+    if (!process.env.DEEPSEEK_API_KEY) {
+      throw new Error('No DeepSeek API key configured');
     }
-    rawText = await geminiProvider.chat([{ role: 'user', text: promptText }]);
+    console.log('\n========== [aiService] PROMPT SENT TO DEEPSEEK ==========');
+    console.log(promptText);
+    console.log('==========================================================\n');
+    rawText = await deepseekProvider.chat([{ role: 'user', text: promptText }]);
     const parsed = JSON.parse(stripFences(rawText));
     return parsed;
   } catch (err) {
-    console.warn('[aiService] Gemini failed or invalid JSON, using mock fallback:', err.message);
+    console.warn('[aiService] DeepSeek failed or invalid JSON, using mock fallback:', err.message);
+    if (rawText) console.warn('[aiService] Raw response was:', rawText.slice(0, 1500));
     return mockFallback;
   }
 };
@@ -60,25 +64,37 @@ Trả về JSON đúng cấu trúc:
 { "skills": ["kỹ năng 1", "kỹ năng 2", "kỹ năng 3", "kỹ năng 4", "kỹ năng 5", "kỹ năng 6", "kỹ năng 7", "kỹ năng 8"] }
 Chỉ trả JSON, không thêm text khác.`;
 
-const IDENTITY_PROMPT = ({ role, organization, tasks, skills, profileContext }) => `Bạn là chuyên gia tư vấn nghề nghiệp Việt Nam, viết với giọng văn chuyên nghiệp nhưng truyền cảm.
+const IDENTITY_PROMPT = ({ role, organization, tasks, skills, profileContext, extraExperiences, extraEducation }) => {
+  const extraExpLine = extraExperiences.length > 0
+    ? `- Kinh nghiệm bổ sung (BẮT BUỘC đề cập): ${extraExperiences.join('; ')}`
+    : '';
+  const extraEduLine = extraEducation.length > 0
+    ? `- Học vấn bổ sung (BẮT BUỘC đề cập): ${extraEducation.join('; ')}`
+    : '';
 
-THÔNG TIN HỒ SƠ NGƯỜI DÙNG (đã xác minh từ KORRA):
-${profileContext}
+  return `Bạn là chuyên gia tư vấn nghề nghiệp Việt Nam, viết với giọng văn chuyên nghiệp nhưng truyền cảm.
 
-THÔNG TIN BỔ SUNG TỪ WIZARD:
-- Vị trí gần nhất: ${role}${organization ? ` tại ${organization}` : ''}
-- Các nhiệm vụ đã làm: ${tasks.join('; ')}
+TRỌNG TÂM CHÍNH — ngữ cảnh người dùng vừa cung cấp (ưu tiên cao nhất):
+- Vị trí hiện tại: ${role}${organization ? ` tại ${organization}` : ''}
+- Nhiệm vụ thực tế đang làm: ${tasks.join('; ')}
 - Kỹ năng tự đánh giá: ${skills.join(', ')}
+${extraExpLine}
+${extraEduLine}
+
+THÔNG TIN NỀN (dùng để làm phong phú thêm, KHÔNG lấn át trọng tâm trên):
+${profileContext}
 
 Hãy viết 1 đoạn "Career Identity Statement" tiếng Việt cho người dùng:
 - Độ dài: 3-5 câu, khoảng 100-180 ký tự mỗi câu.
 - Ngôi xưng: "Tôi" (first person).
-- Cấu trúc: (1) Tôi làm gì + giá trị tạo ra. (2) Phương pháp/cách tiếp cận của tôi. (3) Kinh nghiệm cụ thể tóm tắt.
+- Cấu trúc: (1) Tôi đang làm gì + giá trị tạo ra (dựa trên TRỌNG TÂM CHÍNH). (2) Phương pháp/kỹ năng tôi áp dụng. (3) Nếu có thông tin nền liên quan, lồng ghép tự nhiên — nhắc tên công ty/trường cụ thể.
 - KHÔNG sáo rỗng, KHÔNG dùng cliché ("đam mê", "thử thách bản thân"...).
+- KHÔNG bịa thông tin không có trong dữ liệu trên.
 
 Trả về JSON đúng cấu trúc:
 { "statement": "đoạn văn..." }
 Chỉ trả JSON, không thêm text khác.`;
+};
 
 const PATHS_PROMPT = ({ identityStatement, skills }) => `Bạn là chuyên gia bản đồ nghề nghiệp Việt Nam.
 
@@ -194,22 +210,22 @@ const MOCK_DETAIL = {
 // ─── PUBLIC API ─────────────────────────────────────────────────────────────
 
 const generateTasks = ({ role, organization = '' }) =>
-  callGeminiJson(TASKS_PROMPT({ role, organization }), MOCK_TASKS);
+  callDeepSeekJson(TASKS_PROMPT({ role, organization }), MOCK_TASKS);
 
 const generateSkills = ({ role, tasks }) =>
-  callGeminiJson(SKILLS_PROMPT({ role, tasks }), MOCK_SKILLS);
+  callDeepSeekJson(SKILLS_PROMPT({ role, tasks }), MOCK_SKILLS);
 
-const generateIdentityStatement = ({ role, organization = '', tasks, skills, profileContext }) =>
-  callGeminiJson(
-    IDENTITY_PROMPT({ role, organization, tasks, skills, profileContext }),
+const generateIdentityStatement = ({ role, organization = '', tasks, skills, profileContext, extraExperiences = [], extraEducation = [] }) =>
+  callDeepSeekJson(
+    IDENTITY_PROMPT({ role, organization, tasks, skills, profileContext, extraExperiences, extraEducation }),
     MOCK_IDENTITY
   );
 
 const generateCareerPaths = ({ identityStatement, skills }) =>
-  callGeminiJson(PATHS_PROMPT({ identityStatement, skills }), MOCK_PATHS);
+  callDeepSeekJson(PATHS_PROMPT({ identityStatement, skills }), MOCK_PATHS);
 
 const generateCareerDetail = ({ careerId, careerTitle, profileContext }) =>
-  callGeminiJson(DETAIL_PROMPT({ careerId, careerTitle, profileContext }), MOCK_DETAIL);
+  callDeepSeekJson(DETAIL_PROMPT({ careerId, careerTitle, profileContext }), MOCK_DETAIL);
 
 module.exports = {
   generateTasks,

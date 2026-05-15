@@ -3,8 +3,9 @@ const normalizeSkills = require('./normalizeSkills');
 const ruleBasedExtractor = require('./ruleBasedExtractor');
 
 const hasApiKey = () => {
-  const provider = (process.env.JOB_SKILL_LLM_PROVIDER || 'gemini').toLowerCase();
+  const provider = (process.env.JOB_SKILL_LLM_PROVIDER || 'deepseek').toLowerCase();
 
+  if (provider === 'deepseek') return Boolean(process.env.DEEPSEEK_API_KEY);
   if (provider === 'gemini') return Boolean(process.env.GEMINI_API_KEY);
   return false;
 };

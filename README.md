@@ -90,6 +90,11 @@ Backend được tổ chức theo kiến trúc **Layered Architecture (Route-Con
 | `CLOUDINARY_CLOUD_NAME` | Tên Cloudinary account | `your-cloud-name` |
 | `CLOUDINARY_API_KEY` | API Key của Cloudinary | `123456789` |
 | `CLOUDINARY_API_SECRET` | API Secret của Cloudinary | `secret-cloudinary-key` |
+| `DEEPSEEK_API_KEY` | API Key của DeepSeek cho các tính năng AI | `sk-...` |
+| `DEEPSEEK_BASE_URL` | Base URL OpenAI-compatible của DeepSeek | `https://api.deepseek.com` |
+| `DEEPSEEK_MODEL` | Model DeepSeek dùng cho AI service | `deepseek-v4-flash` |
+| `JOB_SKILL_LLM_ENABLED` | Bật/tắt LLM cho trích xuất kỹ năng công việc | `false` |
+| `JOB_SKILL_LLM_PROVIDER` | Provider LLM cho trích xuất kỹ năng công việc | `deepseek` |
 <!-- /AUTO-GENERATED:ENV -->
 
 ### 3. Các lệnh chính (Available Scripts)

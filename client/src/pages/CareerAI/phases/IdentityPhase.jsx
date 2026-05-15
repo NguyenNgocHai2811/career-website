@@ -1,39 +1,127 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Chip from '../components/Chip';
 import ProfileSection from '../components/ProfileSection';
 import AiLoading from '../components/AiLoading';
 
-/**
- * IdentityPhase — split-pane:
- *   left = profile sections (experience, education, skills)
- *   right = Career Identity Statement card
- */
 const IdentityPhase = ({
   role,
   organization,
   selectedSkills,
   identityStatement,
   loading,
+  extraExperiences,
+  extraEducation,
+  onAddExperience,
+  onRemoveExperience,
+  onAddEducation,
+  onRemoveEducation,
   onExplorePaths,
-  onEditProfile,
   onRegenerate,
 }) => {
+  const [showExpInput, setShowExpInput] = useState(false);
+  const [showEduInput, setShowEduInput] = useState(false);
+  const [inputExp, setInputExp] = useState('');
+  const [inputEdu, setInputEdu] = useState('');
+
+  const handleAddExp = () => {
+    if (inputExp.trim()) {
+      onAddExperience(inputExp.trim());
+      setInputExp('');
+      setShowExpInput(false);
+    }
+  };
+
+  const handleAddEdu = () => {
+    if (inputEdu.trim()) {
+      onAddEducation(inputEdu.trim());
+      setInputEdu('');
+      setShowEduInput(false);
+    }
+  };
+
   return (
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-72px)] px-6 md:px-10 py-8 gap-8 max-w-[1200px] mx-auto w-full">
       {/* Left – Profile */}
       <div className="flex-1 min-w-0">
         <ProfileSection icon="🌱" title="Kinh nghiệm">
-          <Chip blue removable>
-            {role}
-            {organization ? ` • ${organization}` : ''}
+          <Chip blue>
+            {role}{organization ? ` • ${organization}` : ''}
           </Chip>
-          <Chip outline onClick={onEditProfile}>
-            + Thêm kinh nghiệm
-          </Chip>
+          {extraExperiences.map((exp, i) => (
+            <Chip key={i} blue removable onClick={() => onRemoveExperience(i)}>
+              {exp}
+            </Chip>
+          ))}
+          {showExpInput ? (
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <input
+                autoFocus
+                value={inputExp}
+                maxLength={80}
+                onChange={(e) => setInputExp(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddExp()}
+                placeholder="Vị trí • Công ty..."
+                className="text-sm border border-gray-300 rounded-full px-3 py-1.5 outline-none focus:border-primary w-52"
+              />
+              <button
+                type="button"
+                onClick={handleAddExp}
+                className="text-xs bg-primary text-white rounded-full px-3 py-1.5 font-medium"
+              >
+                Thêm
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowExpInput(false); setInputExp(''); }}
+                className="text-xs text-slate-400 hover:text-slate-600"
+              >
+                Hủy
+              </button>
+            </div>
+          ) : (
+            <Chip outline onClick={() => setShowExpInput(true)}>
+              + Thêm kinh nghiệm
+            </Chip>
+          )}
         </ProfileSection>
 
         <ProfileSection icon="🎓" title="Học vấn">
-          <Chip outline>+ Thêm học vấn</Chip>
+          {extraEducation.map((edu, i) => (
+            <Chip key={i} blue removable onClick={() => onRemoveEducation(i)}>
+              {edu}
+            </Chip>
+          ))}
+          {showEduInput ? (
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <input
+                autoFocus
+                value={inputEdu}
+                maxLength={80}
+                onChange={(e) => setInputEdu(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddEdu()}
+                placeholder="Bằng cấp • Trường..."
+                className="text-sm border border-gray-300 rounded-full px-3 py-1.5 outline-none focus:border-primary w-52"
+              />
+              <button
+                type="button"
+                onClick={handleAddEdu}
+                className="text-xs bg-primary text-white rounded-full px-3 py-1.5 font-medium"
+              >
+                Thêm
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowEduInput(false); setInputEdu(''); }}
+                className="text-xs text-slate-400 hover:text-slate-600"
+              >
+                Hủy
+              </button>
+            </div>
+          ) : (
+            <Chip outline onClick={() => setShowEduInput(true)}>
+              + Thêm học vấn
+            </Chip>
+          )}
         </ProfileSection>
 
         <ProfileSection icon="💪" title="Kỹ năng">
