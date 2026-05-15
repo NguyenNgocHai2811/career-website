@@ -35,11 +35,11 @@ const formatNotifDate = (dateStr) => {
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return '';
   const diff = Math.floor((Date.now() - date) / 1000);
-  if (diff < 60) return 'Vừa xong';
-  if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
-  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 const NotificationBell = () => {
@@ -145,19 +145,19 @@ const NotificationBell = () => {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#1e293b] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 z-50 animate-fade-in-up max-h-100 overflow-y-auto">
           <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-            <h3 className="font-bold text-slate-900 dark:text-white">Thông báo</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
                 className="text-xs text-blue-500 hover:underline"
               >
-                Đánh dấu tất cả đã đọc
+                Mark all as read
               </button>
             )}
           </div>
           <div className="py-1">
             {notifications.length === 0 ? (
-              <p className="px-4 py-3 text-sm text-center text-slate-500">Không có thông báo mới</p>
+              <p className="px-4 py-3 text-sm text-center text-slate-500">No new notifications</p>
             ) : (
               notifications.map(n => (
                 <div

@@ -70,9 +70,9 @@ function Login() {
         <div className="relative z-10 flex w-full flex-1 flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
           <div className="w-full max-w-[460px] overflow-hidden rounded-[10px] bg-white/95 backdrop-blur-sm shadow-2xl ring-1 ring-white/50">
             <div className="flex flex-col gap-2 p-10 pb-4 text-center">
-              <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-[10px] bg-primary/10 text-primary">
+              <Link to="/" className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-[10px] bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                 <span className="material-symbols-outlined text-3xl">diamond</span>
-              </div>
+              </Link>
               <h2 className="text-2xl font-extrabold tracking-tight text-primary-dark">Welcome Back</h2>
               <p className="text-sm text-slate-500">Access your professional networking dashboard.</p>
             </div>
@@ -151,6 +151,7 @@ function Login() {
           </div>
 
           <div className="mt-8 flex gap-8 text-xs font-bold uppercase tracking-widest text-slate-400">
+            <Link to="/" className="hover:text-primary-dark transition-colors no-underline">Home</Link>
             <a href="#" className="hover:text-primary-dark transition-colors">Privacy</a>
             <a href="#" className="hover:text-primary-dark transition-colors">Terms</a>
             <a href="#" className="hover:text-primary-dark transition-colors">Help</a>

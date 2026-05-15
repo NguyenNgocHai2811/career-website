@@ -653,7 +653,7 @@ const Profile = () => {
       console.error('Error name:', err.name);
       console.error('Error message:', err.message);
       console.error('Error stack:', err.stack);
-      alert(`Lỗi: ${err.name} - ${err.message}`);
+      alert(`Error: ${err.name} - ${err.message}`);
     } finally {
       if (restoreGetComputedStyle) restoreGetComputedStyle();
       if (exportContainer?.parentNode) {
@@ -729,7 +729,7 @@ const Profile = () => {
   };
 
   const handleUnfriend = async () => {
-    if (!confirm('Bạn có chắc chắn muốn hủy kết bạn?')) return;
+    if (!confirm('Are you sure you want to remove this connection?')) return;
     setConnLoading(true);
     try {
       await removeConnection(token, userId);
@@ -857,7 +857,7 @@ const Profile = () => {
                     <>
                       <button onClick={handleExportPDF} disabled={isExporting} className="px-5 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2">
                         {isExporting ? <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span> : <span className="material-symbols-outlined text-[18px]">download</span>}
-                        Tải PDF
+                        Download PDF
                       </button>
                       <button onClick={() => openModal('basicInfo')} className="px-5 py-2 border border-primary text-primary font-semibold rounded-lg text-sm hover:bg-primary/5 transition-colors flex items-center gap-2">
                         <span className="material-symbols-outlined text-[18px]">edit</span>
@@ -869,30 +869,30 @@ const Profile = () => {
                       {connStatus === 'NONE' && (
                         <button onClick={handleConnect} disabled={connLoading} className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 flex items-center gap-2 text-sm disabled:opacity-60">
                           <span className="material-symbols-outlined text-[18px]">person_add</span>
-                          {connLoading ? 'Đang gửi...' : 'Kết bạn'}
+                          {connLoading ? 'Sending...' : 'Connect'}
                         </button>
                       )}
                       {connStatus === 'PENDING_SENT' && (
                         <button disabled className="px-6 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-500 font-semibold rounded-lg flex items-center gap-2 text-sm cursor-default">
                           <span className="material-symbols-outlined text-[18px]">schedule</span>
-                          Đã gửi lời mời
+                          Request Sent
                         </button>
                       )}
                       {connStatus === 'PENDING_RECEIVED' && (
                         <button onClick={handleAcceptRequest} disabled={connLoading} className="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-lg shadow-green-500/20 transition-all hover:-translate-y-0.5 flex items-center gap-2 text-sm disabled:opacity-60">
                           <span className="material-symbols-outlined text-[18px]">check</span>
-                          {connLoading ? 'Đang xử lý...' : 'Chấp nhận lời mời'}
+                          {connLoading ? 'Processing...' : 'Accept Request'}
                         </button>
                       )}
                       {connStatus === 'CONNECTED' && (
                         <button onClick={handleUnfriend} disabled={connLoading} className="px-6 py-2.5 bg-white dark:bg-transparent border border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 font-semibold rounded-lg transition-all flex items-center gap-2 text-sm disabled:opacity-60">
                           <span className="material-symbols-outlined text-[18px]">person_remove</span>
-                          {connLoading ? 'Đang xử lý...' : 'Hủy kết bạn'}
+                          {connLoading ? 'Processing...' : 'Remove Connection'}
                         </button>
                       )}
                       <button onClick={() => navigate('/messages')} className="px-6 py-2.5 bg-white dark:bg-transparent border border-primary/50 text-primary hover:bg-primary/5 font-semibold rounded-lg transition-colors flex items-center gap-2 text-sm">
                         <span className="material-symbols-outlined text-[18px]">mail</span>
-                        Nhắn tin
+                        Message
                       </button>
                     </>
                   )}
@@ -953,7 +953,7 @@ const Profile = () => {
                     <>
                       <button onClick={handleExportPDF} disabled={isExporting} className="w-full py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-lg text-sm flex items-center justify-center gap-2">
                         {isExporting ? <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span> : <span className="material-symbols-outlined text-[18px]">download</span>}
-                        Tải PDF
+                        Download PDF
                       </button>
                       <button onClick={() => openModal('basicInfo')} className="w-full py-2.5 bg-primary text-white font-semibold rounded-lg text-sm flex items-center justify-center gap-2">
                         <span className="material-symbols-outlined text-[18px]">edit</span>
@@ -964,23 +964,23 @@ const Profile = () => {
                     <>
                       {connStatus === 'NONE' && (
                         <button onClick={handleConnect} disabled={connLoading} className="flex-1 py-2.5 bg-primary text-white font-semibold rounded-lg text-sm disabled:opacity-60">
-                          {connLoading ? 'Đang gửi...' : 'Kết bạn'}
+                          {connLoading ? 'Sending...' : 'Connect'}
                         </button>
                       )}
                       {connStatus === 'PENDING_SENT' && (
-                        <button disabled className="flex-1 py-2.5 bg-slate-100 text-slate-500 font-semibold rounded-lg text-sm cursor-default">Đã gửi lời mời</button>
+                        <button disabled className="flex-1 py-2.5 bg-slate-100 text-slate-500 font-semibold rounded-lg text-sm cursor-default">Request Sent</button>
                       )}
                       {connStatus === 'PENDING_RECEIVED' && (
                         <button onClick={handleAcceptRequest} disabled={connLoading} className="flex-1 py-2.5 bg-green-500 text-white font-semibold rounded-lg text-sm disabled:opacity-60">
-                          {connLoading ? 'Đang xử lý...' : 'Chấp nhận'}
+                          {connLoading ? 'Processing...' : 'Accept'}
                         </button>
                       )}
                       {connStatus === 'CONNECTED' && (
                         <button onClick={handleUnfriend} disabled={connLoading} className="flex-1 py-2.5 border border-red-300 text-red-500 font-semibold rounded-lg text-sm disabled:opacity-60">
-                          {connLoading ? 'Đang xử lý...' : 'Hủy kết bạn'}
+                          {connLoading ? 'Processing...' : 'Remove Connection'}
                         </button>
                       )}
-                      <button onClick={() => navigate('/messages')} className="flex-1 py-2.5 border border-primary text-primary font-semibold rounded-lg text-sm">Nhắn tin</button>
+                      <button onClick={() => navigate('/messages')} className="flex-1 py-2.5 border border-primary text-primary font-semibold rounded-lg text-sm">Message</button>
                     </>
                   )}
                 </div>
@@ -994,7 +994,7 @@ const Profile = () => {
             <button onClick={() => { setActiveTab('posts'); navigate(userId ? `/profile/${userId}/posts` : '/profile/posts', { replace: true }); }} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'posts' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Posts</button>
             <button onClick={() => { setActiveTab('activity'); navigate(userId ? `/profile/${userId}/activity` : '/profile/activity', { replace: true }); }} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'activity' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Activity</button>
             {isOwner && (
-              <button onClick={() => { setActiveTab('saved'); navigate(`/profile/${userId || 'me'}/saved-jobs`, { replace: true }); }} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'saved' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Việc đã lưu</button>
+              <button onClick={() => { setActiveTab('saved'); navigate(`/profile/${userId || 'me'}/saved-jobs`, { replace: true }); }} className={`px-1 py-3 border-b-[3px] font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'saved' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-primary hover:border-slate-200 dark:hover:text-white'}`}>Saved Jobs</button>
             )}
           </div>
         </header>

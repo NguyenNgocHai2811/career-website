@@ -15,17 +15,17 @@ const ResetPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!token) {
-      setError('Token không hợp lệ hoặc đã hết hạn.');
+      setError('Invalid or expired token.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp.');
+      setError('Passwords do not match.');
       return;
     }
 
     if (password.length < 8) {
-      setError('Mật khẩu phải có ít nhất 8 ký tự.');
+      setError('Password must be at least 8 characters.');
       return;
     }
 
@@ -47,10 +47,10 @@ const ResetPassword = () => {
       if (response.ok) {
         navigate('/reset-password/success');
       } else {
-        setError(data.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+        setError(data.message || 'An error occurred. Please try again.');
       }
     } catch (err) {
-      setError('Lỗi kết nối. Vui lòng kiểm tra mạng và thử lại.');
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -71,7 +71,7 @@ const ResetPassword = () => {
         </div>
         <h2 className="text-2xl font-bold tracking-tight">Korra</h2>
         </div>
-        <nav className="hidden md:flex gap-6 text-sm font-medium font-sans text-text-muted dark:text-gray-400">
+        <nav className="hidden md:flex gap-6 text-sm font-medium text-text-muted dark:text-gray-400">
           <a className="hover:text-primary transition-colors" href="#">Help Center</a>
           <a className="hover:text-primary transition-colors" href="#">Contact Support</a>
         </nav>
@@ -84,18 +84,18 @@ const ResetPassword = () => {
               <span className="material-symbols-outlined text-3xl">encrypted</span>
             </div>
             <h1 className="text-3xl font-bold mb-3 text-text-main dark:text-white">Set new password</h1>
-            <p className="text-text-muted dark:text-gray-400 text-sm mb-8 leading-relaxed font-sans max-w-xs">
+            <p className="text-text-muted dark:text-gray-400 text-sm mb-8 leading-relaxed max-w-xs">
               Your new password must be different from previously used passwords.
             </p>
 
-            {error && <div className="text-red-500 text-sm mb-4 font-sans">{error}</div>}
+            {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
 
             <form className="w-full flex flex-col gap-5 text-left" onSubmit={handleSubmit}>
               <label className="flex flex-col w-full group/input">
-                <span className="text-xs font-semibold text-text-main dark:text-gray-300 mb-2 ml-1 font-sans">New Password</span>
+                <span className="text-xs font-semibold text-text-main dark:text-gray-300 mb-2 ml-1">New Password</span>
                 <div className="relative">
                   <input
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#121420] text-text-main dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-sans placeholder:text-gray-300 dark:placeholder:text-gray-600"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#121420] text-text-main dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600"
                     placeholder="••••••••"
                     type={showPassword ? "text" : "password"}
                     value={password}
@@ -120,16 +120,16 @@ const ResetPassword = () => {
                   <div className={`h-full w-1/4 rounded-full ${password.length >= 10 && /[A-Z]/.test(password) && /[0-9]/.test(password) ? 'bg-emerald-400' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
                 </div>
                 <div className="flex justify-between items-center w-full">
-                  <span className="text-[10px] text-text-muted dark:text-gray-500 font-sans">Min 8 characters</span>
-                  {password.length >= 8 && <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wide font-sans">Strong</span>}
+                  <span className="text-[10px] text-text-muted dark:text-gray-500">Min 8 characters</span>
+                  {password.length >= 8 && <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wide">Strong</span>}
                 </div>
               </div>
 
               <label className="flex flex-col w-full group/input">
-                <span className="text-xs font-semibold text-text-main dark:text-gray-300 mb-2 ml-1 font-sans">Confirm Password</span>
+                <span className="text-xs font-semibold text-text-main dark:text-gray-300 mb-2 ml-1">Confirm Password</span>
                 <div className="relative">
                   <input
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#121420] text-text-main dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-sans placeholder:text-gray-300 dark:placeholder:text-gray-600"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#121420] text-text-main dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600"
                     placeholder="••••••••"
                     type={showPassword ? "text" : "password"}
                     value={confirmPassword}
@@ -142,13 +142,13 @@ const ResetPassword = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-4 bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all transform active:scale-[0.98] font-sans flex items-center justify-center disabled:opacity-70"
+                className="w-full mt-4 bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center disabled:opacity-70"
               >
                 {loading ? 'Updating...' : 'Update Password'}
               </button>
             </form>
 
-            <Link to="/login" className="mt-8 text-sm text-text-muted dark:text-gray-400 hover:text-primary dark:hover:text-primary font-medium flex items-center gap-1 transition-colors font-sans group/link">
+            <Link to="/login" className="mt-8 text-sm text-text-muted dark:text-gray-400 hover:text-primary dark:hover:text-primary font-medium flex items-center gap-1 transition-colors group/link">
               <span className="material-symbols-outlined text-base transition-transform group-hover/link:-translate-x-1">arrow_back</span>
               Back to Login
             </Link>
@@ -156,7 +156,7 @@ const ResetPassword = () => {
         </div>
       </main>
 
-      <footer className="w-full py-8 text-center text-xs text-text-muted/60 font-sans">
+      <footer className="w-full py-8 text-center text-xs text-text-muted/60">
         <p>© 2024 Korra Inc. All rights reserved.</p>
       </footer>
     </div>

@@ -49,13 +49,13 @@ const ProfileSavedJobs = ({ token }) => {
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>
         </div>
-        <p className="text-slate-500 dark:text-slate-400 font-medium">Chưa lưu công việc nào</p>
-        <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Lưu các vị trí yêu thích để xem lại sau.</p>
+        <p className="text-slate-500 dark:text-slate-400 font-medium">No saved jobs yet</p>
+        <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Save your favorite positions to review later.</p>
         <Link to="/jobs" className="mt-5 px-5 py-2.5 bg-primary text-white rounded-full text-sm font-semibold hover:bg-primary/90 transition-colors">
-          Khám phá việc làm
+          Explore Jobs
         </Link>
         <Link to="/applications" className="mt-2 text-sm text-primary font-semibold hover:underline">
-          Xem ứng tuyển của tôi →
+          View My Applications →
         </Link>
       </div>
     );
@@ -116,13 +116,13 @@ const ProfileSavedJobs = ({ token }) => {
               to={`/jobs?jobId=${job.jobId}`}
               className="flex-1 py-2 bg-primary text-white rounded-lg text-xs font-bold text-center hover:bg-primary/90 transition-colors"
             >
-              Xem chi tiết
+              View Details
             </Link>
             <button
               onClick={() => handleUnsave(job.jobId)}
               disabled={unsavingId === job.jobId}
               className="px-3 py-2 bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-lg text-xs font-bold hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Bỏ lưu"
+              title="Unsave"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />

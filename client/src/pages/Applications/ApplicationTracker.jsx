@@ -11,20 +11,20 @@ import {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const OFFICIAL_STATUS_CONFIG = {
-  PENDING:     { label: 'Chờ duyệt',   color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200' },
+  PENDING:     { label: 'Pending',     color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200' },
   SHORTLISTED: { label: 'Shortlisted', color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200' },
-  INTERVIEWED: { label: 'Phỏng vấn',  color: 'text-purple-700',  bg: 'bg-purple-50 border-purple-200' },
-  HIRED:       { label: 'Tuyển dụng',  color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
-  REJECTED:    { label: 'Từ chối',     color: 'text-red-700',     bg: 'bg-red-50 border-red-200' },
+  INTERVIEWED: { label: 'Interviewed', color: 'text-purple-700',  bg: 'bg-purple-50 border-purple-200' },
+  HIRED:       { label: 'Hired',       color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
+  REJECTED:    { label: 'Rejected',    color: 'text-red-700',     bg: 'bg-red-50 border-red-200' },
 };
 
 const CANDIDATE_STATUS_OPTIONS = [
-  { value: 'APPLIED',    label: 'Đã nộp' },
-  { value: 'FOLLOW_UP',  label: 'Cần follow-up' },
-  { value: 'INTERVIEW',  label: 'Phỏng vấn' },
-  { value: 'OFFER',      label: 'Nhận offer' },
-  { value: 'REJECTED',   label: 'Bị từ chối' },
-  { value: 'WITHDRAWN',  label: 'Rút đơn' },
+  { value: 'APPLIED',    label: 'Applied' },
+  { value: 'FOLLOW_UP',  label: 'Follow-up Needed' },
+  { value: 'INTERVIEW',  label: 'Interview' },
+  { value: 'OFFER',      label: 'Offer Received' },
+  { value: 'REJECTED',   label: 'Rejected' },
+  { value: 'WITHDRAWN',  label: 'Withdrawn' },
 ];
 
 const CANDIDATE_STATUS_CONFIG = {
@@ -41,7 +41,7 @@ const formatDate = (dateStr) => {
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return null;
-    return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
   } catch {
     return null;
   }
@@ -76,7 +76,7 @@ const AddExternalModal = ({ onClose, onCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title.trim() || !form.companyName.trim()) {
-      setError('Vị trí và công ty là bắt buộc.');
+      setError('Job title and company are required.');
       return;
     }
     setLoading(true);
@@ -86,7 +86,7 @@ const AddExternalModal = ({ onClose, onCreated }) => {
       onCreated(created);
       onClose();
     } catch (err) {
-      setError(err.message || 'Không thể tạo ứng tuyển.');
+      setError(err.message || 'Failed to create application.');
     } finally {
       setLoading(false);
     }
@@ -97,30 +97,30 @@ const AddExternalModal = ({ onClose, onCreated }) => {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white dark:bg-slate-800 rounded-t-2xl border-b border-slate-100 dark:border-slate-700 px-6 py-4 flex items-center justify-between z-10">
-          <h3 className="font-bold text-slate-900 dark:text-white">Thêm ứng tuyển bên ngoài</h3>
+          <h3 className="font-bold text-slate-900 dark:text-white">Add External Application</h3>
           <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-colors">
             <span className="material-symbols-outlined text-slate-400" style={{ fontSize: 20 }}>close</span>
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-primary uppercase tracking-wider mb-1">Vị trí *</label>
+            <label className="block text-xs font-bold text-primary uppercase tracking-wider mb-1">Job Title *</label>
             <input name="title" value={form.title} onChange={handleChange} placeholder="Frontend Developer..." required
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary focus:ring-1 focus:ring-primary/20" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-primary uppercase tracking-wider mb-1">Công ty *</label>
+            <label className="block text-xs font-bold text-primary uppercase tracking-wider mb-1">Company *</label>
             <input name="companyName" value={form.companyName} onChange={handleChange} placeholder="Google, Meta..." required
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary focus:ring-1 focus:ring-primary/20" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Địa điểm</label>
-              <input name="location" value={form.location} onChange={handleChange} placeholder="Hà Nội..."
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Location</label>
+              <input name="location" value={form.location} onChange={handleChange} placeholder="Ho Chi Minh City..."
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary focus:ring-1 focus:ring-primary/20" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Trạng thái</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Status</label>
               <select name="candidateStatus" value={form.candidateStatus} onChange={handleChange}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary">
                 {CANDIDATE_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -129,7 +129,7 @@ const AddExternalModal = ({ onClose, onCreated }) => {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Ngày nộp</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Applied Date</label>
               <input type="date" name="appliedAt" value={form.appliedAt} onChange={handleChange}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary" />
             </div>
@@ -141,25 +141,25 @@ const AddExternalModal = ({ onClose, onCreated }) => {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Người liên hệ</label>
-              <input name="contactName" value={form.contactName} onChange={handleChange} placeholder="Nguyễn HR..."
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contact Name</label>
+              <input name="contactName" value={form.contactName} onChange={handleChange} placeholder="HR Manager..."
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Email liên hệ</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contact Email</label>
               <input name="contactEmail" value={form.contactEmail} onChange={handleChange} type="email" placeholder="hr@company.com"
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Ghi chú</label>
-            <textarea name="notes" value={form.notes} onChange={handleChange} rows={3} placeholder="Ghi chú về công việc này..."
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Notes</label>
+            <textarea name="notes" value={form.notes} onChange={handleChange} rows={3} placeholder="Notes about this application..."
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary resize-none" />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button type="submit" disabled={loading}
             className="w-full py-2.5 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-            {loading ? 'Đang lưu...' : 'Thêm ứng tuyển'}
+            {loading ? 'Saving...' : 'Add Application'}
           </button>
         </form>
       </div>
@@ -197,7 +197,7 @@ const DetailDrawer = ({ app, onClose, onUpdated, onArchiveToggle }) => {
       const updated = await updateMyApplication(token, app.jobId, form);
       onUpdated(updated);
     } catch (err) {
-      setError(err.message || 'Không thể cập nhật.');
+      setError(err.message || 'Failed to update.');
     } finally {
       setSaving(false);
     }
@@ -210,7 +210,7 @@ const DetailDrawer = ({ app, onClose, onUpdated, onArchiveToggle }) => {
       onArchiveToggle(updated);
       onClose();
     } catch (err) {
-      setError(err.message || 'Không thể lưu trữ.');
+      setError(err.message || 'Failed to archive.');
     } finally {
       setArchiving(false);
     }
@@ -236,7 +236,7 @@ const DetailDrawer = ({ app, onClose, onUpdated, onArchiveToggle }) => {
         <div className="p-5 space-y-5 flex-1">
           {/* Official status (read-only) */}
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Trạng thái từ NTD</p>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Recruiter Status</p>
             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${officialCfg.bg} ${officialCfg.color}`}>
               {officialCfg.label}
             </span>
@@ -244,7 +244,7 @@ const DetailDrawer = ({ app, onClose, onUpdated, onArchiveToggle }) => {
 
           {/* Candidate status */}
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Trạng thái của bạn</label>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Your Status</label>
             <select name="candidateStatus" value={form.candidateStatus} onChange={handleChange}
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary">
               {CANDIDATE_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -259,7 +259,7 @@ const DetailDrawer = ({ app, onClose, onUpdated, onArchiveToggle }) => {
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs text-slate-900 dark:text-white outline-none focus:border-primary" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Phỏng vấn</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Interview Date</label>
               <input type="date" name="interviewAt" value={form.interviewAt} onChange={handleChange}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs text-slate-900 dark:text-white outline-none focus:border-primary" />
             </div>
@@ -267,19 +267,19 @@ const DetailDrawer = ({ app, onClose, onUpdated, onArchiveToggle }) => {
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Ghi chú</label>
-            <textarea name="notes" value={form.notes} onChange={handleChange} rows={4} placeholder="Thêm ghi chú..."
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Notes</label>
+            <textarea name="notes" value={form.notes} onChange={handleChange} rows={4} placeholder="Add notes..."
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary resize-none" />
           </div>
 
           {/* Contact */}
           <div className="space-y-2">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Liên hệ</p>
-            <input name="contactName" value={form.contactName} onChange={handleChange} placeholder="Tên HR..."
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Contact</p>
+            <input name="contactName" value={form.contactName} onChange={handleChange} placeholder="HR Name..."
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary" />
             <input name="contactEmail" value={form.contactEmail} onChange={handleChange} type="email" placeholder="Email HR..."
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary" />
-            <input name="contactPhone" value={form.contactPhone} onChange={handleChange} placeholder="SĐT..."
+            <input name="contactPhone" value={form.contactPhone} onChange={handleChange} placeholder="Phone..."
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary" />
           </div>
 
@@ -296,7 +296,7 @@ const DetailDrawer = ({ app, onClose, onUpdated, onArchiveToggle }) => {
             <Link to={`/jobs?jobId=${app.jobId}`}
               className="flex items-center gap-1.5 text-sm text-primary font-semibold hover:underline">
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>open_in_new</span>
-              Xem tin tuyển dụng
+              View Job Listing
             </Link>
           )}
 
@@ -307,11 +307,11 @@ const DetailDrawer = ({ app, onClose, onUpdated, onArchiveToggle }) => {
         <div className="sticky bottom-0 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 px-5 py-4 flex gap-2">
           <button onClick={handleSave} disabled={saving}
             className="flex-1 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/90 disabled:opacity-50 transition-colors">
-            {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+            {saving ? 'Saving...' : 'Save Changes'}
           </button>
           <button onClick={handleArchive} disabled={archiving}
             className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-semibold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors">
-            {archiving ? '...' : app.archived ? 'Khôi phục' : 'Lưu trữ'}
+            {archiving ? '...' : app.archived ? 'Restore' : 'Archive'}
           </button>
         </div>
       </div>
@@ -334,10 +334,10 @@ const StatsBar = ({ applications }) => {
   }, [applications]);
 
   const items = [
-    { label: 'Tổng ứng tuyển', value: stats.total, icon: 'work', color: 'text-primary' },
-    { label: 'Đang phỏng vấn', value: stats.interviewing, icon: 'forum', color: 'text-purple-600' },
-    { label: 'Nhận offer', value: stats.offers, icon: 'verified', color: 'text-emerald-600' },
-    { label: 'Cần follow-up', value: stats.followUpDue, icon: 'schedule', color: 'text-amber-600' },
+    { label: 'Total Applied', value: stats.total, icon: 'work', color: 'text-primary' },
+    { label: 'Interviewing', value: stats.interviewing, icon: 'forum', color: 'text-purple-600' },
+    { label: 'Offers', value: stats.offers, icon: 'verified', color: 'text-emerald-600' },
+    { label: 'Follow-up Due', value: stats.followUpDue, icon: 'schedule', color: 'text-amber-600' },
   ];
 
   return (
@@ -394,7 +394,7 @@ const ApplicationCard = ({ app, onClick }) => {
 
         <div className="flex items-center gap-3 mt-2">
           {app.appliedAt && (
-            <span className="text-[0.65rem] text-slate-400">Nộp: {formatDate(app.appliedAt)}</span>
+            <span className="text-[0.65rem] text-slate-400">Applied: {formatDate(app.appliedAt)}</span>
           )}
           {app.followUpAt && (
             <span className={`text-[0.65rem] flex items-center gap-0.5 ${followUpOverdue ? 'text-amber-600 font-semibold' : 'text-slate-400'}`}>
@@ -447,7 +447,7 @@ const ApplicationTracker = () => {
       const data = await getMyApplications(token, filters);
       setApplications(data || []);
     } catch (err) {
-      setError(err.message || 'Không thể tải danh sách ứng tuyển.');
+      setError(err.message || 'Failed to load applications.');
     } finally {
       setLoading(false);
     }
@@ -493,15 +493,15 @@ const ApplicationTracker = () => {
         {/* Page Title */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Ứng tuyển của tôi</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Theo dõi tất cả vị trí bạn đã ứng tuyển</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">My Applications</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Track all positions you've applied for</p>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary/90 transition-colors shadow-sm"
           >
             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
-            Thêm bên ngoài
+            Add External
           </button>
         </div>
 
@@ -513,26 +513,26 @@ const ApplicationTracker = () => {
           <input
             value={filterSearch}
             onChange={e => setFilterSearch(e.target.value)}
-            placeholder="Tìm kiếm vị trí, công ty..."
+            placeholder="Search by title, company..."
             className="flex-1 min-w-[180px] px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm text-slate-900 dark:text-white outline-none focus:border-primary"
           />
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
             className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-primary">
-            <option value="">Tất cả trạng thái</option>
+            <option value="">All Statuses</option>
             {CANDIDATE_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
           <select value={filterSource} onChange={e => setFilterSource(e.target.value)}
             className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-primary">
-            <option value="">Tất cả nguồn</option>
+            <option value="">All Sources</option>
             <option value="internal">Korra</option>
-            <option value="external">Bên ngoài</option>
+            <option value="external">External</option>
           </select>
           <button
             onClick={() => setShowArchived(v => !v)}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${showArchived ? 'bg-primary/10 border-primary/30 text-primary' : 'border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-slate-300'}`}
           >
             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>inventory_2</span>
-            {showArchived ? 'Đang xem lưu trữ' : 'Lưu trữ'}
+            {showArchived ? 'Viewing Archived' : 'Archived'}
           </button>
         </div>
 
@@ -546,25 +546,25 @@ const ApplicationTracker = () => {
             <span className="material-symbols-outlined text-red-400 text-5xl block mb-3">error</span>
             <p className="text-slate-500 dark:text-slate-400">{error}</p>
             <button onClick={fetchApplications} className="mt-4 px-5 py-2 bg-primary text-white rounded-full text-sm font-semibold hover:bg-primary/90">
-              Thử lại
+              Retry
             </button>
           </div>
         ) : filteredApplications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-6xl block mb-4">work_off</span>
             <p className="text-slate-500 dark:text-slate-400 font-medium">
-              {applications.length === 0 ? 'Chưa có ứng tuyển nào' : 'Không có kết quả phù hợp'}
+              {applications.length === 0 ? 'No applications yet' : 'No matching results'}
             </p>
             <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">
-              {applications.length === 0 ? 'Tìm kiếm và nộp đơn vào công việc bạn yêu thích.' : 'Thử thay đổi bộ lọc.'}
+              {applications.length === 0 ? 'Find and apply to jobs you love.' : 'Try adjusting your filters.'}
             </p>
             {applications.length === 0 && (
               <div className="flex gap-3 mt-5">
                 <Link to="/jobs" className="px-5 py-2.5 bg-primary text-white rounded-full text-sm font-semibold hover:bg-primary/90 transition-colors">
-                  Tìm việc làm
+                  Find Jobs
                 </Link>
                 <button onClick={() => setShowAddModal(true)} className="px-5 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-full text-sm font-semibold hover:border-primary/30 transition-colors">
-                  Thêm thủ công
+                  Add Manually
                 </button>
               </div>
             )}
