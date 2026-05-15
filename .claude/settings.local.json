@@ -4,7 +4,8 @@
       "Bash(mkdir -p \"c:/career-website/.claude/PRPs/reports\")",
       "Bash(mkdir -p \"c:/career-website/.claude/PRPs/plans/completed\")",
       "Bash(mv \"c:/career-website/.claude/PRPs/plans/notification-feature.plan.md\" \"c:/career-website/.claude/PRPs/plans/completed/notification-feature.plan.md\")",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(node -e \"require\\('uuid'\\); console.log\\('uuid ok'\\)\")"
     ],
     "additionalDirectories": [
       "c:\\career-website\\.claude\\PRPs\\plans"

@@ -125,7 +125,7 @@ const generateSkills = async (req, res, next) => {
 const generateIdentity = async (req, res, next) => {
   try {
     const { userId } = req.user;
-    const { role, organization = '', tasks = [], skills } = req.body || {};
+    const { role, organization = '', tasks = [], skills, extraExperiences = [], extraEducation = [] } = req.body || {};
 
     if (!role || typeof role !== 'string') {
       return res.status(400).json({ success: false, error: 'Vai trò không được để trống.' });
@@ -149,6 +149,12 @@ const generateIdentity = async (req, res, next) => {
       tasks: tasks.map(t => String(t).trim()).filter(Boolean),
       skills: skills.map(s => String(s).trim()).filter(Boolean),
       profileContext,
+      extraExperiences: Array.isArray(extraExperiences)
+        ? extraExperiences.map(s => String(s).trim()).filter(Boolean)
+        : [],
+      extraEducation: Array.isArray(extraEducation)
+        ? extraEducation.map(s => String(s).trim()).filter(Boolean)
+        : [],
     });
 
     res.status(200).json({ success: true, data });

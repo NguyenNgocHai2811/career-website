@@ -40,6 +40,9 @@ const CareerExplorer = () => {
   const [skills, setSkills] = useState([]);
   const [selectedSkills, setSelectedSkills] = useState([]);
 
+  const [extraExperiences, setExtraExperiences] = useState([]);
+  const [extraEducation, setExtraEducation] = useState([]);
+
   const [identityStatement, setIdentityStatement] = useState('');
   const [careerPaths, setCareerPaths] = useState([]);
   const [selectedCareer, setSelectedCareer] = useState(null);
@@ -145,6 +148,8 @@ const CareerExplorer = () => {
         organization: organization.trim(),
         tasks: selectedTasks,
         skills: selectedSkills,
+        extraExperiences,
+        extraEducation,
       });
       setIdentityStatement(statement || '');
     } catch (err) {
@@ -153,7 +158,7 @@ const CareerExplorer = () => {
       setIdentityLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, role, organization, selectedTasks, selectedSkills]);
+  }, [token, role, organization, selectedTasks, selectedSkills, extraExperiences, extraEducation]);
 
   const handleSkillsNext = () => {
     if (selectedSkills.length < 3) return;
@@ -208,19 +213,11 @@ const CareerExplorer = () => {
     [token]
   );
 
-  // ── Edit profile (back to wizard, reset) ──────────────
-  const handleEditProfile = () => {
-    setPhase('wizard');
-    setWizardStep(0);
-    setTasks([]);
-    setSelectedTasks([]);
-    setSkills([]);
-    setSelectedSkills([]);
-    setIdentityStatement('');
-    setCareerPaths([]);
-    setSelectedCareer(null);
-    setCareerDetail(null);
-  };
+  // ── Extra profile data handlers ────────────────────────
+  const handleAddExperience = (exp) => setExtraExperiences((prev) => [...prev, exp]);
+  const handleRemoveExperience = (i) => setExtraExperiences((prev) => prev.filter((_, idx) => idx !== i));
+  const handleAddEducation = (edu) => setExtraEducation((prev) => [...prev, edu]);
+  const handleRemoveEducation = (i) => setExtraEducation((prev) => prev.filter((_, idx) => idx !== i));
 
   const handleWizardBack = () => {
     setWizardStep((s) => Math.max(0, s - 1));
@@ -286,8 +283,13 @@ const CareerExplorer = () => {
           selectedSkills={selectedSkills}
           identityStatement={identityStatement}
           loading={identityLoading}
+          extraExperiences={extraExperiences}
+          extraEducation={extraEducation}
+          onAddExperience={handleAddExperience}
+          onRemoveExperience={handleRemoveExperience}
+          onAddEducation={handleAddEducation}
+          onRemoveEducation={handleRemoveEducation}
           onExplorePaths={handleExplorePaths}
-          onEditProfile={handleEditProfile}
           onRegenerate={handleRegenerateIdentity}
         />
       )}
