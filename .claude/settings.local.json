@@ -5,7 +5,13 @@
       "Bash(mkdir -p \"c:/career-website/.claude/PRPs/plans/completed\")",
       "Bash(mv \"c:/career-website/.claude/PRPs/plans/notification-feature.plan.md\" \"c:/career-website/.claude/PRPs/plans/completed/notification-feature.plan.md\")",
       "Bash(git commit -m ' *)",
-      "Bash(node -e \"require\\('uuid'\\); console.log\\('uuid ok'\\)\")"
+      "Bash(node -e \"require\\('uuid'\\); console.log\\('uuid ok'\\)\")",
+      "Read(//c/Users/nguye/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/08579561-c069-41bf-9edc-7a9ccd0fc2bf/1e6e2da9-7860-48aa-80f2-86f0cb72fdf2/skills/docx/**)",
+      "Bash(python scripts/office/unpack.py \"C:\\\\career-website\\\\docs\\\\baocao_khoa_luan.docx\" \"C:\\\\career-website\\\\docs\\\\baocao_unpacked\\\\\")",
+      "Bash(python scripts/office/unpack.py \"C:\\\\career-website\\\\docs\\\\baocao_khoa_luan.docx\" C:\\\\career-website\\\\docs\\\\baocao_unpacked)",
+      "Bash(pip install *)",
+      "Bash(pandoc \"C:\\\\career-website\\\\docs\\\\baocao_khoa_luan.docx\" -t markdown)",
+      "PowerShell(pandoc \"C:\\\\career-website\\\\docs\\\\baocao_khoa_luan.docx\" -t markdown 2>$null)"
     ],
     "additionalDirectories": [
       "c:\\career-website\\.claude\\PRPs\\plans"

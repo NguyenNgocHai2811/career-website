@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import NotificationBell from '../NotificationBell/NotificationBell';
 
@@ -195,10 +196,10 @@ const AppHeader = ({ activeTab = null }) => {
                           <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-primary transition-colors">Dashboard</span>
                         </Link>
                       )}
-                      <button className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full text-left group">
+                      <Link to="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full text-left group no-underline">
                         <span className="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary transition-colors">settings</span>
                         <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-primary transition-colors">Settings</span>
-                      </button>
+                      </Link>
                     </div>
                     <div className="border-t border-gray-100 dark:border-gray-700 pt-1">
                       <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full text-left group">
@@ -228,7 +229,7 @@ const AppHeader = ({ activeTab = null }) => {
         </div>
       </div>
 
-      {mobileMenuOpen && (
+      {mobileMenuOpen && createPortal(
         <div className="fixed inset-0 z-[1000] md:hidden isolate">
           <div 
             className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm animate-fade-in"
@@ -302,10 +303,10 @@ const AppHeader = ({ activeTab = null }) => {
                         <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Dashboard</span>
                       </Link>
                     )}
-                    <button className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full text-left">
+                    <Link to="/settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full text-left no-underline">
                       <span className="material-symbols-outlined text-[20px] text-slate-400">settings</span>
                       <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Settings</span>
-                    </button>
+                    </Link>
                     <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full text-left">
                       <span className="material-symbols-outlined text-[20px] text-slate-400">logout</span>
                       <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Sign Out</span>
@@ -329,7 +330,8 @@ const AppHeader = ({ activeTab = null }) => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );

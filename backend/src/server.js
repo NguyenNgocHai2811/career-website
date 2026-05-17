@@ -84,6 +84,7 @@ app.use('/v1/companies', require('./routes/companyRoutes'));
 app.use('/v1/notifications', require('./routes/notificationRoutes'));
 app.use('/v1/ai', require('./routes/aiRoutes'));
 app.use('/v1/admin', require('./routes/adminRoutes'));
+app.use('/v1/account', require('./routes/accountRoutes'));
 
 // Global Error Handler (Phải đăng ký cuối cùng)
 app.use(errorMiddleware);

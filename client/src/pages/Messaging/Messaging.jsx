@@ -192,7 +192,7 @@ const Messaging = () => {
     }, []);
 
     return (
-        <div className="bg-[#f8fafc] dark:bg-[#0f172a] text-slate-900 dark:text-white min-h-screen h-screen flex flex-col font-sans overflow-hidden">
+        <div className="bg-[#f8fafc] dark:bg-[#0f172a] text-slate-900 dark:text-white min-h-screen h-screen flex flex-col font-body overflow-hidden">
             <AppHeader activeTab="messages" />
 
             <main className="flex-1 min-h-0 flex overflow-hidden max-w-[1440px] mx-auto w-full relative">

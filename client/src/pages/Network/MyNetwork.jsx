@@ -65,8 +65,8 @@ const MyNetwork = () => {
   };
 
   return (
-    <div className="bg-[#FEF9F3] min-h-screen text-[#1D1B18] font-sans pb-20">
-      <AppHeader />
+    <div className="bg-[#FEF9F3] min-h-screen text-[#1D1B18] font-body pb-20">
+      <AppHeader activeTab="network" />
       <div className="max-w-[1200px] mx-auto pt-28 px-4 md:px-8 grid grid-cols-1 lg:grid-cols-4 gap-8 animate-[fadeInUp_0.5s_ease-out]">
         
         {/* Left Sidebar */}

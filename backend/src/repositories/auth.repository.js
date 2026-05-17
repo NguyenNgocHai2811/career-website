@@ -26,6 +26,12 @@ class AuthRepository {
           phone: $phone,
           dateOfBirth: $dateOfBirth,
           address: $address,
+          emailVerified: false,
+          notificationEmail: true,
+          notificationPush: true,
+          notificationJobAlerts: true,
+          notificationMessages: true,
+          isDeactivated: false,
           isOnboarded: $isOnboarded,
           createdAt: datetime()
         })
@@ -47,6 +53,12 @@ class AuthRepository {
           .phone,
           .dateOfBirth,
           .address,
+          .emailVerified,
+          .notificationEmail,
+          .notificationPush,
+          .notificationJobAlerts,
+          .notificationMessages,
+          .isDeactivated,
           .isOnboarded,
           .createdAt
         } AS user, c { .companyId, .name } AS company
@@ -115,6 +127,9 @@ class AuthRepository {
           .dateOfBirth,
           .address,
           .avatarUrl,
+          .isBanned,
+          .isDeactivated,
+          .emailVerified,
           .isOnboarded,
           .createdAt
         } AS user,

@@ -1,17 +1,48 @@
 const jwt = require('jsonwebtoken');
+const { driver } = require('../config/neo4j');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'korra_secret_key_default';
 
-const verifyToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized' });
+const getUserStatus = async (userId) => {
+  const session = driver.session();
+  try {
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId})
+       RETURN u.isBanned AS isBanned, u.isDeactivated AS isDeactivated`,
+      { userId }
+    );
+    if (result.records.length === 0) return null;
+    return {
+      isBanned: result.records[0].get('isBanned') === true,
+      isDeactivated: result.records[0].get('isDeactivated') === true,
+    };
+  } finally {
+    await session.close();
   }
+};
 
-  const token = authHeader.split(' ')[1];
+const verifyDecodedUserIsActive = async (decoded) => {
+  const status = await getUserStatus(decoded.userId);
+  if (!status) return { ok: false, statusCode: 401, message: 'Unauthorized' };
+  if (status.isBanned) return { ok: false, statusCode: 403, message: 'Account is banned' };
+  if (status.isDeactivated) return { ok: false, statusCode: 403, message: 'Account is deactivated' };
+  return { ok: true };
+};
+
+const readBearerToken = (req) => {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  return authHeader.split(' ')[1];
+};
+
+const verifyToken = async (req, res, next) => {
+  const token = readBearerToken(req);
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    const active = await verifyDecodedUserIsActive(decoded);
+    if (!active.ok) return res.status(active.statusCode).json({ error: active.message });
     req.user = decoded;
     next();
   } catch (err) {
@@ -19,29 +50,28 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// Optional auth: sets req.user if token valid, but never blocks the request
-const verifyTokenOptional = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) return next();
+const verifyTokenOptional = async (req, res, next) => {
+  const token = readBearerToken(req);
+  if (!token) return next();
 
-  const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
+    const active = await verifyDecodedUserIsActive(decoded);
+    if (active.ok) req.user = decoded;
   } catch (_) {
-    // ignore invalid token for optional routes
+    // Optional auth never blocks public requests.
   }
   next();
 };
 
-const verifyAdmin = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  const token = authHeader.split(' ')[1];
+const verifyAdmin = async (req, res, next) => {
+  const token = readBearerToken(req);
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    const active = await verifyDecodedUserIsActive(decoded);
+    if (!active.ok) return res.status(active.statusCode).json({ error: active.message });
     if (decoded.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Forbidden: Admin access required' });
     }

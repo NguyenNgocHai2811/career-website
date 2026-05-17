@@ -19,6 +19,7 @@ import AdminDashboard from './pages/Admin/AdminDashboard.jsx';
 import AdminUsers from './pages/Admin/AdminUsers.jsx';
 import AdminJobs from './pages/Admin/AdminJobs.jsx';
 import AdminPosts from './pages/Admin/AdminPosts.jsx';
+import Settings from './pages/Settings/Settings.jsx';
 
 import CompanyProfile from './pages/Company/CompanyProfile.jsx';
 import MyNetwork from './pages/Network/MyNetwork.jsx';
@@ -43,6 +44,7 @@ function App() {
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/jobs" element={<AdminJobs />} />
         <Route path="/admin/posts" element={<AdminPosts />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />

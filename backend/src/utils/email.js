@@ -60,6 +60,40 @@ const sendResetPasswordEmail = async (toEmail, resetLink) => {
   }
 };
 
+const sendVerificationEmail = async (toEmail, verificationLink) => {
+  try {
+    const info = await transporter.sendMail({
+      from: '"KorraCareers Support" <support@korracareers.com>',
+      to: toEmail,
+      subject: 'Verify your KorraCareers email',
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 520px; margin: auto; color: #2d3748;">
+          <div style="text-align: center; padding: 32px 0 16px;">
+            <span style="display: inline-block; background: #ede9fe; border-radius: 12px; padding: 12px 16px; font-size: 24px;">◆</span>
+            <h2 style="margin: 12px 0 0; font-size: 20px; color: #4153b4;">Korra<span style="font-weight: 300;">Careers</span></h2>
+          </div>
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px;">
+            <h3 style="margin: 0 0 12px; font-size: 18px;">Verify your email address</h3>
+            <p style="margin: 0 0 20px; color: #4a5568;">Confirm this email address for your KorraCareers account. The link is valid for 24 hours.</p>
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${verificationLink}" style="display: inline-block; padding: 12px 28px; color: white; background-color: #4153b4; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 15px;">Verify email</a>
+            </div>
+            <p style="color: #718096; font-size: 13px;">If the button does not work, copy this link into your browser:</p>
+            <p style="font-size: 12px; word-break: break-all;"><a href="${verificationLink}" style="color: #4153b4;">${verificationLink}</a></p>
+          </div>
+          <p style="text-align: center; color: #a0aec0; font-size: 12px; margin-top: 20px;">KorraCareers Support</p>
+        </div>
+      `,
+    });
+    console.log('Verification email sent: %s', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('Error sending verification email:', error);
+    throw error;
+  }
+};
+
 module.exports = {
-  sendResetPasswordEmail
+  sendResetPasswordEmail,
+  sendVerificationEmail,
 };

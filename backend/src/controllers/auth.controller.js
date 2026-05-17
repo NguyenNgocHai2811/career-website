@@ -142,6 +142,20 @@ class AuthController {
         });
       }
 
+      if (error.message === 'ACCOUNT_BANNED') {
+        return res.status(403).json({
+          status: 'error',
+          message: 'Tài khoản đã bị khóa.'
+        });
+      }
+
+      if (error.message === 'ACCOUNT_DEACTIVATED') {
+        return res.status(403).json({
+          status: 'error',
+          message: 'Tài khoản đã bị vô hiệu hóa.'
+        });
+      }
+
       return res.status(500).json({
         status: 'error',
         message: 'Lỗi hệ thống nội bộ. Vui lòng thử lại sau.'

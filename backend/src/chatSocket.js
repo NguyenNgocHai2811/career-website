@@ -36,7 +36,7 @@ const initializeSockets = (io) => {
     const token = socket.handshake.auth.token;
     if (!token) return next(new Error('Authentication error'));
     
-    jwt.verify(token, process.env.JWT_SECRET || 'secret_key', (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET || 'korra_secret_key_default', (err, decoded) => {
       if (err) return next(new Error('Authentication error'));
       socket.userId = normalizeUserId(decoded.userId);
       next();

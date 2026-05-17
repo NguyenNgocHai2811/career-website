@@ -91,6 +91,14 @@ class AuthService {
       }
 
       // 2. Kiểm tra mật khẩu
+      if (user.isBanned) {
+        throw new Error('ACCOUNT_BANNED');
+      }
+
+      if (user.isDeactivated) {
+        throw new Error('ACCOUNT_DEACTIVATED');
+      }
+
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (!isPasswordValid) {
