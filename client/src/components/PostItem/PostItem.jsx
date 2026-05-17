@@ -54,6 +54,40 @@ const PostItem = ({ post, onToggleLike, getAuthToken, user, onDelete, onUpdate }
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportDone, setReportDone] = useState(false);
   const menuRef = useRef(null);
+  const [showReactions, setShowReactions] = useState(false);
+  const reactionsRef = useRef(null);
+  const longPressTimer = useRef(null);
+  const longPressTriggered = useRef(false);
+
+  const handleLikePressStart = (e) => {
+    longPressTriggered.current = false;
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      setShowReactions(true);
+    }, 400);
+  };
+
+  const handleLikePressEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleLikeClick = (e) => {
+    if (longPressTriggered.current) {
+      e.preventDefault();
+      longPressTriggered.current = false;
+      return;
+    }
+    onToggleLike(post.id, 'Like', post.userReactionType === 'Like');
+  };
+
+  const pickReaction = (type) => {
+    onToggleLike(post.id, type, post.userReactionType === type);
+    setShowReactions(false);
+  };
 
   const REPORT_REASONS = ['Spam', 'Thông tin sai lệch', 'Ngôn từ thù địch', 'Nội dung không phù hợp', 'Quấy rối', 'Khác'];
 
@@ -84,9 +118,14 @@ const PostItem = ({ post, onToggleLike, getAuthToken, user, onDelete, onUpdate }
     const handleClick = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false);
       if (shareRef.current && !shareRef.current.contains(e.target)) setShowShareMenu(false);
+      if (reactionsRef.current && !reactionsRef.current.contains(e.target)) setShowReactions(false);
     };
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    document.addEventListener('touchstart', handleClick);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('touchstart', handleClick);
+    };
   }, []);
 
   const handleSaveEdit = async () => {
@@ -333,10 +372,17 @@ const PostItem = ({ post, onToggleLike, getAuthToken, user, onDelete, onUpdate }
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <div className="flex-1 relative group">
+          <div className="flex-1 relative group" ref={reactionsRef}>
             <button
-              onClick={() => onToggleLike(post.id, 'Like', post.userReactionType === 'Like')}
-              className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium text-sm ${post.userReactionType ? 'text-primary bg-primary/5' : 'text-text-secondary dark:text-gray-400'} ${post.userReactionType ? REACTION_ICONS[post.userReactionType]?.color : ''}`}>
+              onClick={handleLikeClick}
+              onTouchStart={handleLikePressStart}
+              onTouchEnd={handleLikePressEnd}
+              onTouchMove={handleLikePressEnd}
+              onTouchCancel={handleLikePressEnd}
+              onContextMenu={(e) => e.preventDefault()}
+              className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium text-sm select-none touch-manipulation ${post.userReactionType ? 'text-primary bg-primary/5' : 'text-text-secondary dark:text-gray-400'} ${post.userReactionType ? REACTION_ICONS[post.userReactionType]?.color : ''}`}
+              style={{ WebkitTouchCallout: 'none' }}
+            >
               {post.userReactionType && REACTION_ICONS[post.userReactionType] ? (
                 <span className="text-[20px]">{REACTION_ICONS[post.userReactionType].icon}</span>
               ) : (
@@ -344,14 +390,21 @@ const PostItem = ({ post, onToggleLike, getAuthToken, user, onDelete, onUpdate }
               )}
               {post.userReactionType || 'Like'}
             </button>
-            <div className="absolute bottom-full left-0 pb-2 w-full flex justify-center z-20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0">
-              <div className="bg-white dark:bg-gray-800 rounded-full shadow-xl border border-gray-100 dark:border-gray-700 flex gap-2 p-1.5 animate-fade-in-up">
+            <div
+              className={`absolute bottom-full left-0 pb-2 w-full flex justify-center z-20 transition-all duration-200 ${
+                showReactions
+                  ? 'opacity-100 visible translate-y-0'
+                  : 'opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0'
+              }`}
+            >
+              <div className="bg-white dark:bg-gray-800 rounded-full shadow-xl border border-gray-100 dark:border-gray-700 flex gap-1 sm:gap-2 p-1.5 animate-fade-in-up">
                 {Object.keys(REACTION_ICONS).map(type => (
                   <button
                     key={type}
-                    onClick={() => onToggleLike(post.id, type, post.userReactionType === type)}
-                    className="hover:scale-125 transition-transform origin-bottom text-2xl p-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-full"
+                    onClick={() => pickReaction(type)}
+                    className="hover:scale-125 active:scale-110 transition-transform origin-bottom text-2xl p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-full"
                     title={type}
+                    aria-label={type}
                   >
                     {REACTION_ICONS[type].icon}
                   </button>
