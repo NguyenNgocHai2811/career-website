@@ -65,7 +65,7 @@ function Homepage() {
         <div className="bubble bubble-blue animate-drift size-[550px] -bottom-20 right-1/4 animate-float-reverse"></div>
       </div>
       <div className="relative flex min-h-screen w-full flex-col z-10">
-        <header className="fixed top-0 left-0 right-0 z-50 border-b border-primary/10 glass-nav px-6 py-4">
+        <header className="fixed top-0 left-0 right-0 z-50 border-b border-primary/10 glass-nav px-4 md:px-6 py-3 md:py-4">
           <div className="mx-auto max-w-[1280px] flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center size-10 rounded-xl bg-primary/10 text-primary">
@@ -126,7 +126,7 @@ function Homepage() {
                   </div>
                   <h3 className="font-bold text-[#2d3748]">KorraCareers</h3>
                 </div>
-                <button onClick={() => setMobileMenuOpen(false)} className="size-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-slate-500">
+                <button onClick={() => setMobileMenuOpen(false)} className="size-11 flex items-center justify-center rounded-full hover:bg-gray-100 text-slate-500" aria-label="Close menu">
                   <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
@@ -164,18 +164,18 @@ function Homepage() {
             </div>
           </div>
         )}
-        <main className="flex-grow pt-24 md:pt-32">
-          <section className="relative px-6 pb-20 overflow-visible">
+        <main className="flex-grow pt-20 md:pt-32">
+          <section className="relative px-4 sm:px-6 pb-16 md:pb-20 overflow-visible">
             <div className="relative z-10 max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
               <div className="flex flex-col items-start text-left">
                 <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/60 border border-primary/20 shadow-sm backdrop-blur-sm animate-float load-fade-in-up">
                   <span className="size-2 rounded-full bg-pastel-pink animate-pulse"></span>
                   <span className="text-xs font-bold text-primary-dark uppercase tracking-wide">The premier career network</span>
                 </div>
-                <h1 className="load-slide-in-left delay-100 text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-[#2d3748] mb-6 leading-[1.1]">
+                <h1 className="load-slide-in-left delay-100 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-[#2d3748] mb-6 leading-[1.1]">
                   Discover a Career <br /><span className="text-gradient font-light italic">As Unique As You</span>
                 </h1>
-                <p className="load-slide-in-left delay-200 text-lg md:text-xl text-[#4a5568] max-w-xl mb-10 font-light leading-relaxed">
+                <p className="load-slide-in-left delay-200 text-base md:text-xl text-[#4a5568] max-w-xl mb-8 md:mb-10 font-light leading-relaxed">
                   Connect with premium employers in a space designed for professionals who value culture, growth, and vibrancy.
                 </p>
                 <div className="w-full p-2 bg-white/80 rounded-2xl shadow-card border border-white relative z-20 backdrop-blur-md transition-all hover:shadow-soft load-fade-in-up delay-300">

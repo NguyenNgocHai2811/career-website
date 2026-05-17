@@ -535,7 +535,7 @@ const JobSearch = () => {
       {/* Shared App Header */}
       <AppHeader activeTab="jobs" />
 
-      <main className="max-w-screen-2xl mx-auto px-8 py-12">
+      <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">
         {/* Split View or Grid View */}
         {selectedJob ? (
           <div className="flex flex-col lg:flex-row gap-8">
@@ -588,7 +588,7 @@ const JobSearch = () => {
             </div>
 
             {/* Right Detail Pane */}
-            <div className="lg:w-2/3 bg-white rounded-3xl p-10 shadow-lg border border-[#ece7e2]" style={{ animation: 'fadeInUp 0.3s ease-out' }}>
+            <div className="lg:w-2/3 bg-white rounded-3xl p-5 sm:p-6 lg:p-10 shadow-lg border border-[#ece7e2]" style={{ animation: 'fadeInUp 0.3s ease-out' }}>
               <div className="flex items-start gap-6 mb-8">
                 <div className="w-20 h-20 bg-[#fef9f3] rounded-2xl flex items-center justify-center p-3 flex-shrink-0">
                     {selectedJob.company?.logoUrl ? (
@@ -714,10 +714,10 @@ const JobSearch = () => {
           /* Default Grid View */
           <>
             <section className="mb-12">
-              <h1 className="text-5xl font-bold text-[#1d1b18] mb-4 leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1d1b18] mb-4 leading-tight">
                 Discover Opportunities<br/><span className="text-[#4153b4] italic font-light">career</span>
               </h1>
-              <p className="text-[#454652] max-w-xl text-lg mb-10">
+              <p className="text-[#454652] max-w-xl text-base md:text-lg mb-8 md:mb-10">
                 Find positions that match your skills and passion.
               </p>
 

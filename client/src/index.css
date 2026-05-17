@@ -58,9 +58,31 @@
     background-color: rgba(108, 126, 225, 0.2);
     color: var(--color-primary-dark);
   }
+  /* Prevent iOS Safari from auto-zooming on focus for text inputs (<16px triggers zoom). */
+  @media (max-width: 767px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
 }
 
 @layer utilities {
+  /* iOS safe-area helpers for notch / home indicator. */
+  .pb-safe {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+  .pt-safe {
+    padding-top: calc(env(safe-area-inset-top));
+  }
   .glass-nav {
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(12px);

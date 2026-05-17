@@ -245,7 +245,7 @@ const AppHeader = ({ activeTab = null }) => {
                   Korra<span className="font-light text-primary">Careers</span>
                 </h3>
               </Link>
-              <button onClick={() => setMobileMenuOpen(false)} className="size-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-slate-500">
+              <button onClick={() => setMobileMenuOpen(false)} className="size-11 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-slate-500" aria-label="Close menu">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>

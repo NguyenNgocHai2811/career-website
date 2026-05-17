@@ -304,7 +304,7 @@ const DetailDrawer = ({ app, onClose, onUpdated, onArchiveToggle }) => {
         </div>
 
         {/* Footer actions */}
-        <div className="sticky bottom-0 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 px-5 py-4 flex gap-2">
+        <div className="sticky bottom-0 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 px-5 py-4 pb-safe flex gap-2">
           <button onClick={handleSave} disabled={saving}
             className="flex-1 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/90 disabled:opacity-50 transition-colors">
             {saving ? 'Saving...' : 'Save Changes'}
