@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const REACTION_ICONS = {
   'Like': { icon: '👍', color: 'text-blue-500' },
@@ -72,20 +73,39 @@ const NestedReplyItem = ({ reply, commentAuthorId, formatDate, getAuthToken, han
     }
   };
 
+  const replyAuthorId = reply.author?.userId || reply.author?.id;
+  const replyProfileTo = replyAuthorId ? `/profile/${replyAuthorId}` : null;
+
   return (
     <div className="flex gap-3 relative">
-      <div className="size-6 rounded-full bg-gray-200 flex items-center justify-center shrink-0 overflow-hidden">
-        {reply.author?.avatar ? (
-          <img alt={reply.author.fullName} className="w-full h-full object-cover" src={reply.author.avatar} />
-        ) : (
-          <span className="material-symbols-outlined text-[14px] text-gray-500">person</span>
-        )}
-      </div>
+      {replyProfileTo ? (
+        <Link to={replyProfileTo} className="size-6 rounded-full bg-gray-200 flex items-center justify-center shrink-0 overflow-hidden hover:ring-2 hover:ring-primary transition-all no-underline">
+          {reply.author?.avatar ? (
+            <img alt={reply.author.fullName} className="w-full h-full object-cover" src={reply.author.avatar} />
+          ) : (
+            <span className="material-symbols-outlined text-[14px] text-gray-500">person</span>
+          )}
+        </Link>
+      ) : (
+        <div className="size-6 rounded-full bg-gray-200 flex items-center justify-center shrink-0 overflow-hidden">
+          {reply.author?.avatar ? (
+            <img alt={reply.author.fullName} className="w-full h-full object-cover" src={reply.author.avatar} />
+          ) : (
+            <span className="material-symbols-outlined text-[14px] text-gray-500">person</span>
+          )}
+        </div>
+      )}
       <div className="flex-1">
         <div className="relative bg-surface-container-low dark:bg-gray-800 p-2.5 rounded-2xl rounded-tl-none">
           <div className="flex justify-between items-start mb-1">
             <h5 className="text-xs font-bold text-text-main dark:text-white">
-              {reply.author?.fullName || 'Unknown User'}
+              {replyProfileTo ? (
+                <Link to={replyProfileTo} className="no-underline text-text-main dark:text-white hover:text-primary transition-colors">
+                  {reply.author?.fullName || 'Unknown User'}
+                </Link>
+              ) : (
+                reply.author?.fullName || 'Unknown User'
+              )}
               {commentAuthorId === reply.author?.userId && (
                 <span className="ml-1 px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[9px] uppercase tracking-wider">Author</span>
               )}
@@ -291,23 +311,43 @@ const CommentItem = ({ comment, getAuthToken, user, formatDate }) => {
 
   // Avoid shadowing the external helper
   const topRx = getTopReactions(allTypes);
+  const commentAuthorIdFull = comment.author?.userId || comment.author?.id;
+  const commentProfileTo = commentAuthorIdFull ? `/profile/${commentAuthorIdFull}` : null;
 
   return (
     <div className="flex gap-3">
       {/* Avatar */}
-      <div className="size-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0 overflow-hidden">
-        {comment.author?.avatar ? (
-          <img alt={comment.author.fullName} className="w-full h-full object-cover" src={comment.author.avatar} />
-        ) : (
-          <span className="material-symbols-outlined text-[18px] text-gray-500">person</span>
-        )}
-      </div>
+      {commentProfileTo ? (
+        <Link to={commentProfileTo} className="size-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0 overflow-hidden hover:ring-2 hover:ring-primary transition-all no-underline">
+          {comment.author?.avatar ? (
+            <img alt={comment.author.fullName} className="w-full h-full object-cover" src={comment.author.avatar} />
+          ) : (
+            <span className="material-symbols-outlined text-[18px] text-gray-500">person</span>
+          )}
+        </Link>
+      ) : (
+        <div className="size-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0 overflow-hidden">
+          {comment.author?.avatar ? (
+            <img alt={comment.author.fullName} className="w-full h-full object-cover" src={comment.author.avatar} />
+          ) : (
+            <span className="material-symbols-outlined text-[18px] text-gray-500">person</span>
+          )}
+        </div>
+      )}
 
       <div className="flex-1">
         {/* Comment Bubble */}
         <div className="bg-surface-container-low dark:bg-gray-800 p-3 rounded-2xl rounded-tl-none">
           <div className="flex justify-between items-start mb-1">
-            <h5 className="text-sm font-bold text-text-main dark:text-white">{comment.author?.fullName || 'Unknown User'}</h5>
+            <h5 className="text-sm font-bold text-text-main dark:text-white">
+              {commentProfileTo ? (
+                <Link to={commentProfileTo} className="no-underline text-text-main dark:text-white hover:text-primary transition-colors">
+                  {comment.author?.fullName || 'Unknown User'}
+                </Link>
+              ) : (
+                comment.author?.fullName || 'Unknown User'
+              )}
+            </h5>
             <span className="text-[10px] text-text-secondary dark:text-gray-400">
                 {formatDate(comment.createdAt)}
             </span>

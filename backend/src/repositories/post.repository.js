@@ -290,7 +290,7 @@ const addComment = async (userId, postId, content) => {
 
     return {
       ...comment,
-      author: { userId: author.userId, fullName: author.fullName, email: author.email }
+      author: { userId: author.userId, fullName: author.fullName, email: author.email, avatar: author.avatarUrl }
     };
   } finally {
     await session.close();
@@ -343,7 +343,7 @@ const getComments = async (postId, page = 1, limit = 10) => {
         reactionsCount: typeof reactionsCount?.toNumber === 'function' ? reactionsCount.toNumber() : (reactionsCount || 0),
         userReactionType: userReactionType || null,
         allTypes: allTypes || [],
-        author: { userId: author.userId, fullName: author.fullName, email: author.email }
+        author: { userId: author.userId, fullName: author.fullName, email: author.email, avatar: author.avatarUrl }
       };
     });
   } finally {

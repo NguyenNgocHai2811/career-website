@@ -34,7 +34,7 @@ const replyToComment = async (userId, parentCommentId, content) => {
     
     return {
       ...comment,
-      author: { userId: author.userId, fullName: author.fullName, email: author.email }
+      author: { userId: author.userId, fullName: author.fullName, email: author.email, avatar: author.avatarUrl }
     };
   } finally {
     await session.close();
@@ -103,8 +103,8 @@ const getReplies = async (currentUserId, parentCommentId, cursor, limit = 10) =>
         reactionsCount: typeof reactionsCount?.toNumber === 'function' ? reactionsCount.toNumber() : (reactionsCount || 0),
         userReactionType: userReactionType || null,
         allTypes: allTypes || [],
-        targetUser: targetUser ? { userId: targetUser.userId, fullName: targetUser.fullName } : null,
-        author: { userId: author.userId, fullName: author.fullName, email: author.email }
+        targetUser: targetUser ? { userId: targetUser.userId, fullName: targetUser.fullName, avatar: targetUser.avatarUrl } : null,
+        author: { userId: author.userId, fullName: author.fullName, email: author.email, avatar: author.avatarUrl }
       };
     });
   } finally {
